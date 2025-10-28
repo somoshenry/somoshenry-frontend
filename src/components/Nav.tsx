@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import React from "react";
-import Barra from "./Barra";
-import useDarkMode from "../app/useDarkMode";
+import Link from 'next/link';
+import React from 'react';
+import Barra from './Barra';
+import useDarkMode from '../hook/useDarkMode';
 
 export const Nav: React.FC = () => {
-  let isAutentic = false;
+  let isAutentic = true;
   const [theme, toggleTheme] = useDarkMode();
-  const iconSrc = theme === "dark" ? "/modoClaro.png" : "/modoDark.png";
+  const iconSrc = theme === 'dark' ? '/modoClaro.png' : '/modoDark.png';
 
   return (
     <nav className=" flex dark:bg-gray-900 dark:text-white px-1 bg-white text-black shadow-amber-50 sticky top-0 z-50 box-border w-full  shadow-md md:text-xl items-center justify-between p-1">
-      <Link href={"#"}>
+      <Link href={'#'}>
         <img src="/logo.jpeg" alt="logo" className="w-24 md:w-36 mr-2 md:mr-4" />
       </Link>
       <div className="grow flex justify-start md:justify-center mx-2 md:mx-auto ">

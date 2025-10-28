@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import Barra from "./Barra";
-import useDarkMode from "./useDarkMode";
+import useDarkMode from "../app/useDarkMode";
 
 export const Nav: React.FC = () => {
   let isAutentic = false;

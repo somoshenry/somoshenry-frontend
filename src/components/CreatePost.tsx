@@ -24,7 +24,7 @@ export default function CreatePost({ onAddPost }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-4">
+    <form onSubmit={handleSubmit} className="bg-gray-500 rounded-2xl shadow p-4">
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -33,7 +33,7 @@ export default function CreatePost({ onAddPost }: Props) {
       />
       <button
         type="submit"
-        className="mt-2 bg-yellow-400 text-black px-4 py-2 rounded-lg hover:bg-yellow-300 transition"
+        className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg hover:bg-yellow-300 transition"
       >
         Publicar
       </button>

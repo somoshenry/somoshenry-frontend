@@ -19,8 +19,8 @@ export default function Post({ post, onUpdatePost }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow p-4 space-y-3">
-      <p>{post.content}</p>
+    <div className="bg-gray-200 rounded-2xl shadow p-4 space-y-3">
+      <p className="text-black">{post.content}</p>
       <LikeButton likes={post.likes} onLike={handleLike} />
       <CommentSection comments={post.comments} onAddComment={handleAddComment} />
     </div>

@@ -23,8 +23,8 @@ export default function CommentSection({ comments, onAddComment }: Props) {
   };
 
   return (
-    <div className="border-t pt-2">
-      <ul className="space-y-1 text-sm text-gray-600">
+    <div className=" pt-2">
+      <ul className="space-y-1 text-sm text-black">
         {comments.map((c) => (
           <li key={c.id}>💬 {c.text}</li>
         ))}
@@ -35,11 +35,11 @@ export default function CommentSection({ comments, onAddComment }: Props) {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Escribe un comentario..."
-          className="flex-1 border p-1 rounded-lg text-sm"
+          className="flex-1 border p-1 rounded-lg text-sm text-black"
         />
         <button
           type="submit"
-          className="bg-gray-200 px-2 py-1 rounded-lg text-sm hover:bg-gray-300"
+          className="bg-[#ffff00] px-2 py-1 rounded-lg text-black hover:bg-yellow-300 transition"
         >
           Comentar
         </button>

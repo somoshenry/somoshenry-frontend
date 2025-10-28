@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import React from "react";
@@ -6,7 +6,7 @@ import Barra from "./Barra";
 import useDarkMode from "../hook/useDarkMode";
 
 export const Nav: React.FC = () => {
-  let isAutentic = false;
+  let isAutentic = true;
   const [theme, toggleTheme] = useDarkMode();
   const iconSrc = theme === "dark" ? "/modoClaro.png" : "/modoD.png";
   const logoSrc = theme === "dark" ? "/logoDark.png" : "/logo.jpeg";

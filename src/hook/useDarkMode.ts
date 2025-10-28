@@ -9,9 +9,9 @@ export const useDarkMode = () => {
   const getInitialTheme = (): Mode => {
     // Comprueba si estamos en el navegador y si el SO prefiere 'dark'
     if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "dark";
+      return "light";
     }
-    return "light";
+    return "dark";
   };
 
   // Inicializa el estado con la preferencia del sistema

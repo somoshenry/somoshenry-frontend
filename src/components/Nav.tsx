@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import Barra from "./Barra";
 import useDarkMode from "../hook/useDarkMode";
+import {useRouter} from "next/navigation";
 
 export const Nav: React.FC = () => {
   let isAutentic = false;
@@ -76,6 +77,14 @@ export const Nav: React.FC = () => {
             Iniciar seccion
           </button>
           <button className=" bg-[#ffff00] rounded-xl px-2 py-2 text-center text-black cursor-pointer hover:bg-white hover:outline-1 hover:outline-black transition duration-150 ease-in-out text-sm md:text-lg">
+            Crear cuenta
+          </button>
+          <button
+            className=" bg-[#ffff00] rounded-xl px-2 py-2 text-center text-black cursor-pointer hover:bg-white hover:outline-1 hover:outline-black transition duration-150 ease-in-out text-sm md:text-lg"
+            onClick={() => {
+              route.push("/register");
+            }}
+          >
             Crear cuenta
           </button>
         </div>

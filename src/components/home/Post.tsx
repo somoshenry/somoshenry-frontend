@@ -1,6 +1,6 @@
 import LikeButton from './LikeButton';
 import CommentSection from './CommentSection';
-import { PostType, CommentType } from '../interfaces/post';
+import { PostType, CommentType } from '../../interfaces/interfaces.post/post';
 
 interface Props {
   post: PostType;

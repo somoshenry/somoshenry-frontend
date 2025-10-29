@@ -42,7 +42,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="max-w-2xl mx-auto p-4 space-y-6">
+    <main className=" max-w-2xl mx-auto p-4 space-y-6">
       <CreatePost onAddPost={handleAddPost} />
       <PostList posts={posts} onUpdatePost={handleUpdatePost} />
     </main>

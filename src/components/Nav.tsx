@@ -1,12 +1,15 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import React from "react";
 import Barra from "./Barra";
 import useDarkMode from "../hook/useDarkMode";
+import {useRouter} from "next/navigation";
 
 export const Nav: React.FC = () => {
-  let isAutentic = true;
+  let isAutentic = false;
+  const route = useRouter();
+
   const [theme, toggleTheme] = useDarkMode();
   const iconSrc = theme === "dark" ? "/modoClaro.png" : "/modoD.png";
   const logoSrc = theme === "dark" ? "/logoDark.png" : "/logo.jpeg";
@@ -67,10 +70,18 @@ export const Nav: React.FC = () => {
           <button
             className=" border gap-1
            flex items-center border-black rounded-xl px-2 py-1 dark:border-white text-center mx-2 cursor-pointer hover:bg-[#ffff00] transition duration-100 ease-in-out text-sm md:text-lg"
+            onClick={() => {
+              route.push("/login");
+            }}
           >
             Iniciar seccion
           </button>
-          <button className=" bg-[#ffff00] rounded-xl px-2 py-2 text-center text-black cursor-pointer hover:bg-white hover:outline-1 hover:outline-black transition duration-150 ease-in-out text-sm md:text-lg">
+          <button
+            className=" bg-[#ffff00] rounded-xl px-2 py-2 text-center text-black cursor-pointer hover:bg-white hover:outline-1 hover:outline-black transition duration-150 ease-in-out text-sm md:text-lg"
+            onClick={() => {
+              route.push("/register");
+            }}
+          >
             Crear cuenta
           </button>
         </div>

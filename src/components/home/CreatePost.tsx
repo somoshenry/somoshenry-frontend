@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PostType } from '../interfaces/post';
+import { PostType } from '../../interfaces/interfaces.post/post';
 
 interface Props {
   onAddPost: (post: PostType) => void;
@@ -29,12 +29,9 @@ export default function CreatePost({ onAddPost }: Props) {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="¿Qué quieres compartir?"
-        className="w-full border p-2 rounded-lg resize-none"
+        className="bg-gray-800 w-full border p-2 rounded-lg resize-none"
       />
-      <button
-        type="submit"
-        className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg hover:bg-yellow-300 transition"
-      >
+      <button type="submit" className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg hover:bg-yellow-300 transition">
         Publicar
       </button>
     </form>

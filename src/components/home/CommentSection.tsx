@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CommentType } from '../interfaces/post';
+import { CommentType } from '../../interfaces/interfaces.post/post';
 
 interface Props {
   comments: CommentType[];
@@ -37,10 +37,7 @@ export default function CommentSection({ comments, onAddComment }: Props) {
           placeholder="Escribe un comentario..."
           className="flex-1 border p-1 rounded-lg text-sm text-black"
         />
-        <button
-          type="submit"
-          className="bg-[#ffff00] px-2 py-1 rounded-lg text-black hover:bg-yellow-300 transition"
-        >
+        <button type="submit" className="bg-[#ffff00] px-2 py-1 rounded-lg text-black hover:bg-yellow-300 transition">
           Comentar
         </button>
       </form>

@@ -1,29 +1,22 @@
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Nav from '../components/landing/LandingNavbar';
 
-import {Geist, Geist_Mono} from "next/font/google";
-import "./globals.css";
-import Nav from "../components/Nav";
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+export const metadata: Metadata = {
+  title: 'somosHenry - Conectá. Aprendé. Crecé.',
+  description: 'La comunidad educativa donde estudiantes y docentes se conectan, comparten conocimiento y construyen el futuro de la tecnología juntos.',
+};
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <Nav />
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+    <html lang="es">
+      <body className={`${inter.className} antialiased bg-white text-black dark:bg-black dark:text-white`}>
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }

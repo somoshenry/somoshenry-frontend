@@ -1,22 +1,27 @@
 import Link from 'next/link';
 
 export default function LandingFooter() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
-          <p className="text-gray-600 dark:text-gray-400">© 2025 somosHenry. Todos los derechos reservados.</p>
+    <footer className="bg-white border-t border-gray-200 py-8 px-6 md:px-12">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* Copyright */}
+          <p className="text-gray-600 text-sm">© {currentYear} somosHenry. Todos los derechos reservados.</p>
+
+          {/* Links */}
           <div className="flex gap-6">
-            <Link href="/soporte" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+            <Link href="/support" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               Soporte
             </Link>
-            <Link href="/terminos" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+            <Link href="/terms" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               Términos
             </Link>
-            <Link href="/privacidad" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+            <Link href="/privacy" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               Privacidad
             </Link>
-            <Link href="/sobre-henry" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+            <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               Sobre Henry
             </Link>
           </div>

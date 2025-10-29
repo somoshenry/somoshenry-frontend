@@ -1,17 +1,15 @@
-import React from 'react';
-
 interface FeatureCardProps {
-  icon: React.ReactNode;
+  icon: string;
   title: string;
   description: string;
 }
 
 export default function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
-      <div className="w-12 h-12 bg-[#FFFF00] rounded-md flex items-center justify-center mb-4">{icon}</div>
-      <h3 className="text-base font-semibold text-black dark:text-white mb-2">{title}</h3>
-      <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed">{description}</p>
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-neutral-900">
+      <div className="w-14 h-14 bg-[#FFFF00] rounded-lg flex items-center justify-center mb-5 shadow-md transform group-hover:scale-110 transition-all duration-300">{icon}</div>
+      <h3 className="text-base font-semibold">{title}</h3>
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{description}</p>
     </div>
   );
 }

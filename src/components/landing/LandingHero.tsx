@@ -1,13 +1,18 @@
 import Link from 'next/link';
 
-export default function LandingHero() {
+export function LandingHero() {
   return (
-    <section className="pt-28 pb-16 px-6 bg-white dark:bg-black">
+    <section className="py-20 px-6 md:px-12">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-5xl sm:text-6xl font-bold text-black dark:text-white mb-5">Conectá. Aprendé. Crecé.</h1>
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">La comunidad educativa donde estudiantes y docentes se conectan, comparten conocimiento y construyen el futuro de la tecnología juntos.</p>
-        <Link href="/join" className="inline-block bg-[#FFFF00] text-black px-8 py-3 rounded-md font-semibold text-base hover:bg-yellow-400">
-          Únete a la comunidad
+        {/* Main Headline */}
+        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">Conectá. Aprendé. Crecé.</h1>
+
+        {/* Subtitle */}
+        <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">La comunidad educativa donde estudiantes y docentes se conectan, comparten conocimiento y construyen el futuro de la tecnología juntos.</p>
+
+        {/* CTA Button */}
+        <Link href="/register" className="inline-block bg-[#FFFF00] text-black font-semibold px-8 py-4 rounded-lg text-lg hover:bg-yellow-500 transition-colors shadow-lg hover:shadow-xl">
+          Unirte a la comunidad
         </Link>
       </div>
     </section>

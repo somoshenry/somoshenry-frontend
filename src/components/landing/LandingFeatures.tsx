@@ -1,42 +1,56 @@
-import FeatureCard from '@/components/ui/FeatureCard';
+export function LandingFeatures() {
+  const features = [
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+      title: 'Aprendé en comunidad',
+      description: 'Compartí tus avances, resolvé dudas y colaborá con compañeros de todo el mundo.',
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      title: 'Conectá con docentes',
+      description: 'Accedé a clases en vivo, tutorías personalizadas y contenido exclusivo de expertos.',
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+      title: 'Impulsá tu carrera',
+      description: 'Construí tu portafolio, hacé networking y descubrí oportunidades laborales.',
+    },
+  ];
 
-export default function LandingFeatures() {
   return (
-    <section className="py-16 px-6 bg-gray-50 dark:bg-black">
+    <section className="py-16 px-6 md:px-12 bg-white">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-black dark:text-white mb-12">¿Qué hace especial a somosHenry?</h2>
+        {/* Section Title */}
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">¿Qué hace especial a somosHenry?</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FeatureCard
-            icon={
-              <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-              </svg>
-            }
-            title="Aprende en comunidad"
-            description="Comparte tus avances, resuelve dudas y colabora con compañeros de todo el mundo."
-          />
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <div key={index} className="text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
+              {/* Icon */}
+              <div className="w-16 h-16 bg-[#FFFF00] rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="text-black">{feature.icon}</div>
+              </div>
 
-          <FeatureCard
-            icon={
-              <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-              </svg>
-            }
-            title="Conecta con docentes"
-            description="Accede a clases en vivo, tutorías personalizadas y contenido exclusivo de expertos."
-          />
+              {/* Title */}
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
 
-          <FeatureCard
-            icon={
-              <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
-                <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
-              </svg>
-            }
-            title="Impulsa tu carrera"
-            description="Construye tu portafolio, haz networking y descubre oportunidades laborales."
-          />
+              {/* Description */}
+              <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

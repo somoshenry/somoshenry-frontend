@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
-import Nav from '../components/Nav';
+import Nav from '../components/landing/LandingNavbar';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'somosHenry - Conectá. Aprendé. Crecé.',
@@ -12,9 +12,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <Nav />
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+    <html lang="es">
+      <body className={`${inter.className} antialiased bg-white text-black dark:bg-black dark:text-white`}>
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }

@@ -9,7 +9,7 @@ import MobileMenuButton from "../sidebar/MobileMenuButton";
 import Sidebar from "../sidebar/Sidebar";
 
 export const Nav: React.FC = () => {
-  let isAutentic = true;
+  const isAutentic = false;
   const route = useRouter();
 
   const [theme, toggleTheme] = useDarkMode();

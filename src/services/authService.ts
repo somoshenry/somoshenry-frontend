@@ -2,6 +2,7 @@ import { api } from './api';
 import { User } from '../interfaces/context/auth';
 import { tokenStore } from './tokenStore';
 import { IRegisterFormProps } from '../interfaces/IRegisterFormProps';
+
 export async function register(userData: IRegisterFormProps) {
   // Preparamos los datos para el registro, excluyendo la confirmación de contraseña
   const registerData = {
@@ -9,20 +10,17 @@ export async function register(userData: IRegisterFormProps) {
     lastName: userData.lastName,
     email: userData.email,
     password: userData.password,
+    role: 'TEACHER', // o 'STUDENT' según tu necesidad
+    status: 'ACTIVE',
   };
 
   try {
-    // Esperamos: { accessToken, refreshToken, user }
+    // El backend devuelve: { message, user }
     const { data } = await api.post('/auth/register', registerData);
-    const { accessToken, refreshToken, user } = data as {
-      accessToken: string;
-      refreshToken: string;
+    const { user } = data as {
+      message: string;
       user: User;
     };
-
-    // Guardamos los tokens
-    tokenStore.setAccess(accessToken);
-    tokenStore.setRefresh(refreshToken);
 
     return { user, success: true };
   } catch (error) {
@@ -35,30 +33,35 @@ export async function register(userData: IRegisterFormProps) {
 }
 
 export async function login(email: string, password: string) {
-  // Esperamos: { accessToken, refreshToken, user }
-  const { data } = await api.post('/auth/login', { email, password });
-  const { accessToken, refreshToken, user } = data as {
-    accessToken: string;
-    refreshToken: string;
-    user: User;
-  };
-  tokenStore.setAccess(accessToken);
-  tokenStore.setRefresh(refreshToken);
-  return { user };
+  // El backend devuelve: { token } (JWT)
+  // No devuelve el usuario directamente, necesitarás llamar a /users/me después
+  const { data } = await api.post('/auth/login', {
+    username: email, // Según tu imagen, el backend espera "username"
+    password,
+  });
+
+  const { token } = data as { token: string };
+
+  // Guardamos el token como access token
+  tokenStore.setAccess(token);
+
+  // Obtenemos los datos del usuario
+  const userData = await me();
+
+  return { user: userData.user };
 }
 
-// se necesita un /auth/me, solicitar al backend que lo implemente
+// Endpoint /users/me para obtener datos del usuario autenticado
 export async function me() {
-  // Requiere Authorization; si expira, el interceptor hará refresh
-  const { data } = await api.get('/auth/me');
+  // Requiere Authorization Bearer token
+  const { data } = await api.get('/users/me');
   return data as { user: User };
 }
 
 export async function logout() {
-  // En este enfoque, solemos invalidar el refresh en backend
-  const refreshToken = tokenStore.getRefresh();
   try {
-    if (refreshToken) await api.post('/auth/logout', { refreshToken });
+    // Si tu backend tiene endpoint de logout, úsalo aquí
+    // await api.post('/auth/logout');
   } finally {
     tokenStore.clear();
   }

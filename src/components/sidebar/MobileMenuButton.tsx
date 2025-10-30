@@ -1,18 +1,16 @@
-// 'use client';
-// import { Menu, X } from 'lucide-react';
+"use client";
+import {Menu, X} from "lucide-react";
+import Sidebar from "./Sidebar";
 
-// interface Props {
-//   isOpen: boolean;
-//   toggle: () => void;
-// }
+interface Props {
+  isOpen: boolean;
+  toggle: () => void;
+}
 
-// export default function MobileMenuButton({ isOpen, toggle }: Props) {
-//   return (
-//     <button
-//       onClick={toggle}
-//       className="md:hidden fixed top-4 left-4 z-50 bg-gray-900 text-yellow-400 p-2 rounded-lg"
-//     >
-//       {isOpen ? <X size={24} /> : <Menu size={24} />}
-//     </button>
-//   );
-// }
+export default function MobileMenuButton({isOpen, toggle}: Props) {
+  return (
+    <button onClick={toggle} className=" text-yellow-400 p-2 rounded-lg mr-1 size-10 md:hidden cursor-pointer">
+      {isOpen ? <X size={28} /> : <Menu size={28} />}
+    </button>
+  );
+}

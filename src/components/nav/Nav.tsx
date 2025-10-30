@@ -19,13 +19,41 @@ export const Nav: React.FC = () => {
   const campanaSrc = theme === "dark" ? "/campanaD.png" : "/campanaC.png";
   const mensajeSrc = theme === "dark" ? "/mensajeD.png" : "/mensajeC.png";
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
+  const [isMenuOpen, setIsMenuOpen] = useState(() => {
+    // 1. Verifica si estamos en el navegador (lado del cliente)
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 768;
+    }
+
+    return false;
+  });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMenuOpen(true);
+      } else {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const toggleMenu = () => {
+    if (window.innerWidth < 768) {
+      setIsMenuOpen((prev) => !prev);
+    }
+  };
 
   return (
     <>
       <nav
-        className="flex bg-white text-black dark:bg-[#121212] dark:text-white px-1 shadow-[#ffff00] fixed top-0 left-0 h-16 z-50 
+        className="flex bg-white text-black dark:bg-gray-900 dark:text-white px-1 shadow-[#ffff00] fixed top-0 left-0 h-16 z-50 
         box-border w-full shadow-md/30 md:text-xl items-center justify-between p-1"
       >
         <MobileMenuButton isOpen={isMenuOpen} toggle={toggleMenu} />
@@ -100,7 +128,6 @@ export const Nav: React.FC = () => {
         )}
       </nav>
 
-      {/* 🔹 Sidebar separado del nav */}
       <Sidebar isOpen={isMenuOpen} toggle={toggleMenu} />
     </>
   );

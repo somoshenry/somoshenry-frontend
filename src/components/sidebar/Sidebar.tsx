@@ -28,20 +28,19 @@ export default function Sidebar({isOpen, toggle}: SidebarProps) {
         animate={{x: isOpen ? 0 : "-110%"}}
         transition={{type: "spring", stiffness: 260, damping: 25}}
         className={clsx(
-          "fixed left-0 z-40 w-64 bg-gray-900 text-white flex flex-col p-4",
+          "fixed left-0 z-40 w-64 dark:bg-gray-900 dark:text-white flex flex-col p-4 bg-white text-black",
           "top-16 h-[calc(100%-4rem)]",
           "shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]",
-          " md:translate-x-0 md:flex md:h-screen md:w-64 md:bg-gray-900 md:fixed md:left-0 md:z-40"
+          " md:translate-x-0 md:flex md:h-screen md:w-64 md:fixed md:left-0 md:z-40"
         )}
       >
-        <h1 className="text-2xl font-bold mb-8 text-yellow-400">Mi Red Social</h1>
         <nav className="space-y-2">
           {links.map((link) => (
             <Link
               key={link.name}
               href={link.href}
               className={clsx(
-                "flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-800 transition",
+                "flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-[#ffff00] transition",
                 pathname === link.href && "bg-gray-800 text-yellow-400"
               )}
               onClick={toggle}

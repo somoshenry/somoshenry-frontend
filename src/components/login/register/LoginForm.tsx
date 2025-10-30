@@ -16,8 +16,6 @@ const LoginForm = () => {
     password: "",
   });
 
-  const [theme, toggleTheme] = useDarkMode();
-
   const loginValidateSchema = Yup.object({
     email: Yup.string().required("El email es requerida"),
     password: Yup.string().required("La contraseña es requerida"),
@@ -70,7 +68,7 @@ const LoginForm = () => {
       className="shadow-Oscuro border-[#ffff00] mx-auto flex w-11/12 max-w-md min-w-[400px] flex-col bg-gray-100 items-center rounded-xl border-t-4  m-8 shadow-2xl "
       onSubmit={submitHandel}
     >
-      <div className=" flex flex-col justify-center text-center border-t-xl pt-10 w-full ">
+      <div className=" flex flex-col justify-center text-center rounded-t-xl pt-10 w-full ">
         <img src="/user.png" className="size-16 mx-auto block mb-2" />
         <p className="text-3xl text-black mb-2">Bienvenido de nuevo</p>
         <p className="text-md text-gray-700 mb-6">Inicia sesión en tu cuenta</p>

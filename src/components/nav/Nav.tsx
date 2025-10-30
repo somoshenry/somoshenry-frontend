@@ -22,7 +22,6 @@ export const Nav: React.FC = () => {
   const campanaSrc = theme === "dark" ? "/campanaD.png" : "/campanaC.png";
   const mensajeSrc = theme === "dark" ? "/mensajeD.png" : "/mensajeC.png";
 
-  // Lógica mejorada para el manejo del menú móvil
   const [isMenuOpen, setIsMenuOpen] = useState(() => {
     // Verifica si estamos en el navegador (lado del cliente)
     if (typeof window !== "undefined") {
@@ -88,7 +87,7 @@ export const Nav: React.FC = () => {
   // Mostrar un skeleton mientras carga
   if (!mounted || loading) {
     return (
-      <nav className="flex bg-white text-black dark:bg-[#121212] dark:text-white px-1 shadow-[#ffff00] fixed top-0 left-0 h-16 z-50 box-border w-full shadow-md/30 md:text-xl items-center justify-between p-1">
+      <nav className="flex bg-white text-black dark:bg-gray-900 dark:text-white px-1 shadow-[#ffff00] fixed top-0 left-0 h-16 z-50 box-border w-full shadow-md/30 md:text-xl items-center justify-between p-1">
         <div className="shrink-0 md:hidden">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />
         </div>
@@ -107,7 +106,7 @@ export const Nav: React.FC = () => {
 
   return (
     <>
-      <nav className="flex bg-white text-black dark:bg-[#121212] dark:text-white px-1 shadow-[#ffff00] fixed top-0 left-0 h-16 z-50 box-border w-full shadow-md/30 md:text-xl items-center justify-between p-1">
+      <nav className="flex bg-white text-black dark:bg-gray-900 dark:text-white px-1 shadow-[#ffff00] fixed top-0 left-0 h-16 z-50 box-border w-full shadow-md/30 md:text-xl items-center justify-between p-1">
         {/* Botón de menú móvil: SOLO visible en móvil cuando está autenticado */}
         {user && (
           <div className="md:hidden">
@@ -249,7 +248,7 @@ export const Nav: React.FC = () => {
               Iniciar sesión
             </button>
             <button
-              className="bg-[#ffff00] rounded-xl px-2 py-2 text-center text-black cursor-pointer hover:bg-white hover:outline hover:outline-1 hover:outline-black transition duration-150 ease-in-out text-sm md:text-lg whitespace-nowrap"
+              className="bg-[#ffff00] rounded-xl px-2 py-2 text-center text-black cursor-pointer hover:bg-white hover:outline-1 hover:outline-black transition duration-150 ease-in-out text-sm md:text-lg whitespace-nowrap"
               onClick={() => router.push("/register")}
             >
               Crear cuenta

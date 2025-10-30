@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
+import {Home, LayoutDashboard, Settings} from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,27 +14,31 @@ const Sidebar: React.FC<SidebarProps> = ({isOpen, toggle}) => {
   const pathname = usePathname();
 
   const menuItems = [
-    {name: "Inicio", icon: "🏠", href: "/dashboard"},
-    {name: "Mi Tablero", icon: "📊", href: "/dashboard/tablero"},
-    {name: "Configuración", icon: "⚙️", href: "/settings"},
+    {name: "Inicio", href: "/", icon: <Home size={20} />},
+    {name: "Mi Tablero", href: "/tablero", icon: <LayoutDashboard size={20} />},
+    {name: "Configuración", href: "/configuracion", icon: <Settings size={20} />},
   ];
 
   return (
     <>
       {/* Overlay para móvil */}
-      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={toggle} />}
+      {isOpen && <div className=" inset-0 bg-black bg-opacity-50 z-40 md:hidden sticky " onClick={toggle} />}
 
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-16 left-0 h-[calc(100vh-4rem)] bg-[#1a1a1a] text-white z-40 transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 w-64
-        `}
+    fixed top-16 left-0 h-[calc(100vh-4rem)] dark:bg-gray-900 text-white z-40 transition-transform duration-300 ease-in-out
+    ${
+      isOpen
+        ? "translate-x-0 shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]" // 💡 Aquí se aplica la sombra si está ABIERTO
+        : "-translate-x-full"
+    }
+    w-64
+    md:translate-x-0 
+    md:shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]  // 💡 Aquí se aplica SIEMPRE en md
+  `}
       >
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-[#ffff00] mb-8">Mi Red Social</h2>
-
           <nav>
             <ul className="space-y-4">
               {menuItems.map((item) => (

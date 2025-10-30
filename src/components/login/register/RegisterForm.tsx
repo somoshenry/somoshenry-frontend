@@ -7,8 +7,8 @@ import * as Yup from "yup";
 import {ValidationError} from "yup";
 import Swal from "sweetalert2";
 import ImputGeneric from "./ImputGeneric";
-import IRegisterFormProps from "../interfaces/IRegisterFormProps";
 import Link from "next/link";
+import IRegisterFormProps from "@/src/interfaces/IRegisterFormProps";
 
 export const RegisterForm = () => {
   const [error, setError] = useState<Record<string, string[]>>({});

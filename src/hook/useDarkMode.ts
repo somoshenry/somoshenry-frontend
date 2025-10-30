@@ -1,39 +1,49 @@
-"use client"; // Necesario para usar Hooks y estado en el cliente
+"use client";
 
 import {useState, useEffect} from "react";
 
 type Mode = "light" | "dark";
 
 export const useDarkMode = () => {
-  // Función para obtener la preferencia inicial del sistema operativo
+  // 1. FUNCIÓN DE INICIALIZACIÓN
   const getInitialTheme = (): Mode => {
-    // Comprueba si estamos en el navegador y si el SO prefiere 'dark'
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "light";
+    // A. Prioriza la preferencia guardada en localStorage
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark" || savedTheme === "light") {
+        return savedTheme as Mode;
+      }
     }
-    return "dark";
+
+    // B. Si no hay nada guardado, empieza por 'light' (Tu requisito)
+    return "light";
   };
 
-  // Inicializa el estado con la preferencia del sistema
+  // Inicializa el estado con la preferencia guardada o 'light'
   const [theme, setTheme] = useState<Mode>(getInitialTheme);
 
-  // Este efecto se ejecuta cada vez que 'theme' cambia
+  // 2. EFECTO PARA MANIPULAR EL DOM Y GUARDAR LA PREFERENCIA
   useEffect(() => {
-    const root = window.document.documentElement; // Accede a la etiqueta <html>
+    const root = window.document.documentElement;
 
-    // 1. Quita la clase opuesta para evitar conflictos
+    // 1. Quita la clase opuesta
     root.classList.remove(theme === "dark" ? "light" : "dark");
 
     // 2. Aplica la clase actual ('dark' o 'light')
     root.classList.add(theme);
-  }, [theme]); // La dependencia [theme] asegura que se ejecute al cambiar el tema
 
-  // Función para alternar el tema
+    // 3. Guarda el tema actual en localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme]);
+
+  // 3. FUNCIÓN PARA ALTERNAR
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"));
   };
 
-  // Devuelve el estado actual y la función para cambiarlo
   return [theme, toggleTheme] as const;
 };
+
 export default useDarkMode;

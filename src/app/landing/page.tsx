@@ -3,7 +3,7 @@ import { LandingFeatures } from '@/src/components/landing/LandingFeatures';
 import LandingCTA from '@/src/components/landing/LandingCTA';
 import LandingFooter from '@/src/components/landing/LandingFooter';
 import LandingPricing from '@/src/components/landing/LandingPrincing';
-import Nav from '@/src/components/Nav';
+import Nav from '@/src/components/nav/Nav';
 
 export default function LandingPage() {
   return (

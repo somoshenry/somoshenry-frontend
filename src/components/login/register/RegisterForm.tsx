@@ -10,7 +10,7 @@ import ImputGeneric from './ImputGeneric';
 import Link from 'next/link';
 import Image from 'next/image';
 import IRegisterFormProps from '@/src/interfaces/IRegisterFormProps';
-import { register } from '@/src/services/authService';
+import axios from 'axios';
 
 export const RegisterForm = () => {
   const [error, setError] = useState<Record<string, string[]>>({});
@@ -34,14 +34,9 @@ export const RegisterForm = () => {
 
   const registerValidateSchema = Yup.object({
     name: Yup.string().required('El nombre es requerido.').trim(),
-
-    // Corregido: 'apellido' no existe en 'registerstate', debe ser 'lastName'
     lastName: Yup.string().required('El apellido es requerido.').trim(),
-
     email: Yup.string().required('El email es requerido.').email('Debe ser un email valido'),
-
     password: Yup.string().required('La contraseña es requerida.'),
-
     confPassword: Yup.string()
       .required('La confirmación es requerida.')
       .oneOf([Yup.ref('password')], 'Las contraseñas no coinciden.'),
@@ -70,6 +65,22 @@ export const RegisterForm = () => {
       }
       return false;
     }
+  };
+
+  // Función para enviar la petición al backend
+  const postRegister = async () => {
+    const registerDto = {
+      email: registerstate.email,
+      password: registerstate.password,
+      name: registerstate.name,
+      lastName: registerstate.lastName,
+      role: 'TEACHER', // o 'STUDENT' NO SE QUE VA ACA ...
+      status: 'ACTIVE',
+    };
+
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, registerDto);
+
+    return response.data;
   };
 
   const changeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,21 +118,36 @@ export const RegisterForm = () => {
 
     if (valid) {
       try {
-        const { success } = await register(registerstate);
+        // Llama al backend
+        await postRegister();
 
-        if (success) {
-          await Swal.fire({
-            icon: 'success',
-            title: '¡Registro exitoso!',
-            text: 'Tu cuenta ha sido creada correctamente.',
-          });
-          router.push('/login');
-        }
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Registro exitoso!',
+          text: 'Tu cuenta ha sido creada correctamente.',
+        });
+
+        // Limpiar el formulario
+        setregisterstate({
+          name: '',
+          lastName: '',
+          email: '',
+          password: '',
+          confPassword: '',
+        });
+
+        router.push('/login');
       } catch (error) {
+        let errorMessage = 'Ocurrió un error durante el registro';
+
+        if (axios.isAxiosError(error)) {
+          errorMessage = error.response?.data?.message || errorMessage;
+        }
+
         await Swal.fire({
           icon: 'error',
           title: 'Error en el registro',
-          text: error instanceof Error ? error.message : 'Ocurrió un error durante el registro',
+          text: errorMessage,
         });
       }
     } else {
@@ -134,11 +160,7 @@ export const RegisterForm = () => {
   };
 
   return (
-    <form
-      className="shadow-Oscuro border-[#ffff00] mx-auto flex w-11/12 max-w-md min-w-[400px] flex-col bg-gray-100 items-center rounded-xl border-t-4 m-8 shadow-2xl"
-      onSubmit={submitHandel}
-      noValidate
-    >
+    <form className="shadow-Oscuro border-[#ffff00] mx-auto flex w-11/12 max-w-md min-w-[400px] flex-col bg-gray-100 items-center rounded-xl border-t-4 m-8 shadow-2xl" onSubmit={submitHandel} noValidate>
       <div className=" flex flex-col justify-center text-center pt-10 pb-4 w-full ">
         <Image src="/user.png" alt="Ícono de usuario" width={64} height={64} className="mx-auto block mb-2" />
         <p className="text-3xl text-black mb-2">Crear cuenta</p>
@@ -159,14 +181,7 @@ export const RegisterForm = () => {
             )}
           </div>
           <div className="flex flex-col w-1/2">
-            <ImputGeneric
-              id="lastName"
-              label="Apellido"
-              name="lastName"
-              value={registerstate.lastName}
-              onChange={changeHandler}
-              onBlur={handleBlur}
-            />
+            <ImputGeneric id="lastName" label="Apellido" name="lastName" value={registerstate.lastName} onChange={changeHandler} onBlur={handleBlur} />
 
             {Array.isArray(error.lastName) && error.lastName.length > 0 && (
               <div className="text-red-400 mb-3 space-y-1 text-sm w-full">
@@ -191,15 +206,7 @@ export const RegisterForm = () => {
           </div>
         )}
 
-        <ImputGeneric
-          id="password"
-          label="Contraseña"
-          type="password"
-          name="password"
-          value={registerstate.password}
-          onChange={changeHandler}
-          onBlur={handleBlur}
-        />
+        <ImputGeneric id="password" label="Contraseña" type="password" name="password" value={registerstate.password} onChange={changeHandler} onBlur={handleBlur} />
         {Array.isArray(error.password) && error.password.length > 0 && (
           <div className="text-red-400 mb-3 space-y-1 text-sm">
             {error.password.map((message, index) => (
@@ -210,15 +217,7 @@ export const RegisterForm = () => {
           </div>
         )}
 
-        <ImputGeneric
-          id="confPassword"
-          label="Confirmar contraseña"
-          type="password"
-          name="confPassword"
-          value={registerstate.confPassword}
-          onChange={changeHandler}
-          onBlur={handleBlur}
-        />
+        <ImputGeneric id="confPassword" label="Confirmar contraseña" type="password" name="confPassword" value={registerstate.confPassword} onChange={changeHandler} onBlur={handleBlur} />
         {error.confPassword && <div className="text-red-400 mb-3 space-y-1 text-sm">{error.confPassword}</div>}
 
         <ButtonForm name="Registrar" type="submit" />
@@ -227,8 +226,7 @@ export const RegisterForm = () => {
             ¿Ya tienes cuenta? Inicia sesión
           </Link>
         </div>
-      </div>{' '}
-      {/* Fin del div blanco */}
+      </div>
     </form>
   );
 };

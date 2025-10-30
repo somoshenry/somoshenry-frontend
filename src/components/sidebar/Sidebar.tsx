@@ -1,57 +1,67 @@
-"use client";
-import Link from "next/link";
-import {usePathname} from "next/navigation";
-import {Home, LayoutDashboard, Settings} from "lucide-react";
-import clsx from "clsx";
-import {motion} from "framer-motion";
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface SidebarProps {
   isOpen: boolean;
   toggle: () => void;
 }
 
-export default function Sidebar({isOpen, toggle}: SidebarProps) {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const pathname = usePathname();
 
-  const links = [
-    {name: "Inicio", href: "/", icon: <Home size={20} />},
-    {name: "Mi Tablero", href: "/tablero", icon: <LayoutDashboard size={20} />},
-    {name: "Configuración", href: "/configuracion", icon: <Settings size={20} />},
+  const menuItems = [
+    { name: 'Inicio', icon: '🏠', href: '/dashboard' },
+    { name: 'Mi Tablero', icon: '📊', href: '/dashboard/tablero' },
+    { name: 'Configuración', icon: '⚙️', href: '/settings' },
   ];
 
   return (
     <>
-      {isOpen && <div onClick={toggle} className=" inset-0 bg-black/60 z-50 md:hidden sticky top-0 "></div>}
+      {/* Overlay para móvil */}
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={toggle} />}
 
-      <motion.aside
-        initial={{x: "-110%"}}
-        animate={{x: isOpen ? 0 : "-110%"}}
-        transition={{type: "spring", stiffness: 260, damping: 25}}
-        className={clsx(
-          "fixed left-0 z-40 w-64 bg-gray-900 text-white flex flex-col p-4",
-          "top-16 h-[calc(100%-4rem)]",
-          "shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]",
-          " md:translate-x-0 md:flex md:h-screen md:w-64 md:bg-gray-900 md:fixed md:left-0 md:z-40"
-        )}
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed top-16 left-0 h-[calc(100vh-4rem)] bg-[#1a1a1a] text-white z-40 transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0 w-64
+        `}
       >
-        <h1 className="text-2xl font-bold mb-8 text-yellow-400">Mi Red Social</h1>
-        <nav className="space-y-2">
-          {links.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={clsx(
-                "flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-800 transition",
-                pathname === link.href && "bg-gray-800 text-yellow-400"
-              )}
-              onClick={toggle}
-            >
-              {link.icon}
-              <span>{link.name}</span>
-            </Link>
-          ))}
-        </nav>
-      </motion.aside>
+        <div className="p-6">
+          <h2 className="text-2xl font-bold text-[#ffff00] mb-8">Mi Red Social</h2>
+
+          <nav>
+            <ul className="space-y-4">
+              {menuItems.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      // Cerrar el menú en móvil al hacer clic
+                      if (window.innerWidth < 768) {
+                        toggle();
+                      }
+                    }}
+                    className={`
+                      flex items-center space-x-3 p-3 rounded-lg transition-colors
+                      ${pathname === item.href ? 'bg-[#ffff00] text-black font-semibold' : 'hover:bg-gray-800'}
+                    `}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </aside>
     </>
   );
-}
+};
+
+export default Sidebar;

@@ -17,16 +17,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // bootstrap de sesión: si hay tokens en LS, intenta /me
+  // Bootstrap de sesión: si hay token en LS, intenta /users/me
   useEffect(() => {
     (async () => {
       try {
-        if (tokenStore.getAccess() && tokenStore.getRefresh()) {
+        const token = tokenStore.getAccess();
+        if (token) {
           const { user } = await meSvc();
           setUser(user);
         }
-      } catch {
-        // tokens inválidos
+      } catch (error) {
+        // Token inválido
+        console.error('Error al validar sesión:', error);
         tokenStore.clear();
         setUser(null);
       } finally {
@@ -45,9 +47,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
 }

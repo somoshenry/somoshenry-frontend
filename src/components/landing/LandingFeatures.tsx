@@ -30,25 +30,25 @@ export function LandingFeatures() {
   ];
 
   return (
-    <section className="py-16 px-6 md:px-12 bg-white">
+    <section className="py-16 px-6 md:px-12 bg-white dark:bg-gray-900 transition-colors">
       <div className="max-w-6xl mx-auto">
         {/* Section Title */}
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">¿Qué hace especial a somosHenry?</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">¿Qué hace especial a somosHenry?</h2>
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
-              {/* Icon */}
-              <div className="w-16 h-16 bg-[#FFFF00] rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div key={index} className="text-center p-8 rounded-2xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:scale-105 hover:-translate-y-2">
+              {/* Icon - El amarillo se mantiene */}
+              <div className="w-16 h-16 bg-[#FFFF00] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-md">
                 <div className="text-black">{feature.icon}</div>
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{feature.title}</h3>
 
               {/* Description */}
-              <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

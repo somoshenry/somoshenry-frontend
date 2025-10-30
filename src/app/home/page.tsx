@@ -3,7 +3,6 @@ import { useState } from 'react';
 import CreatePost from '../../components/home/CreatePost';
 import PostList from '../../components/home/PostList';
 import { PostType } from '../../interfaces/interfaces.post/post';
-import Nav from '../../components/nav/Nav';
 
 export default function HomePage() {
   const [posts, setPosts] = useState<PostType[]>([
@@ -93,9 +92,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-       <Nav />
-      <main className="max-w-2xl mx-auto p-4 space-y-6">
+    // pt-16: compensa la navbar (h-16)
+    // md:ml-64: compensa la sidebar en desktop (w-64)
+    <div className="min-h-screen bg-white dark:bg-black pt-16 md:ml-64">
+      <main className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
         <CreatePost onAddPost={handleAddPost} />
         <PostList posts={posts} onUpdatePost={handleUpdatePost} />
       </main>

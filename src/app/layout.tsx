@@ -1,6 +1,8 @@
 import type {Metadata} from "next";
 import {Inter} from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "../context/AuthContext";
+import { PostProvider } from "../context/PostContext";
 
 const inter = Inter({subsets: ["latin"], display: "swap"});
 
@@ -14,7 +16,10 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="es" className="dark">
       <body className={`${inter.className} antialiased bg-white text-black dark:bg-black dark:text-white`}>
-        {children}
+       
+       <AuthProvider>
+          <PostProvider>{children}</PostProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -18,7 +18,7 @@ const LoginForm = () => {
 
   const [theme, toggleTheme] = useDarkMode();
 
-  let loginValidateSchema = Yup.object({
+  const loginValidateSchema = Yup.object({
     email: Yup.string().required("El email es requerida"),
     password: Yup.string().required("La contraseña es requerida"),
   });

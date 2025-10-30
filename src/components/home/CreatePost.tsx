@@ -16,6 +16,12 @@ export default function CreatePost({ onAddPost }: Props) {
       id: Date.now(),
       content,
       likes: 0,
+      createdAt: new Date().toISOString(),
+      user: {
+        id: 99, // Usuario actual (temporal, hasta conectar al back)
+        name: 'Usuario Actual',
+        avatar: '/avatars/default.jpg',
+      },
       comments: [],
     };
 
@@ -24,16 +30,23 @@ export default function CreatePost({ onAddPost }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-500 rounded-2xl shadow p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-gray-100 rounded-2xl shadow p-7"
+    >
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="¿Qué quieres compartir?"
-        className="bg-gray-800 w-full border p-2 rounded-lg resize-none"
+        className="bg-gray-200 text-black w-full border p-2 rounded-lg resize-none"
       />
-      <button type="submit" className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg hover:bg-yellow-300 transition">
+      <button
+        type="submit"
+        className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg hover:bg-yellow-300 transition"
+      >
         Publicar
       </button>
     </form>
   );
 }
+

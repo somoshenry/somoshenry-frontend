@@ -1,23 +1,25 @@
-"use client";
+'use client';
 
-import {useState} from "react";
-import ButtonForm from "./ButtonForm";
-import {useRouter} from "next/navigation";
-import * as Yup from "yup";
-import {ValidationError} from "yup";
-import Swal from "sweetalert2";
-import ImputGeneric from "./ImputGeneric";
-import Link from "next/link";
-import IRegisterFormProps from "@/src/interfaces/IRegisterFormProps";
+import { useState } from 'react';
+import ButtonForm from './ButtonForm';
+import { useRouter } from 'next/navigation';
+import * as Yup from 'yup';
+import { ValidationError } from 'yup';
+import Swal from 'sweetalert2';
+import ImputGeneric from './ImputGeneric';
+import Link from 'next/link';
+import Image from 'next/image';
+import IRegisterFormProps from '@/src/interfaces/IRegisterFormProps';
+import { register } from '@/src/services/authService';
 
 export const RegisterForm = () => {
   const [error, setError] = useState<Record<string, string[]>>({});
   const [registerstate, setregisterstate] = useState<IRegisterFormProps>({
-    name: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confPassword: "",
+    name: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confPassword: '',
   });
 
   const [touched, setTouched] = useState({
@@ -30,24 +32,24 @@ export const RegisterForm = () => {
 
   const router = useRouter();
 
-  let registerValidateSchema = Yup.object({
-    name: Yup.string().required("El nombre es requerido.").trim(),
+  const registerValidateSchema = Yup.object({
+    name: Yup.string().required('El nombre es requerido.').trim(),
 
     // Corregido: 'apellido' no existe en 'registerstate', debe ser 'lastName'
-    lastName: Yup.string().required("El apellido es requerido.").trim(),
+    lastName: Yup.string().required('El apellido es requerido.').trim(),
 
-    email: Yup.string().required("El email es requerido.").email("Debe ser un email valido"),
+    email: Yup.string().required('El email es requerido.').email('Debe ser un email valido'),
 
-    password: Yup.string().required("La contraseña es requerida."),
+    password: Yup.string().required('La contraseña es requerida.'),
 
     confPassword: Yup.string()
-      .required("La confirmación es requerida.")
-      .oneOf([Yup.ref("password")], "Las contraseñas no coinciden."),
+      .required('La confirmación es requerida.')
+      .oneOf([Yup.ref('password')], 'Las contraseñas no coinciden.'),
   });
 
   const validateRegister = async (data: IRegisterFormProps): Promise<boolean> => {
     try {
-      await registerValidateSchema.validate(data, {abortEarly: false});
+      await registerValidateSchema.validate(data, { abortEarly: false });
       setError({});
       return true;
     } catch (error) {
@@ -55,7 +57,7 @@ export const RegisterForm = () => {
         const newError: Record<string, string[]> = {};
 
         for (const err of error.inner) {
-          const fieldName = err.path || "unknown";
+          const fieldName = err.path || 'unknown';
           const fieldError = err.message;
 
           if (!newError[fieldName]) {
@@ -71,20 +73,20 @@ export const RegisterForm = () => {
   };
 
   const changeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {name, value} = e.target;
-    setregisterstate({...registerstate, [name]: value});
+    const { name, value } = e.target;
+    setregisterstate({ ...registerstate, [name]: value });
   };
 
   const handleBlur = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {name} = e.target;
+    const { name } = e.target;
 
-    setTouched({...touched, [name]: true});
+    setTouched({ ...touched, [name]: true });
 
     try {
       await registerValidateSchema.validateAt(name, registerstate);
 
       setError((prevErrors) => {
-        const newErrors = {...prevErrors};
+        const newErrors = { ...prevErrors };
         delete newErrors[name];
         return newErrors;
       });
@@ -104,10 +106,30 @@ export const RegisterForm = () => {
     const valid = await validateRegister(registerstate);
 
     if (valid) {
-      Swal.fire("Todo bien!");
-      router.push("/login");
+      try {
+        const { success } = await register(registerstate);
+
+        if (success) {
+          await Swal.fire({
+            icon: 'success',
+            title: '¡Registro exitoso!',
+            text: 'Tu cuenta ha sido creada correctamente.',
+          });
+          router.push('/login');
+        }
+      } catch (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error en el registro',
+          text: error instanceof Error ? error.message : 'Ocurrió un error durante el registro',
+        });
+      }
     } else {
-      Swal.fire("Todo mal!");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Validación fallida',
+        text: 'Por favor, revisa los campos del formulario',
+      });
     }
   };
 
@@ -118,21 +140,14 @@ export const RegisterForm = () => {
       noValidate
     >
       <div className=" flex flex-col justify-center text-center pt-10 pb-4 w-full ">
-        <img src="/user.png" className="size-16 mx-auto block mb-2" />
+        <Image src="/user.png" alt="Ícono de usuario" width={64} height={64} className="mx-auto block mb-2" />
         <p className="text-3xl text-black mb-2">Crear cuenta</p>
         <p className="text-md text-gray-700">Únete a somosHenry</p>
       </div>
       <div className="p-10 bg-white w-full rounded-xl">
         <div className="flex w-full space-x-4">
           <div className="flex flex-col w-1/2">
-            <ImputGeneric
-              id="name"
-              label="Nombre"
-              name="name"
-              value={registerstate.name}
-              onChange={changeHandler}
-              onBlur={handleBlur}
-            />
+            <ImputGeneric id="name" label="Nombre" name="name" value={registerstate.name} onChange={changeHandler} onBlur={handleBlur} />
             {Array.isArray(error.name) && error.name.length > 0 && (
               <div className="text-red-400 mb-3 space-y-1 text-sm w-full">
                 {error.name.map((message, index) => (
@@ -165,15 +180,7 @@ export const RegisterForm = () => {
           </div>
         </div>
 
-        <ImputGeneric
-          id="email"
-          label="Email"
-          type="email"
-          name="email"
-          value={registerstate.email}
-          onChange={changeHandler}
-          onBlur={handleBlur}
-        />
+        <ImputGeneric id="email" label="Email" type="email" name="email" value={registerstate.email} onChange={changeHandler} onBlur={handleBlur} />
         {Array.isArray(error.email) && error.email.length > 0 && (
           <div className="text-red-400 mb-3 space-y-1 text-sm flex items-start">
             {error.email.map((message, index) => (
@@ -220,7 +227,7 @@ export const RegisterForm = () => {
             ¿Ya tienes cuenta? Inicia sesión
           </Link>
         </div>
-      </div>{" "}
+      </div>{' '}
       {/* Fin del div blanco */}
     </form>
   );

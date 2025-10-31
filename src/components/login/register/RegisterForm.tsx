@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import ButtonForm from './ButtonForm';
-import { useRouter } from 'next/navigation';
-import * as Yup from 'yup';
-import { ValidationError } from 'yup';
-import Swal from 'sweetalert2';
-import ImputGeneric from './ImputGeneric';
-import Link from 'next/link';
-import Image from 'next/image';
-import IRegisterFormProps from '@/src/interfaces/IRegisterFormProps';
-import axios from 'axios';
+import {useState} from "react";
+import ButtonForm from "./ButtonForm";
+import {useRouter} from "next/navigation";
+import * as Yup from "yup";
+import {ValidationError} from "yup";
+import Swal from "sweetalert2";
+import ImputGeneric from "./ImputGeneric";
+import Link from "next/link";
+import Image from "next/image";
+import IRegisterFormProps from "@/src/interfaces/IRegisterFormProps";
+import axios from "axios";
 
 export const RegisterForm = () => {
   const [error, setError] = useState<Record<string, string[]>>({});
   const [registerstate, setregisterstate] = useState<IRegisterFormProps>({
-    name: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confPassword: '',
+    name: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confPassword: "",
   });
 
   const [touched, setTouched] = useState({
@@ -33,18 +33,18 @@ export const RegisterForm = () => {
   const router = useRouter();
 
   const registerValidateSchema = Yup.object({
-    name: Yup.string().required('El nombre es requerido.').trim(),
-    lastName: Yup.string().required('El apellido es requerido.').trim(),
-    email: Yup.string().required('El email es requerido.').email('Debe ser un email valido'),
-    password: Yup.string().required('La contraseña es requerida.'),
+    name: Yup.string().required("El nombre es requerido.").trim(),
+    lastName: Yup.string().required("El apellido es requerido.").trim(),
+    email: Yup.string().required("El email es requerido.").email("Debe ser un email valido"),
+    password: Yup.string().required("La contraseña es requerida."),
     confPassword: Yup.string()
-      .required('La confirmación es requerida.')
-      .oneOf([Yup.ref('password')], 'Las contraseñas no coinciden.'),
+      .required("La confirmación es requerida.")
+      .oneOf([Yup.ref("password")], "Las contraseñas no coinciden."),
   });
 
   const validateRegister = async (data: IRegisterFormProps): Promise<boolean> => {
     try {
-      await registerValidateSchema.validate(data, { abortEarly: false });
+      await registerValidateSchema.validate(data, {abortEarly: false});
       setError({});
       return true;
     } catch (error) {
@@ -52,7 +52,7 @@ export const RegisterForm = () => {
         const newError: Record<string, string[]> = {};
 
         for (const err of error.inner) {
-          const fieldName = err.path || 'unknown';
+          const fieldName = err.path || "unknown";
           const fieldError = err.message;
 
           if (!newError[fieldName]) {
@@ -74,8 +74,8 @@ export const RegisterForm = () => {
       password: registerstate.password,
       name: registerstate.name,
       lastName: registerstate.lastName,
-      role: 'TEACHER', // o 'STUDENT' NO SE QUE VA ACA ...
-      status: 'ACTIVE',
+      role: "TEACHER", // o 'STUDENT' NO SE QUE VA ACA ...
+      status: "ACTIVE",
     };
 
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, registerDto);
@@ -84,20 +84,20 @@ export const RegisterForm = () => {
   };
 
   const changeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setregisterstate({ ...registerstate, [name]: value });
+    const {name, value} = e.target;
+    setregisterstate({...registerstate, [name]: value});
   };
 
   const handleBlur = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name } = e.target;
+    const {name} = e.target;
 
-    setTouched({ ...touched, [name]: true });
+    setTouched({...touched, [name]: true});
 
     try {
       await registerValidateSchema.validateAt(name, registerstate);
 
       setError((prevErrors) => {
-        const newErrors = { ...prevErrors };
+        const newErrors = {...prevErrors};
         delete newErrors[name];
         return newErrors;
       });
@@ -122,54 +122,65 @@ export const RegisterForm = () => {
         await postRegister();
 
         await Swal.fire({
-          icon: 'success',
-          title: '¡Registro exitoso!',
-          text: 'Tu cuenta ha sido creada correctamente.',
+          icon: "success",
+          title: "¡Registro exitoso!",
+          text: "Tu cuenta ha sido creada correctamente.",
         });
 
         // Limpiar el formulario
         setregisterstate({
-          name: '',
-          lastName: '',
-          email: '',
-          password: '',
-          confPassword: '',
+          name: "",
+          lastName: "",
+          email: "",
+          password: "",
+          confPassword: "",
         });
 
-        router.push('/login');
+        router.push("/login");
       } catch (error) {
-        let errorMessage = 'Ocurrió un error durante el registro';
+        let errorMessage = "Ocurrió un error durante el registro";
 
         if (axios.isAxiosError(error)) {
           errorMessage = error.response?.data?.message || errorMessage;
         }
 
         await Swal.fire({
-          icon: 'error',
-          title: 'Error en el registro',
+          icon: "error",
+          title: "Error en el registro",
           text: errorMessage,
         });
       }
     } else {
       await Swal.fire({
-        icon: 'error',
-        title: 'Validación fallida',
-        text: 'Por favor, revisa los campos del formulario',
+        icon: "error",
+        title: "Validación fallida",
+        text: "Por favor, revisa los campos del formulario",
       });
     }
   };
 
   return (
-    <form className="shadow-Oscuro border-[#ffff00] mx-auto flex w-11/12 max-w-md min-w-[400px] flex-col bg-gray-100 items-center rounded-xl border-t-4 m-8 shadow-2xl" onSubmit={submitHandel} noValidate>
+    <form
+      className="shadow-Oscuro border-[#ffff00] mx-auto flex w-11/12 max-w-md min-w-[400px] flex-col dark:bg-gray-100 bg-gray-100 items-center rounded-xl border-t-4 m-8 shadow-2xl"
+      onSubmit={submitHandel}
+      noValidate
+    >
       <div className=" flex flex-col justify-center text-center pt-10 pb-4 w-full ">
         <Image src="/user.png" alt="Ícono de usuario" width={64} height={64} className="mx-auto block mb-2" />
         <p className="text-3xl text-black mb-2">Crear cuenta</p>
         <p className="text-md text-gray-700">Únete a somosHenry</p>
       </div>
-      <div className="p-10 bg-white w-full rounded-xl">
+      <div className="p-10 bg-white dark:bg-gray-200 w-full rounded-xl">
         <div className="flex w-full space-x-4">
           <div className="flex flex-col w-1/2">
-            <ImputGeneric id="name" label="Nombre" name="name" value={registerstate.name} onChange={changeHandler} onBlur={handleBlur} />
+            <ImputGeneric
+              id="name"
+              label="Nombre"
+              name="name"
+              value={registerstate.name}
+              onChange={changeHandler}
+              onBlur={handleBlur}
+            />
             {Array.isArray(error.name) && error.name.length > 0 && (
               <div className="text-red-400 mb-3 space-y-1 text-sm w-full">
                 {error.name.map((message, index) => (
@@ -181,7 +192,14 @@ export const RegisterForm = () => {
             )}
           </div>
           <div className="flex flex-col w-1/2">
-            <ImputGeneric id="lastName" label="Apellido" name="lastName" value={registerstate.lastName} onChange={changeHandler} onBlur={handleBlur} />
+            <ImputGeneric
+              id="lastName"
+              label="Apellido"
+              name="lastName"
+              value={registerstate.lastName}
+              onChange={changeHandler}
+              onBlur={handleBlur}
+            />
 
             {Array.isArray(error.lastName) && error.lastName.length > 0 && (
               <div className="text-red-400 mb-3 space-y-1 text-sm w-full">
@@ -195,7 +213,15 @@ export const RegisterForm = () => {
           </div>
         </div>
 
-        <ImputGeneric id="email" label="Email" type="email" name="email" value={registerstate.email} onChange={changeHandler} onBlur={handleBlur} />
+        <ImputGeneric
+          id="email"
+          label="Email"
+          type="email"
+          name="email"
+          value={registerstate.email}
+          onChange={changeHandler}
+          onBlur={handleBlur}
+        />
         {Array.isArray(error.email) && error.email.length > 0 && (
           <div className="text-red-400 mb-3 space-y-1 text-sm flex items-start">
             {error.email.map((message, index) => (
@@ -206,7 +232,15 @@ export const RegisterForm = () => {
           </div>
         )}
 
-        <ImputGeneric id="password" label="Contraseña" type="password" name="password" value={registerstate.password} onChange={changeHandler} onBlur={handleBlur} />
+        <ImputGeneric
+          id="password"
+          label="Contraseña"
+          type="password"
+          name="password"
+          value={registerstate.password}
+          onChange={changeHandler}
+          onBlur={handleBlur}
+        />
         {Array.isArray(error.password) && error.password.length > 0 && (
           <div className="text-red-400 mb-3 space-y-1 text-sm">
             {error.password.map((message, index) => (
@@ -217,7 +251,15 @@ export const RegisterForm = () => {
           </div>
         )}
 
-        <ImputGeneric id="confPassword" label="Confirmar contraseña" type="password" name="confPassword" value={registerstate.confPassword} onChange={changeHandler} onBlur={handleBlur} />
+        <ImputGeneric
+          id="confPassword"
+          label="Confirmar contraseña"
+          type="password"
+          name="confPassword"
+          value={registerstate.confPassword}
+          onChange={changeHandler}
+          onBlur={handleBlur}
+        />
         {error.confPassword && <div className="text-red-400 mb-3 space-y-1 text-sm">{error.confPassword}</div>}
 
         <ButtonForm name="Registrar" type="submit" />

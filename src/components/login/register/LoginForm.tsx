@@ -85,16 +85,16 @@ const LoginForm = () => {
 
   return (
     <form
-      className="shadow-Oscuro border-[#ffff00] mx-auto flex w-11/12 max-w-md min-w-[400px] flex-col bg-gray-100 items-center rounded-xl border-t-4 m-8 shadow-2xl"
+      className="shadow-Oscuro border-[#ffff00] mx-auto dark:bg-gray-100 flex w-11/12 max-w-md min-w-[400px] flex-col bg-gray-100 items-center rounded-xl border-t-4 m-8 shadow-2xl"
       onSubmit={submitHandel}
       noValidate
     >
       <div className="flex flex-col justify-center text-center border-t-xl pt-10 w-full">
         <img src="/user.png" className="size-16 mx-auto block mb-2" alt="Usuario" />
-        <p className="text-3xl text-black mb-2">Bienvenido de nuevo</p>
-        <p className="text-md text-gray-700 mb-6">Inicia sesión en tu cuenta</p>
+        <p className="text-3xl  text-black mb-2">Bienvenido de nuevo</p>
+        <p className="text-md text-gray-500 mb-6">Inicia sesión en tu cuenta</p>
       </div>
-      <div className="p-10 border rounded-xl bg-white w-full">
+      <div className="p-10  rounded-xl dark:bg-gray-200 bg-white w-full">
         <ImputGeneric
           id="email"
           label="Email"

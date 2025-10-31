@@ -103,7 +103,7 @@ const LoginForm = () => {
           name="email"
           onChange={changeHandler}
         />
-        {error.email && <div className="text-red-400 mb-3 text-sm">{error.email}</div>}
+        {error.email && <div className="text-red-400 mb-3 text-xs">*{error.email}</div>}
 
         <ImputGeneric
           id="password"
@@ -113,7 +113,7 @@ const LoginForm = () => {
           name="password"
           onChange={changeHandler}
         />
-        {error.password && <div className="text-red-400 mb-1 text-sm">{error.password}</div>}
+        {error.password && <div className="text-red-400 mb-1 text-xs">*{error.password}</div>}
 
         <div className="flex justify-end w-full mb-6">
           <Link

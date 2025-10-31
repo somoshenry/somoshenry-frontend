@@ -33,12 +33,31 @@ export const RegisterForm = () => {
   const router = useRouter();
 
   const registerValidateSchema = Yup.object({
-    name: Yup.string().required("El nombre es requerido.").trim(),
-    lastName: Yup.string().required("El apellido es requerido.").trim(),
-    email: Yup.string().required("El email es requerido.").email("Debe ser un email valido"),
-    password: Yup.string().required("La contraseña es requerida."),
+    name: Yup.string()
+      .required("El nombre es requerido.")
+      .min(2, "Debe contener al menos dos caracteres.")
+      .max(10, "Debe contener un máximo de 10 caracteres.")
+      .matches(/^\S+(?: \S+)*$/, "No se permiten espacios dobles, ni al inicio o final.")
+      .trim(),
+
+    lastName: Yup.string()
+      .required("El apellido es requerido.")
+      .min(2, "Debe contener al menos dos caracteres.")
+      .max(20, "Debe contener un máximo de 20 caracteres.")
+      .matches(/^\S+(?: \S+)*$/, "No se permiten espacios dobles, ni al inicio o final.")
+      .trim(),
+
+    email: Yup.string().required("El correo electrónico es requerido.").email("Debe ser un correo electrónico válido."),
+
+    password: Yup.string()
+      .required("La contraseña es requerida.")
+      .min(8, "Debe tener al menos 8 caracteres.")
+      .max(16, "Debe tener un máximo de 16 caracteres.")
+      .matches(/[A-Z]+/, "Debe contener al menos una mayúscula.")
+      .matches(/\d+/, "Debe tener al menos un número."),
+
     confPassword: Yup.string()
-      .required("La confirmación es requerida.")
+      .required("La confirmación de contraseña es requerida.")
       .oneOf([Yup.ref("password")], "Las contraseñas no coinciden."),
   });
 
@@ -147,7 +166,7 @@ export const RegisterForm = () => {
         await Swal.fire({
           icon: "error",
           title: "Error en el registro",
-          text: errorMessage,
+          //text: errorMessage,
         });
       }
     } else {
@@ -182,10 +201,10 @@ export const RegisterForm = () => {
               onBlur={handleBlur}
             />
             {Array.isArray(error.name) && error.name.length > 0 && (
-              <div className="text-red-400 mb-3 space-y-1 text-sm w-full">
+              <div className="text-red-400 mb-3 space-y-2 text-xs w-full">
                 {error.name.map((message, index) => (
                   <p key={index} className="flex items-start">
-                    {message}
+                    *{message}
                   </p>
                 ))}
               </div>
@@ -202,10 +221,10 @@ export const RegisterForm = () => {
             />
 
             {Array.isArray(error.lastName) && error.lastName.length > 0 && (
-              <div className="text-red-400 mb-3 space-y-1 text-sm w-full">
+              <div className="text-red-400 mb-3 text-xs space-y-2 w-full">
                 {error.lastName.map((message, index) => (
                   <p key={index} className="flex items-start">
-                    {message}
+                    *{message}
                   </p>
                 ))}
               </div>
@@ -223,10 +242,10 @@ export const RegisterForm = () => {
           onBlur={handleBlur}
         />
         {Array.isArray(error.email) && error.email.length > 0 && (
-          <div className="text-red-400 mb-3 space-y-1 text-sm flex items-start">
+          <div className="text-red-400 mb-3  text-xs flex space-y-2 items-start">
             {error.email.map((message, index) => (
               <p key={index} className="flex items-start">
-                {message}
+                *{message}
               </p>
             ))}
           </div>
@@ -242,10 +261,10 @@ export const RegisterForm = () => {
           onBlur={handleBlur}
         />
         {Array.isArray(error.password) && error.password.length > 0 && (
-          <div className="text-red-400 mb-3 space-y-1 text-sm">
+          <div className="text-red-400 mb-3 space-y-2 text-xs">
             {error.password.map((message, index) => (
               <p key={index} className="flex items-start">
-                {message}
+                *{message}
               </p>
             ))}
           </div>
@@ -260,7 +279,7 @@ export const RegisterForm = () => {
           onChange={changeHandler}
           onBlur={handleBlur}
         />
-        {error.confPassword && <div className="text-red-400 mb-3 space-y-1 text-sm">{error.confPassword}</div>}
+        {error.confPassword && <div className="text-red-400 mb-3 text-xs">{error.confPassword}</div>}
 
         <ButtonForm name="Registrar" type="submit" />
         <div className="flex justify-center w-full mt-4">

@@ -20,19 +20,17 @@ export function AlertProvider({ children }: { children: ReactNode }) {
 
   const showAlert = (message: string, type: AlertType = 'info') => {
     setAlert({ message, type });
-    setTimeout(() => setAlert(null), 3000); // desaparece a los 3 segundos
+    setTimeout(() => setAlert(null), 3000);
   };
 
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
-
-      {/* ALERTA FLOTANTE */}
       <AnimatePresence>
         {alert && (
           <motion.div
-            initial={{ opacity: 0, x: 100, y: 0 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ duration: 0.3 }}
             className={`fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium
@@ -54,8 +52,6 @@ export function AlertProvider({ children }: { children: ReactNode }) {
 
 export function useAlert() {
   const context = useContext(AlertContext);
-  if (!context) {
-    throw new Error('useAlert debe usarse dentro de un <AlertProvider>');
-  }
+  if (!context) throw new Error('useAlert debe usarse dentro de un <AlertProvider>');
   return context;
 }

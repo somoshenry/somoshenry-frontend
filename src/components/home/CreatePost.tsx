@@ -1,44 +1,46 @@
 'use client';
 import { useState, ChangeEvent, FormEvent } from 'react';
-import { PostType } from '../../interfaces/interfaces.post/post';
+import { usePost } from '@/context/PostContext';
+import { useAlert } from '@/context/AlertContext';
 
-interface Props {
-  onAddPost: (post: PostType) => void;
-}
-
-export default function CreatePost({ onAddPost }: Props) {
+export default function CreatePost() {
   const [content, setContent] = useState('');
   const [media, setMedia] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const { addPost } = usePost();
+  const { showAlert } = useAlert();
 
+  //  Manejo de archivos con validaciones
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setMedia(file);
-      setPreview(URL.createObjectURL(file)); // Muestra la vista previa
+    if (!file) return;
+
+    // Limita tamaño a 10 MB
+    if (file.size > 10 * 1024 * 1024) {
+      showAlert('El archivo es demasiado grande (máx 10MB) ❌', 'error');
+      return;
     }
+
+    // Acepta solo imágenes o videos
+    if (!file.type.startsWith('image') && !file.type.startsWith('video')) {
+      showAlert('Solo se permiten imágenes o videos 📷🎥', 'error');
+      return;
+    }
+
+    setMedia(file);
+    setPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  //  Envío del formulario
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && !media) return;
 
-    const newPost: PostType = {
-      id: Date.now(),
-      content,
-      likes: 0,
-      createdAt: new Date().toISOString(),
-      user: {
-        id: 99, // temporal
-        name: 'Usuario Actual',
-        avatar: '/avatars/default.jpg',
-      },
-      comments: [],
-      mediaUrl: preview || null, // URL de la imagen o video
-      mediaType: media?.type.startsWith('video') ? 'video' : 'image', // tipo
-    };
+    if (!content.trim() && !media) {
+      showAlert('Escribe algo o agrega un archivo antes de publicar 📝', 'error');
+      return;
+    }
 
-    onAddPost(newPost);
+    await addPost(content.trim(), media);
     setContent('');
     setMedia(null);
     setPreview(null);
@@ -56,7 +58,6 @@ export default function CreatePost({ onAddPost }: Props) {
         className="bg-gray-200 text-black w-full border p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-yellow-300"
       />
 
-      {/* Input de archivos */}
       <div className="flex items-center justify-between">
         <label
           htmlFor="file-upload"
@@ -77,11 +78,7 @@ export default function CreatePost({ onAddPost }: Props) {
       {preview && (
         <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-300">
           {media?.type.startsWith('video') ? (
-            <video
-              src={preview}
-              controls
-              className="w-full rounded-xl"
-            />
+            <video src={preview} controls className="w-full rounded-xl" />
           ) : (
             <img
               src={preview}
@@ -111,4 +108,3 @@ export default function CreatePost({ onAddPost }: Props) {
     </form>
   );
 }
-

@@ -1,103 +1,76 @@
 'use client';
-import LikeButton from './LikeButton';
+import { usePost } from '@/context/PostContext';
+import { PostType } from '@/interfaces/interfaces.post/post';
 import CommentSection from './CommentSection';
-import { PostType, CommentType } from '../../interfaces/interfaces.post/post';
+import LikeButton from './LikeButton';
 import Image from 'next/image';
 
-interface Props {
-  post: PostType;
-  onUpdatePost: (post: PostType) => void;
-}
+export default function Post({ post }: { post: PostType }) {
+  const { likePost, addComment, reportPost } = usePost();
 
-export default function Post({ post, onUpdatePost }: Props) {
-  // 👉 Dar like al post
-  const handleLike = () => {
-    const updated = { ...post, likes: post.likes + 1 };
-    onUpdatePost(updated);
-  };
-
-  // 👉 Agregar comentario
-  const handleAddComment = (comment: CommentType) => {
-    const updated = { ...post, comments: [...post.comments, comment] };
-    onUpdatePost(updated);
-  };
-
-  // 👉 Reportar post (por ahora simulado)
-  const handleReport = () => {
-    alert(`Post reportado (ID: ${post.id})`);
-    // ⚙️ luego reemplazar por showAlert('Reporte enviado', 'success') cuando integremos el AlertContext
-  };
-
-  // 👉 Formatear fecha
-  const date = new Date(post.createdAt).toLocaleString('es-AR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
+  // ⚙️ Garantizamos que los comentarios existan siempre
+  const safeComments = post.comments ?? [];
 
   return (
     <div className="bg-gray-100 rounded-2xl shadow-md p-5 text-black space-y-4">
-      {/* HEADER DEL POST */}
+      {/* Cabecera del post */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Image
             src={post.user?.avatar || '/avatars/default.jpg'}
-            alt={post.user?.name || 'Usuario'}
+            alt="avatar"
             width={48}
             height={48}
             className="rounded-full object-cover"
           />
           <div>
             <p className="font-semibold text-gray-900">{post.user?.name}</p>
-            <p className="text-xs text-gray-500">{date}</p>
+            <p className="text-xs text-gray-500">
+              {new Date(post.createdAt).toLocaleString('es-AR')}
+            </p>
           </div>
         </div>
-
-        {/* Botón de reportar */}
         <button
-          onClick={handleReport}
+          onClick={() => reportPost(post.id)}
           className="text-gray-400 hover:text-red-500 transition text-sm"
         >
-          🚩 Reportar
+           Reportar
         </button>
       </div>
 
-      {/* CONTENIDO DEL POST */}
+      {/* Contenido del post */}
       {post.content && (
         <p className="text-gray-800 whitespace-pre-line bg-gray-200 rounded-xl p-3">
           {post.content}
         </p>
       )}
 
-      {/* MULTIMEDIA (imagen o video) */}
+      {/* Multimedia */}
       {post.mediaUrl && (
         <div className="overflow-hidden rounded-xl border border-gray-300">
           {post.mediaType === 'video' ? (
-            <video
-              src={post.mediaUrl}
-              controls
-              className="w-full rounded-xl"
-            />
+            <video src={post.mediaUrl} controls className="w-full rounded-xl" />
           ) : (
             <img
               src={post.mediaUrl}
-              alt="Post media"
+              alt="media"
               className="w-full object-cover max-h-[400px] rounded-xl"
             />
           )}
         </div>
       )}
 
-      {/* BOTONES DE INTERACCIÓN */}
+      {/* Likes y contador de comentarios */}
       <div className="flex items-center justify-between mt-2">
-        <LikeButton likes={post.likes} onLike={handleLike} />
+        <LikeButton likes={post.likes || 0} onLike={() => likePost(post.id)} />
         <span className="text-xs text-gray-500">
-          {post.comments.length} comentarios
+          {safeComments.length} comentarios
         </span>
       </div>
 
-      {/* SECCIÓN DE COMENTARIOS */}
+      {/* Sección de comentarios */}
       <div className="border-t border-gray-300 pt-3">
-        <CommentSection comments={post.comments} onAddComment={handleAddComment} />
+        <CommentSection comments={safeComments} postId={post.id} />
       </div>
     </div>
   );

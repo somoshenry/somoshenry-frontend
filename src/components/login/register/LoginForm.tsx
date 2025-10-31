@@ -6,9 +6,9 @@ import {ValidationError} from "yup";
 import Swal from "sweetalert2";
 import ImputGeneric from "./ImputGeneric";
 import ButtonForm from "./ButtonForm";
-import ILoginFormProps from "@/src/interfaces/ILoginFormProps";
+import ILoginFormProps from "@/interfaces/ILoginFormProps";
 import {useRouter} from "next/navigation";
-import {useAuth} from "@/src/hook/useAuth";
+import {useAuth} from "@/hook/useAuth";
 
 const LoginForm = () => {
   const [error, setError] = useState<Record<string, string[]>>({});

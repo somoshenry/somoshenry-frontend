@@ -1,4 +1,4 @@
-import IButtonFormProps from "../interfaces/IButtonFrom";
+import IButtonFormProps from "../../../interfaces/IButtonFrom";
 
 // Las props se desestructuran así:
 const ButtonForm = ({name, ...restProps}: IButtonFormProps) => {

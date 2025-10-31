@@ -1,7 +1,7 @@
 "use client";
-import LoginForm from "@/src/components/login/register/LoginForm";
-import Nav from "@/src/components/nav/Nav";
-import Sidebar from "@/src/components/sidebar/Sidebar";
+import LoginForm from "@/components/login/register/LoginForm";
+import Nav from "@/components/nav/Nav";
+import Sidebar from "@/components/sidebar/Sidebar";
 
 // ... y llama al botón así:
 

@@ -1,8 +1,8 @@
-import {LandingHero} from "@/src/components/landing/LandingHero";
-import {LandingFeatures} from "@/src/components/landing/LandingFeatures";
-import LandingCTA from "@/src/components/landing/LandingCTA";
-import LandingFooter from "@/src/components/landing/LandingFooter";
-import LandingPricing from "@/src/components/landing/LandingPrincing";
+import {LandingHero} from "@/components/landing/LandingHero";
+import {LandingFeatures} from "@/components/landing/LandingFeatures";
+import LandingCTA from "@/components/landing/LandingCTA";
+import LandingFooter from "@/components/landing/LandingFooter";
+import LandingPricing from "@/components/landing/LandingPrincing";
 import Nav from "../components/nav/Nav";
 
 export default function LandingPage() {

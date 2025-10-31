@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 import ImputGeneric from './ImputGeneric';
 import Link from 'next/link';
 import Image from 'next/image';
-import IRegisterFormProps from '@/src/interfaces/IRegisterFormProps';
+import IRegisterFormProps from '@/interfaces/IRegisterFormProps';
 import axios from 'axios';
 
 export const RegisterForm = () => {

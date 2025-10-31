@@ -4,10 +4,10 @@ import Link from "next/link";
 import React, {useState, useEffect} from "react";
 import Barra from "./Barra";
 import {useRouter} from "next/navigation";
-import useDarkMode from "@/src/hook/useDarkMode";
+import useDarkMode from "@/hook/useDarkMode";
 import MobileMenuButton from "../sidebar/MobileMenuButton";
 import Sidebar from "../sidebar/Sidebar";
-import {useAuth} from "@/src/hook/useAuth";
+import {useAuth} from "@/hook/useAuth";
 
 export const Nav: React.FC = () => {
   const router = useRouter();

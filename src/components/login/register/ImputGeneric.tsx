@@ -1,4 +1,4 @@
-import IinputGenericProps from "@/src/interfaces/IImputGenericProps";
+import IinputGenericProps from "../../../interfaces/IImputGenericProps";
 
 export const ImputGeneric = ({id, label, ...props}: IinputGenericProps) => {
   return (

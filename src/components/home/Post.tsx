@@ -1,6 +1,7 @@
 'use client';
 import { usePost } from '@/context/PostContext';
 import { PostType } from '@/interfaces/interfaces.post/post';
+import { formatDateArgentina } from '@/utils/dateFormatter';
 import CommentSection from './CommentSection';
 import LikeButton from './LikeButton';
 import Image from 'next/image';
@@ -26,7 +27,7 @@ export default function Post({ post }: { post: PostType }) {
           <div>
             <p className="font-semibold text-gray-900">{post.user?.name}</p>
             <p className="text-xs text-gray-500">
-              {new Date(post.createdAt).toLocaleString('es-AR')}
+              {formatDateArgentina(post.createdAt)}
             </p>
           </div>
         </div>
@@ -46,13 +47,13 @@ export default function Post({ post }: { post: PostType }) {
       )}
 
       {/* Multimedia */}
-      {post.mediaUrl && (
+      {(post.mediaURL || post.mediaUrl) && (
         <div className="overflow-hidden rounded-xl border border-gray-300">
           {post.mediaType === 'video' ? (
-            <video src={post.mediaUrl} controls className="w-full rounded-xl" />
+            <video src={(post.mediaURL || post.mediaUrl) || undefined} controls className="w-full rounded-xl" />
           ) : (
             <img
-              src={post.mediaUrl}
+              src={(post.mediaURL || post.mediaUrl) || ''}
               alt="media"
               className="w-full object-cover max-h-[400px] rounded-xl"
             />

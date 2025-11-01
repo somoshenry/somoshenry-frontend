@@ -1,32 +1,33 @@
 // 🔹 Usuario
 export interface UserType {
-  id: number;
+  id: string;
   name: string;
   avatar: string; // Ruta o URL de la imagen
 }
 
 // 🔹 Comentario
 export interface CommentType {
-  id: number;
-  text: string;
+  id: string;
+  content: string; // El backend usa 'content'
   createdAt: string;
-  user: UserType;
+  author: UserType; // El backend usa 'author' en comentarios
 
   // Opcional: contador de likes en cada comentario
-  likes?: number;
+  likeCount: number; // El backend usa 'likeCount'
 }
 
 // 🔹 Post o Publicación
 export interface PostType {
-  id: number;
+  id: string;
   content: string;
   likes: number;
   createdAt: string;
-  user: UserType;
+  user: UserType; // El backend usa 'user' en posts
   comments: CommentType[];
 
   // Campos multimedia (opcional)
-  mediaUrl?: string | null; // URL de la imagen o video
+  mediaURL?: string | null; // El backend usa 'mediaURL'
+  mediaUrl?: string | null; // Compatibilidad
   mediaType?: 'image' | 'video' | null; // tipo de archivo
 }
 

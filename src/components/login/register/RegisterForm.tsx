@@ -17,6 +17,7 @@ export const RegisterForm = () => {
   const [registerstate, setregisterstate] = useState<IRegisterFormProps>({
     name: "",
     lastName: "",
+    username: "",
     email: "",
     password: "",
     confPassword: "",
@@ -90,6 +91,7 @@ export const RegisterForm = () => {
   const postRegister = async () => {
     const registerDto = {
       email: registerstate.email,
+      username: registerstate.email,
       password: registerstate.password,
       name: registerstate.name,
       lastName: registerstate.lastName,
@@ -149,6 +151,7 @@ export const RegisterForm = () => {
         // Limpiar el formulario
         setregisterstate({
           name: "",
+          username: "",
           lastName: "",
           email: "",
           password: "",
@@ -166,7 +169,7 @@ export const RegisterForm = () => {
         await Swal.fire({
           icon: "error",
           title: "Error en el registro",
-          //text: errorMessage,
+          text: errorMessage,
         });
       }
     } else {

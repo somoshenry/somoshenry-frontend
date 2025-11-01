@@ -36,7 +36,7 @@ export async function login(email: string, password: string) {
   // El backend devuelve: { token } (JWT)
   // No devuelve el usuario directamente, necesitarás llamar a /users/me después
   const { data } = await api.post('/auth/login', {
-    username: email, // Según tu imagen, el backend espera "username"
+    username: email, // Según tu implementación previa
     password,
   });
 

@@ -1,4 +1,4 @@
-// 🔹 Usuario
+// 🔹 Usuario en Post
 export interface UserType {
   id: string;
   name: string;
@@ -20,7 +20,9 @@ export interface CommentType {
 export interface PostType {
   id: string;
   content: string;
-  likes: number;
+  type: 'TEXT' | 'IMAGE' | 'VIDEO';
+  mediaURL?: string | null;
+  isInappropriate: boolean;
   createdAt: string;
   user: UserType; // El backend usa 'user' en posts
   comments: CommentType[];
@@ -30,8 +32,6 @@ export interface PostType {
   mediaUrl?: string | null; // Compatibilidad
   mediaType?: 'image' | 'video' | null; // tipo de archivo
 }
-
-
 
 // Cuando el backend devuelve un solo post
 export interface PostResponse {

@@ -90,6 +90,7 @@ export const RegisterForm = () => {
   const postRegister = async () => {
     const registerDto = {
       email: registerstate.email,
+      username: registerstate.name,
       password: registerstate.password,
       name: registerstate.name,
       lastName: registerstate.lastName,
@@ -166,7 +167,7 @@ export const RegisterForm = () => {
         await Swal.fire({
           icon: "error",
           title: "Error en el registro",
-          //text: errorMessage,
+          text: errorMessage,
         });
       }
     } else {

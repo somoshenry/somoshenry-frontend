@@ -7,6 +7,7 @@ export async function register(userData: IRegisterFormProps) {
   // Preparamos los datos para el registro, excluyendo la confirmación de contraseña
   const registerData = {
     name: userData.name,
+    username: userData.email,
     lastName: userData.lastName,
     email: userData.email,
     password: userData.password,
@@ -32,11 +33,11 @@ export async function register(userData: IRegisterFormProps) {
   }
 }
 
-export async function login(email: string, password: string) {
+export async function login(username: string, password: string) {
   // El backend devuelve: { token } (JWT)
   // No devuelve el usuario directamente, necesitarás llamar a /users/me después
   const {data} = await api.post("/auth/login", {
-    email, // Según tu imagen, el backend espera "username"
+    username, // Según tu imagen, el backend espera "username"
     password,
   });
 

@@ -17,6 +17,7 @@ export const RegisterForm = () => {
   const [registerstate, setregisterstate] = useState<IRegisterFormProps>({
     name: "",
     lastName: "",
+    username: "",
     email: "",
     password: "",
     confPassword: "",
@@ -90,7 +91,7 @@ export const RegisterForm = () => {
   const postRegister = async () => {
     const registerDto = {
       email: registerstate.email,
-      username: registerstate.name,
+      username: registerstate.email,
       password: registerstate.password,
       name: registerstate.name,
       lastName: registerstate.lastName,
@@ -150,6 +151,7 @@ export const RegisterForm = () => {
         // Limpiar el formulario
         setregisterstate({
           name: "",
+          username: "",
           lastName: "",
           email: "",
           password: "",

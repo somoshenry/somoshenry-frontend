@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({isOpen, toggle}) => {
       {/* Sidebar */}
       <aside
         className={`
-    fixed top-16 left-0 h-[calc(100vh-4rem)] dark:bg-gray-900 text-white z-40 transition-transform duration-300 ease-in-out
+    fixed top-16 left-0 h-[calc(100vh-4rem)] dark:bg-gray-900 text-black  bg-white dark:text-white z-40 transition-transform duration-300 ease-in-out
     ${
       isOpen
         ? "translate-x-0 shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]" // 💡 Aquí se aplica la sombra si está ABIERTO

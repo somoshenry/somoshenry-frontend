@@ -40,10 +40,8 @@ export async function getUserById(userId: string): Promise<User> {
 
 /**
  * Actualiza el perfil del usuario autenticado
- * NOTA: Este endpoint requiere que el backend tenga PATCH /users/me
- * Si no existe, pedirle al equipo de backend que lo agregue
  */
-export async function updateUserProfile(updates: { name?: string; lastName?: string; biography?: string; location?: string; website?: string; joinDate?: string; profilePicture?: string; coverPicture?: string }): Promise<User> {
+export async function updateUserProfile(updates: { name?: string; lastName?: string; biography?: string; location?: string; website?: string; profilePicture?: string; coverPicture?: string; username?: string }): Promise<User> {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
   return data.user;
 }

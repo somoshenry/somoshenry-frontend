@@ -17,7 +17,6 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
   const [biography, setBiography] = useState(user.biography || '');
   const [location, setLocation] = useState(user.location || '');
   const [website, setWebsite] = useState(user.website || '');
-  const [joinDate, setJoinDate] = useState(user.joinDate ? new Date(user.joinDate).toISOString().split('T')[0] : '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +34,6 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
         biography: biography || undefined,
         location: location || undefined,
         website: website || undefined,
-        joinDate: joinDate || undefined,
         profilePicture: profilePictureUrl || undefined,
         coverPicture: coverPictureUrl || undefined,
       });
@@ -44,14 +42,22 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
       onClose();
     } catch (err: any) {
       console.error('Error al actualizar el perfil:', err);
+      console.error('Response data:', err.response?.data);
+      console.error('Response status:', err.response?.status);
 
       // Mensaje de error más claro
       if (err.response?.status === 401) {
-        setError('⚠️ Error de permisos: No tienes autorización para actualizar el perfil.');
+        const errorMsg = err.response?.data?.message || 'No autorizado';
+        setError(`⚠️ Error 401: ${errorMsg}. Intenta cerrar sesión y volver a iniciar sesión.`);
       } else if (err.response?.status === 400) {
-        setError('Los campos enviados no son válidos. Verifica los datos ingresados.');
+        const errorMsg = err.response?.data?.message || 'Datos inválidos';
+        setError(`Error 400: ${errorMsg}`);
+      } else if (err.response?.status === 403) {
+        setError('⚠️ No tienes permisos para realizar esta acción.');
+      } else if (err.response) {
+        setError(`Error ${err.response.status}: ${err.response.data?.message || 'Error del servidor'}`);
       } else {
-        setError('No se pudo actualizar el perfil. Intenta nuevamente más tarde.');
+        setError('No se pudo conectar con el servidor. Verifica tu conexión.');
       }
     } finally {
       setLoading(false);
@@ -144,13 +150,6 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
             <label className="block text-sm font-semibold mb-2 dark:text-white">GitHub / Sitio Web</label>
             <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://github.com/tu-usuario" className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white" />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ingresa el link a tu perfil de GitHub o portafolio</p>
-          </div>
-
-          {/* Fecha de ingreso */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Fecha de ingreso</label>
-            <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white" />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Fecha en que te uniste a la plataforma</p>
           </div>
 
           {/* Botones */}

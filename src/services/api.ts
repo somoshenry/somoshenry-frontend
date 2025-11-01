@@ -1,14 +1,13 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { tokenStore } from './tokenStore';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export const api = axios.create({
   baseURL: BASE_URL,
- 
 });
 
-// Adjunta Authorization si hay accessToken 
+// Adjunta Authorization si hay accessToken
 api.interceptors.request.use((config) => {
   const token = tokenStore.getAccess();
   if (token) {
@@ -18,7 +17,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-//  Manejo de 401 + cola para refresh concurrente 
+//  Manejo de 401 + cola para refresh concurrente
 let refreshing = false;
 let queue: Array<(token: string | null) => void> = [];
 
@@ -36,6 +35,7 @@ api.interceptors.response.use(
     if (status !== 401 || original.retry) {
       return Promise.reject(error);
     }
+
     original.retry = true;
 
     // si ya estamos refrescando, esperar el resultado
@@ -64,11 +64,7 @@ api.interceptors.response.use(
       }
 
       // Llamada de refresh con refreshToken (en body)
-      const { data } = await axios.post(
-        `${BASE_URL}/auth/refresh`,
-        { refreshToken },
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken }, { headers: { 'Content-Type': 'application/json' } });
       const newAccess = data.accessToken as string | undefined;
       const newRefresh = data.refreshToken as string | undefined;
 

@@ -8,6 +8,7 @@ export default function ProfilePage() {
         <ProfileHeader />
         <ProfileTabs />
       </div>
+      {/* Debug removido */}
     </div>
   );
 }

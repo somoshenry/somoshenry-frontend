@@ -69,8 +69,8 @@ export default function ProfilePosts() {
           {/* Información del post */}
           <div className="flex items-center justify-between mt-3 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-4">
-              <span>❤️ {post.likes.length} Me gusta</span>
-              <span>💬 {post.comments.length} Comentarios</span>
+              <span>❤️ {post.likes?.length || 0} Me gusta</span>
+              <span>💬 {post.comments?.length || 0} Comentarios</span>
             </div>
             <span>{new Date(post.createdAt).toLocaleDateString('es-ES')}</span>
           </div>

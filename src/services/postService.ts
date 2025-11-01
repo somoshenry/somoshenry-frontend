@@ -31,8 +31,8 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   user: PostUser;
-  comments: PostComment[];
-  likes: PostLike[];
+  comments?: PostComment[];
+  likes?: PostLike[];
 }
 
 export interface PostsResponse {

@@ -61,8 +61,8 @@ export default function ProfileMedia() {
               {/* Overlay con información al hacer hover */}
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <div className="text-white text-center text-sm">
-                  <p>❤️ {post.likes.length}</p>
-                  <p>💬 {post.comments.length}</p>
+                  <p>❤️ {post.likes?.length || 0}</p>
+                  <p>💬 {post.comments?.length || 0}</p>
                 </div>
               </div>
             </div>
@@ -89,8 +89,8 @@ export default function ProfileMedia() {
               {/* Overlay con información */}
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <div className="text-white text-center text-sm">
-                  <p>❤️ {post.likes.length}</p>
-                  <p>💬 {post.comments.length}</p>
+                  <p>❤️ {post.likes?.length || 0}</p>
+                  <p>💬 {post.comments?.length || 0}</p>
                 </div>
               </div>
             </div>

@@ -113,7 +113,7 @@ export default function ProfileHeader() {
         {/* Additional Info */}
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2 flex-wrap justify-center">
           {user.location && <span>📍 {user.location}</span>}
-          <span>🎂 Se unió en {formatJoinDate()}</span>
+          <span>✅​ Miembro desde {formatJoinDate()}</span>
           <span>📧 {user.email}</span>
           {user.website && (
             <a href={user.website} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors">

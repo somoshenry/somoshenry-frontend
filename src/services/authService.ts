@@ -4,7 +4,6 @@ import {tokenStore} from "./tokenStore";
 import {IRegisterFormProps} from "../interfaces/IRegisterFormProps";
 
 export async function register(userData: IRegisterFormProps) {
-  // Preparamos los datos para el registro, excluyendo la confirmación de contraseña
   const registerData = {
     name: userData.name,
     username: userData.email,
@@ -25,7 +24,6 @@ export async function register(userData: IRegisterFormProps) {
 
     return {user, success: true};
   } catch (error) {
-    // Manejamos los errores del registro
     if (error instanceof Error) {
       throw error;
     }
@@ -65,5 +63,18 @@ export async function logout() {
     // await api.post('/auth/logout');
   } finally {
     tokenStore.clear();
+  }
+}
+
+export async function handleUrlTokenLogin(token: string) {
+  tokenStore.setAccess(token);
+
+  try {
+    const userData = await me();
+    return {user: userData.user};
+  } catch (error) {
+    console.error("Error al validar el token de URL:", error);
+    tokenStore.clear();
+    throw new Error("Token de URL inválido o expirado.");
   }
 }

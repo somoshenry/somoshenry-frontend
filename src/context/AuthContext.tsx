@@ -1,21 +1,29 @@
-'use client';
-import { createContext, useEffect, useState, ReactNode } from 'react';
-import { login as loginSvc, logout as logoutSvc, me as meSvc } from '../services/authService';
-import { tokenStore } from '../services/tokenStore';
-import { User } from '../interfaces/context/auth';
+"use client";
+import {createContext, useEffect, useState, ReactNode} from "react";
+import {
+  login as loginSvc,
+  logout as logoutSvc,
+  me as meSvc,
+  handleUrlTokenLogin as handleUrlTokenLoginSvc,
+} from "../services/authService";
+import {tokenStore} from "../services/tokenStore";
+import {User} from "../interfaces/context/auth";
+import {useRouter} from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  handleUrlTokenLogin: (token: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({children}: {children: ReactNode}) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Bootstrap de sesión: si hay token en LS, intenta /users/me
   useEffect(() => {
@@ -23,12 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = tokenStore.getAccess();
         if (token) {
-          const { user } = await meSvc();
+          const {user} = await meSvc();
           setUser(user);
         }
       } catch (error) {
-        // Token inválido
-        console.error('Error al validar sesión:', error);
+        console.error("Error al validar sesión:", error);
         tokenStore.clear();
         setUser(null);
       } finally {
@@ -38,14 +45,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { user } = await loginSvc(email, password);
+    const {user} = await loginSvc(email, password);
     setUser(user);
   };
 
   const logout = async () => {
     await logoutSvc();
     setUser(null);
+    router.push("/");
   };
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  const handleUrlTokenLogin = async (token: string) => {
+    const {user} = await handleUrlTokenLoginSvc(token);
+    setUser(user);
+  };
+  return (
+    <AuthContext.Provider value={{user, loading, login, logout, handleUrlTokenLogin}}>{children}</AuthContext.Provider>
+  );
 }

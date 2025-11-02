@@ -286,8 +286,17 @@ export const RegisterForm = () => {
 
         <ButtonForm name="Registrar" type="submit" />
         <div className="flex justify-center w-full mt-4">
-          <Link href="/login" className="text-blue-500 mb-6 text-sm duration-150 hover:scale-[1.02] hover:underline">
+          <Link href="/login" className="text-blue-500 mb-2 text-sm duration-150 hover:scale-[1.02] hover:underline">
             ¿Ya tienes cuenta? Inicia sesión
+          </Link>
+        </div>
+        <p className="text-center w-full text-black mb-2 text-xl"> - o -</p>
+        <div className="flex justify-center w-full">
+          <Link
+            className="bg-white w-full text-center hover:shadow-black text-md mt-2 transform cursor-pointer rounded-lg py-1 text-black shadow-sm/30 duration-300 hover:scale-105 hover:rainbow-shadow-hover"
+            href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+          >
+            Registrate con Google
           </Link>
         </div>
       </div>

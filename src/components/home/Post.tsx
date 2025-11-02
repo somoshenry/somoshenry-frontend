@@ -5,68 +5,64 @@ import { formatDateArgentina } from '@/utils/dateFormatter';
 import CommentSection from './CommentSection';
 import LikeButton from './LikeButton';
 import Image from 'next/image';
+import Avatar from '@/components/ui/Avatar';
 
-export default function Post({ post }: { post: PostType }) {
+// Helpers para resolver avatar y nombre sin cambiar estilos
+function getAvatar(u: any): string {
+  const allowed = new Set(['encrypted-tbn0.gstatic.com', 'lh3.googleusercontent.com', 'res.cloudinary.com', 'e0.pxfuel.com', 'localhost']);
+  const candidate: string = u?.profilePicture || u?.avatar || '';
+  try {
+    if (candidate.startsWith('http')) {
+      const url = new URL(candidate);
+      if (!allowed.has(url.hostname)) return '/avatars/default.svg';
+    }
+  } catch {}
+  return candidate || '/avatars/default.svg';
+}
+
+function getDisplayName(u: any): string {
+  if (!u) return 'Usuario';
+  if (u.name && u.lastName) return `${u.name} ${u.lastName}`;
+  if (u.name) return u.name;
+  if (u.email) return String(u.email).split('@')[0];
+  return 'Usuario';
+}
+
+export default function Post({ post, onUpdatePost }: { post: PostType; onUpdatePost?: (post: PostType) => void }) {
   const { likePost, addComment, reportPost } = usePost();
 
   // ⚙️ Garantizamos que los comentarios existan siempre
   const safeComments = post.comments ?? [];
+  // Algunos tipos no incluyen 'likes' explícitamente
+  const likesCount: number = (post as any).likes || 0;
+  const likedByMe: boolean = Boolean((post as any).likedByMe);
 
   return (
     <div className="bg-gray-100 rounded-2xl shadow-md p-5 text-black space-y-4">
       {/* Cabecera del post */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Image
-            src={post.user?.avatar || '/avatars/default.jpg'}
-            alt="avatar"
-            width={48}
-            height={48}
-            className="rounded-full object-cover"
-          />
+          <Avatar src={getAvatar(post.user)} alt={getDisplayName(post.user)} width={48} height={48} className="rounded-full object-cover" />
           <div>
-            <p className="font-semibold text-gray-900">{post.user?.name}</p>
-            <p className="text-xs text-gray-500">
-              {formatDateArgentina(post.createdAt)}
-            </p>
+            <p className="font-semibold text-gray-900">{getDisplayName(post.user)}</p>
+            <p className="text-xs text-gray-500">{formatDateArgentina(post.createdAt)}</p>
           </div>
         </div>
-        <button
-          onClick={() => reportPost(post.id)}
-          className="text-gray-400 hover:text-red-500 transition text-sm"
-        >
-           Reportar
+        <button onClick={() => reportPost(post.id)} className="text-gray-400 hover:text-red-500 transition text-sm">
+          Reportar
         </button>
       </div>
 
       {/* Contenido del post */}
-      {post.content && (
-        <p className="text-gray-800 whitespace-pre-line bg-gray-200 rounded-xl p-3">
-          {post.content}
-        </p>
-      )}
+      {post.content && <p className="text-gray-800 whitespace-pre-line bg-gray-200 rounded-xl p-3">{post.content}</p>}
 
       {/* Multimedia */}
-      {(post.mediaURL || post.mediaUrl) && (
-        <div className="overflow-hidden rounded-xl border border-gray-300">
-          {post.mediaType === 'video' ? (
-            <video src={(post.mediaURL || post.mediaUrl) || undefined} controls className="w-full rounded-xl" />
-          ) : (
-            <img
-              src={(post.mediaURL || post.mediaUrl) || ''}
-              alt="media"
-              className="w-full object-cover max-h-[400px] rounded-xl"
-            />
-          )}
-        </div>
-      )}
+      {(post.mediaURL || post.mediaUrl) && <div className="overflow-hidden rounded-xl border border-gray-300">{post.mediaType === 'video' ? <video src={post.mediaURL || post.mediaUrl || undefined} controls className="w-full rounded-xl" /> : <img src={post.mediaURL || post.mediaUrl || ''} alt="media" className="w-full object-cover max-h-[400px] rounded-xl" />}</div>}
 
       {/* Likes y contador de comentarios */}
       <div className="flex items-center justify-between mt-2">
-        <LikeButton likes={post.likes || 0} onLike={() => likePost(post.id)} />
-        <span className="text-xs text-gray-500">
-          {safeComments.length} comentarios
-        </span>
+        <LikeButton likes={likesCount} liked={likedByMe} onLike={() => likePost(post.id)} />
+        <span className="text-xs text-gray-500">{safeComments.length} comentarios</span>
       </div>
 
       {/* Sección de comentarios */}

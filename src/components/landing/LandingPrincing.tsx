@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import PricingCard from './LandingPrincingCard';
+import PricingCard, { PricingPlan } from './LandingPrincingCard';
 
 // Datos de los planes
-const pricingPlans = [
+const pricingPlans: PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',

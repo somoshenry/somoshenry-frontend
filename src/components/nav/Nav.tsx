@@ -199,7 +199,7 @@ export const Nav: React.FC = () => {
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        router.push('/settings');
+                        router.push('/config');
                       }}
                       className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                     >

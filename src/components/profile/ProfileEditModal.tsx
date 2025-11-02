@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { User, updateUserProfile } from '@/services/userService';
+import { api } from '@/services/api';
 
 interface ProfileEditModalProps {
   user: User;
@@ -10,8 +11,14 @@ interface ProfileEditModalProps {
 }
 
 export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: ProfileEditModalProps) {
-  const [profilePictureUrl, setProfilePictureUrl] = useState(user.profilePicture || '');
-  const [coverPictureUrl, setCoverPictureUrl] = useState(user.coverPicture || '');
+  // Archivos locales para subir
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [coverPictureFile, setCoverPictureFile] = useState<File | null>(null);
+
+  // Preview URLs
+  const [profilePicturePreview, setProfilePicturePreview] = useState(user.profilePicture || '');
+  const [coverPicturePreview, setCoverPicturePreview] = useState(user.coverPicture || '');
+
   const [name, setName] = useState(user.name || '');
   const [lastName, setLastName] = useState(user.lastName || '');
   const [biography, setBiography] = useState(user.biography || '');
@@ -22,24 +29,82 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
 
   if (!isOpen) return null;
 
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfilePictureFile(file);
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCoverPictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverPictureFile(file);
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverPicturePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const updatedUser = await updateUserProfile({
+      // 1. Actualizar datos del perfil
+      await updateUserProfile({
         name: name || undefined,
         lastName: lastName || undefined,
         biography: biography || undefined,
         location: location || undefined,
         website: website || undefined,
-        profilePicture: profilePictureUrl || undefined,
-        coverPicture: coverPictureUrl || undefined,
       });
 
-      onUpdate(updatedUser);
-      onClose();
+      // 2. Subir foto de perfil si hay un archivo nuevo
+      if (profilePictureFile) {
+        try {
+          const formData = new FormData();
+          formData.append('file', profilePictureFile);
+          await api.put(`/files/uploadProfilePicture/${user.id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch (uploadErr) {
+          console.warn('Error subiendo foto de perfil:', uploadErr);
+          setError('Se actualizó el perfil pero hubo un error al subir la foto de perfil');
+        }
+      }
+
+      // 3. Subir foto de portada si hay un archivo nuevo
+      if (coverPictureFile) {
+        try {
+          const formData = new FormData();
+          formData.append('file', coverPictureFile);
+          await api.put(`/files/uploadCoverPicture/${user.id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch (uploadErr) {
+          console.warn('Error subiendo foto de portada:', uploadErr);
+          setError('Se actualizó el perfil pero hubo un error al subir la foto de portada');
+        }
+      }
+
+      // 4. Recargar datos del usuario para tener las URLs actualizadas de Cloudinary
+      const { data: freshUser } = await api.get(`/users/${user.id}`);
+      onUpdate(freshUser);
+
+      if (!error) {
+        onClose();
+      }
     } catch (err: any) {
       console.error('Error al actualizar el perfil:', err);
       console.error('Response data:', err.response?.data);
@@ -81,42 +146,36 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
 
           {/* Foto de Portada */}
           <div>
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Portada (URL)</label>
-            <input type="url" value={coverPictureUrl} onChange={(e) => setCoverPictureUrl(e.target.value)} placeholder="https://ejemplo.com/mi-foto-portada.jpg" className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white" />
-            {coverPictureUrl && (
+            <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Portada</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleCoverPictureChange}
+              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
+            />
+            {coverPicturePreview && (
               <div className="mt-2 rounded-lg overflow-hidden h-32">
-                <img
-                  src={coverPictureUrl}
-                  alt="Preview portada"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '';
-                    setError('URL de imagen de portada inválida');
-                  }}
-                />
+                <img src={coverPicturePreview} alt="Preview portada" className="w-full h-full object-cover" />
               </div>
             )}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ingresa la URL de una imagen para tu portada</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sube una imagen desde tu computadora</p>
           </div>
 
           {/* Foto de Perfil */}
           <div>
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Perfil (URL)</label>
-            <input type="url" value={profilePictureUrl} onChange={(e) => setProfilePictureUrl(e.target.value)} placeholder="https://ejemplo.com/mi-foto-perfil.jpg" className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white" />
-            {profilePictureUrl && (
+            <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Perfil</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
+            />
+            {profilePicturePreview && (
               <div className="mt-2 flex justify-center">
-                <img
-                  src={profilePictureUrl}
-                  alt="Preview perfil"
-                  className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '';
-                    setError('URL de imagen de perfil inválida');
-                  }}
-                />
+                <img src={profilePicturePreview} alt="Preview perfil" className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600" />
               </div>
             )}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ingresa la URL de una imagen para tu perfil</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sube una imagen desde tu computadora</p>
           </div>
 
           {/* Nombre y Apellido */}

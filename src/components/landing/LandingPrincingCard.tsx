@@ -2,12 +2,12 @@
 
 import React from 'react';
 
-interface PricingFeature {
+export interface PricingFeature {
   text: string;
   limited?: boolean;
 }
 
-interface PricingPlan {
+export interface PricingPlan {
   id: string;
   name: string;
   badge: string;

@@ -2,6 +2,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { usePost } from '@/context/PostContext';
 import { useAlert } from '@/context/AlertContext';
+import VideoPlayer from './VideoPlayer';
 
 export default function CreatePost() {
   const [content, setContent] = useState('');
@@ -47,45 +48,20 @@ export default function CreatePost() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-gray-100 rounded-2xl shadow p-6 flex flex-col gap-3"
-    >
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="¿Qué quieres compartir?"
-        className="bg-gray-200 text-black w-full border p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-yellow-300"
-      />
+    <form onSubmit={handleSubmit} className="bg-gray-100 rounded-2xl shadow p-6 flex flex-col gap-3">
+      <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="¿Qué quieres compartir?" className="bg-gray-200 text-black w-full border p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-yellow-300" />
 
       <div className="flex items-center justify-between">
-        <label
-          htmlFor="file-upload"
-          className="cursor-pointer bg-[#ffff00] text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition"
-        >
+        <label htmlFor="file-upload" className="cursor-pointer bg-[#ffff00] text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition">
           📎 Agregar imagen o video
         </label>
-        <input
-          id="file-upload"
-          type="file"
-          accept="image/*,video/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input id="file-upload" type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
       </div>
 
       {/* Vista previa */}
       {preview && (
         <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-300">
-          {media?.type.startsWith('video') ? (
-            <video src={preview} controls className="w-full rounded-xl" />
-          ) : (
-            <img
-              src={preview}
-              alt="Vista previa"
-              className="w-full object-cover rounded-xl"
-            />
-          )}
+          {media?.type.startsWith('video') ? <VideoPlayer src={preview} className="w-full rounded-xl max-h-[400px]" autoPlay={false} /> : <img src={preview} alt="Vista previa" className="w-full object-cover rounded-xl" />}
           <button
             type="button"
             onClick={() => {
@@ -99,10 +75,7 @@ export default function CreatePost() {
         </div>
       )}
 
-      <button
-        type="submit"
-        className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition"
-      >
+      <button type="submit" className="mt-2 bg-[#ffff00] text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition">
         Publicar
       </button>
     </form>

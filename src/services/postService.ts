@@ -81,7 +81,17 @@ export async function getUserPosts(userId: string): Promise<Post[]> {
  */
 export async function getUserMediaPosts(userId: string): Promise<Post[]> {
   const userPosts = await getUserPosts(userId);
-  return userPosts.filter((post) => (post.type === 'IMAGE' || post.type === 'VIDEO') && post.mediaURL);
+  console.log('Todos los posts del usuario:', userPosts);
+  
+  // Filtra posts que tengan mediaURL o mediaUrl (compatibilidad con ambos campos)
+  const mediaPosts = userPosts.filter((post) => {
+    const hasMedia = post.mediaURL || (post as any).mediaUrl;
+    console.log(`Post ${post.id}: type=${post.type}, mediaURL=${post.mediaURL}, mediaUrl=${(post as any).mediaUrl}, hasMedia=${hasMedia}`);
+    return !!hasMedia; // Retorna cualquier post con media, independientemente del tipo
+  });
+  
+  console.log('Posts filtrados con media:', mediaPosts);
+  return mediaPosts;
 }
 
 /**

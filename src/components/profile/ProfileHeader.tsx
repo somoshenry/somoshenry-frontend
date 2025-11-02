@@ -122,13 +122,13 @@ export default function ProfileHeader() {
           )}
         </div>
 
-        {/* Stats */}
-        <div className="flex gap-4 mt-3 text-sm text-gray-500 dark:text-gray-400">
+        {/* Stats ACA HAY QUE PONER MAS ADELTANTE EL TEMA NIVEL DE SUB!!!! */}
+        {/* <div className="flex gap-4 mt-3 text-sm text-gray-500 dark:text-gray-400">
           <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
             Rol: <span className="font-semibold">{user.role}</span>
           </span>
           <span className={`px-3 py-1 rounded-full ${user.status === 'ACTIVE' ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800'}`}>{user.status === 'ACTIVE' ? '✓ Activo' : user.status}</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Modal de edición */}

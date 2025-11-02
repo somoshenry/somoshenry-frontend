@@ -1,9 +1,11 @@
 'use client';
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { api } from '../services/api';
+import { tokenStore } from '../services/tokenStore';
 import { PostType } from '../interfaces/interfaces.post/post';
 import { useAlert } from './AlertContext';
 import { string } from 'yup';
+import { useAuth } from '../hook/useAuth';
 
 interface PostContextType {
   posts: PostType[];
@@ -25,8 +27,56 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(false);
   const { showAlert } = useAlert();
+  const { user } = useAuth();
 
-  // Obtiene y normaliza los posts del backend
+  // Función auxiliar para normalizar un post
+  const normalizePost = async (p: PostType) => {
+    try {
+      // Intentar cargar comentarios del post
+      const commentsResponse = await api.get(`/post/${p.id}/comments`);
+      const rawComments = Array.isArray(commentsResponse.data) ? commentsResponse.data : [];
+      // Derivar likedByMe en comentarios si backend trae 'likes' con userId
+      const currentUserId = user?.id;
+      const comments = rawComments.map((c: any) => {
+        const liked = Array.isArray(c?.likes) && currentUserId ? c.likes.some((l: any) => l?.userId === currentUserId) : false;
+        return { ...c, likedByMe: liked };
+      });
+      // Obtener contador de likes del post desde el backend para que persista entre recargas
+      let likeCount = 0;
+      try {
+        const likesResp = await api.get(`/posts/${p.id}/likes`);
+        likeCount = Number(likesResp.data?.likeCount ?? 0);
+      } catch (e) {
+        likeCount = 0; // fallback silencioso
+      }
+
+      return {
+        ...p,
+        comments: comments,
+        likes: likeCount,
+        // Compatibilidad con ambos campos de media
+        mediaUrl: p.mediaURL || p.mediaUrl || null,
+        mediaURL: p.mediaURL || p.mediaUrl || null,
+        mediaType: p.mediaType || null,
+        // Estado local para resaltar el botón (no persiste):
+        likedByMe: false as unknown as boolean,
+      };
+    } catch (err) {
+      // Si falla la carga de comentarios, continuar con array vacío
+      console.warn(`No se pudieron cargar comentarios del post ${p.id}`, err);
+      return {
+        ...p,
+        comments: [],
+        likes: 0,
+        mediaUrl: p.mediaURL || p.mediaUrl || null,
+        mediaURL: p.mediaURL || p.mediaUrl || null,
+        mediaType: p.mediaType || null,
+        likedByMe: false as unknown as boolean,
+      };
+    }
+  };
+
+  // Obtiene y normaliza los posts del backend (con loading visible)
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
@@ -34,36 +84,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       const postsArray = Array.isArray(data) ? data : data.data;
 
       // Cargar comentarios para cada post
-      const postsWithComments = await Promise.all(
-        (postsArray || []).map(async (p: PostType) => {
-          try {
-            // Intentar cargar comentarios del post
-            const commentsResponse = await api.get(`/post/${p.id}/comments`);
-            const comments = Array.isArray(commentsResponse.data) ? commentsResponse.data : [];
-            
-            return {
-              ...p,
-              comments: comments,
-              likes: typeof p.likes === 'number' ? p.likes : 0,
-              // Compatibilidad con ambos campos de media
-              mediaUrl: p.mediaURL || p.mediaUrl || null,
-              mediaURL: p.mediaURL || p.mediaUrl || null,
-              mediaType: p.mediaType || null,
-            };
-          } catch (err) {
-            // Si falla la carga de comentarios, continuar con array vacío
-            console.warn(`No se pudieron cargar comentarios del post ${p.id}`, err);
-            return {
-              ...p,
-              comments: [],
-              likes: typeof p.likes === 'number' ? p.likes : 0,
-              mediaUrl: p.mediaURL || p.mediaUrl || null,
-              mediaURL: p.mediaURL || p.mediaUrl || null,
-              mediaType: p.mediaType || null,
-            };
-          }
-        })
-      );
+      const postsWithComments = await Promise.all((postsArray || []).map(normalizePost));
 
       setPosts(postsWithComments);
     } catch (err) {
@@ -73,46 +94,90 @@ export function PostProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, user?.id]);
+
+  // Polling silencioso: solo agrega posts nuevos sin mostrar loading ni afectar scroll
+  const fetchNewPosts = useCallback(async () => {
+    try {
+      const { data } = await api.get('/posts');
+      const postsArray = Array.isArray(data) ? data : data.data;
+
+      if (!postsArray || postsArray.length === 0) return;
+
+      // Identificar posts nuevos comparando IDs
+      const currentIds = new Set(posts.map((p) => p.id));
+      const newPosts = postsArray.filter((p: PostType) => !currentIds.has(p.id));
+
+      if (newPosts.length > 0) {
+        // Normalizar solo los posts nuevos
+        const normalizedNewPosts = await Promise.all(newPosts.map(normalizePost));
+
+        // Agregar los nuevos posts al inicio sin reemplazar los existentes
+        setPosts((prev) => [...normalizedNewPosts, ...prev]);
+      }
+    } catch (err) {
+      // Polling silencioso: no mostrar errores al usuario
+      console.warn('Error en polling silencioso:', err);
+    }
+  }, [posts, user?.id]);
 
   //  Crear un nuevo post
   const addPost = async (content: string, media?: File | null) => {
     try {
-      // CreatePostDto expects JSON: { content, type?, mediaURL? }
-      let mediaURL: string | undefined;
+      // 1. Crear el post (sin mediaURL)
+      const { data: postResp } = await api.post('/posts', { content });
+      const postId = postResp?.data?.id || postResp?.id;
+      let newPost = {
+        ...postResp.data,
+        comments: Array.isArray(postResp.data?.comments) ? postResp.data.comments : [],
+        likes: typeof postResp.data?.likes === 'number' ? postResp.data.likes : 0,
+        mediaUrl: postResp.data?.mediaURL ?? postResp.data?.mediaUrl ?? null,
+        mediaURL: postResp.data?.mediaURL ?? postResp.data?.mediaUrl ?? null,
+        mediaType: postResp.data?.mediaType ?? null,
+      };
 
-      if (media) {
+      // 2. Si hay archivo, subirlo a /files/uploadPostFile/:postId
+      if (media && postId) {
         try {
-          // Intentamos subir el archivo a /uploads si existe (backend puede implementarlo)
-          const uploadForm = new FormData();
-          uploadForm.append('file', media);
-          const uploadResp = await api.post('/uploads', uploadForm, {
+          const form = new FormData();
+          form.append('file', media);
+          const uploadResp = await api.put(`/files/uploadPostFile/${postId}`, form, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
-          mediaURL = uploadResp.data?.url ?? uploadResp.data;
-        } catch (uploadErr: unknown) {
-          // Si /uploads no existe o falla, avisamos y continuamos sin media
-          console.warn('Upload failed or /uploads missing, creating post without media', uploadErr);
-          showAlert('No se pudo subir el archivo; la publicación se creará sin multimedia', 'info');
-          mediaURL = undefined;
+          // El backend actualiza el post y devuelve el post actualizado
+          const updated = uploadResp.data;
+          newPost = {
+            ...newPost,
+            mediaUrl: updated.mediaURL ?? updated.mediaUrl ?? null,
+            mediaURL: updated.mediaURL ?? updated.mediaUrl ?? null,
+            mediaType: updated.mediaType ?? null,
+            user: updated.user || newPost.user, // Asegura usuario correcto si backend lo retorna
+          };
+        } catch (uploadErr) {
+          console.warn('Error subiendo archivo a Cloudinary:', uploadErr);
+          showAlert('No se pudo subir el archivo, pero el post se creó igual', 'info');
         }
       }
 
-      const payload: Record<string, unknown> = { content };
-      if (mediaURL) payload.mediaURL = mediaURL;
+      // Refresca el post desde el backend para asegurar datos completos (usuario, media, etc)
+      let finalPost = newPost;
+      try {
+        if (postId) {
+          const { data: fresh } = await api.get(`/posts/${postId}`);
+          finalPost = {
+            ...fresh,
+            comments: Array.isArray(fresh?.comments) ? fresh.comments : [],
+            likes: typeof fresh?.likes === 'number' ? fresh.likes : 0,
+            mediaUrl: fresh?.mediaURL ?? fresh?.mediaUrl ?? null,
+            mediaURL: fresh?.mediaURL ?? fresh?.mediaUrl ?? null,
+            mediaType: fresh?.mediaType ?? null,
+          };
+        }
+      } catch (refreshErr) {
+        // Si falla, usa el newPost
+      }
 
-      const { data } = await api.post('/posts', payload);
-
-      const newPost = {
-        ...data,
-        comments: Array.isArray(data.comments) ? data.comments : [],
-        likes: typeof data.likes === 'number' ? data.likes : 0,
-        mediaUrl: data.mediaURL ?? data.mediaUrl ?? null,
-        mediaURL: data.mediaURL ?? data.mediaUrl ?? null,
-        mediaType: data.mediaType ?? null,
-      };
-
-      setPosts((prev) => [newPost, ...prev]);
+      setPosts((prev) => [finalPost, ...prev]);
       showAlert('Publicación creada correctamente ✅', 'success');
     } catch (err) {
       console.error('Error al crear post:', err);
@@ -123,47 +188,68 @@ export function PostProvider({ children }: { children: ReactNode }) {
   //  Like en un post
   const likePost = async (id: string) => {
     try {
-      // Optimistic update locally
-      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes: (p.likes || 0) + 1 } : p)));
+      // Requiere autenticación
+      const token = tokenStore.getAccess();
+      if (!token) {
+        showAlert('Debes iniciar sesión para dar like', 'info');
+        return;
+      }
 
-      // Try to call backend like endpoint if it exists. If 404, ignore (backend may not implement likes).
+      // Intentar dar like primero
       try {
         const { data } = await api.post(`/posts/${id}/like`);
-        const serverLikes = typeof data?.likes === 'number' ? data.likes : undefined;
-        if (typeof serverLikes === 'number') {
-          setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes: serverLikes } : p)));
+        let serverCount = Number(data?.likeCount ?? data?.likes ?? 0);
+        // Si el backend no devolvió el contador, lo consultamos
+        if (!Number.isFinite(serverCount) || serverCount < 0) {
+          try {
+            const { data: c } = await api.get(`/posts/${id}/likes`);
+            serverCount = Number(c?.likeCount ?? 0);
+          } catch {}
         }
-      } catch (innerErr: unknown) {
-        // If endpoint missing or error, just keep optimistic value and notify user
-        type ErrWithResponse = { response?: { status?: number } };
-        const status = typeof innerErr === 'object' && innerErr !== null ? (innerErr as ErrWithResponse).response?.status : undefined;
-        if (status === 404) {
-          console.info('/posts/:id/like not implemented in backend; skipping server sync');
-        } else {
-          console.warn('Error calling like endpoint:', innerErr);
-          showAlert('No se pudo sincronizar like con el servidor', 'info');
+        setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes: serverCount, likedByMe: true as unknown as boolean } : p)));
+        return;
+      } catch (err: any) {
+        // Si ya tenía like, intentamos hacer unlike como toggle
+        const msg = err?.response?.data?.message || err?.message || '';
+        const status = err?.response?.status;
+
+        // Intento de fallback a unlike si: ya estaba likeado, o error 409/400, o incluso 500 por validación interna
+        const shouldTryUnlike = String(msg).toLowerCase().includes('ya diste like') || status === 409 || status === 400 || status === 500;
+
+        if (shouldTryUnlike) {
+          try {
+            const { data } = await api.delete(`/posts/${id}/unlike`);
+            let serverCount = Number(data?.likeCount ?? 0);
+            if (!Number.isFinite(serverCount) || serverCount < 0) {
+              try {
+                const { data: c } = await api.get(`/posts/${id}/likes`);
+                serverCount = Number(c?.likeCount ?? 0);
+              } catch {}
+            }
+            setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes: serverCount, likedByMe: false as unknown as boolean } : p)));
+            return;
+          } catch (unlikeErr) {
+            // seguimos abajo al handler genérico
+            throw unlikeErr;
+          }
         }
+
+        // Otros errores
+        throw err;
       }
     } catch (err) {
-      console.error('Error al dar like:', err);
-      showAlert('Error al dar like ❌', 'error');
+      console.error('Error al actualizar like del post:', err);
+      showAlert('No se pudo actualizar el like ❌', 'error');
     }
   };
 
-  
   const addComment = async (postId: string, text: string) => {
     try {
       const { data } = await api.post(`/comment/post/${postId}`, { content: text });
 
       const comment = data;
 
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === postId
-            ? { ...p, comments: [...(p.comments || []), comment] }
-            : p
-        )
-      );
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, comments: [...(p.comments || []), comment] } : p)));
 
       showAlert('Comentario agregado correctamente ✅', 'success');
     } catch (err) {
@@ -172,26 +258,33 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
   //  Like a comentario
   const likeComment = async (commentId: string) => {
     try {
-      await api.post(`/comment/${commentId}/like`);
-      
-      // Actualizar localmente el contador de likes del comentario
+      const { data } = await api.post(`/comment/${commentId}/like`);
+      const message: string = data?.message ?? '';
+      const delta = String(message).toLowerCase().includes('removed') || String(message).toLowerCase().includes('quit') ? -1 : 1;
+
+      // Actualizar localmente el contador de likes del comentario (+1 o -1)
       setPosts((prev) =>
         prev.map((p) => ({
           ...p,
-          comments: p.comments?.map((c) =>
-            c.id === commentId ? { ...c, likeCount: (c.likeCount || 0) + 1 } : c
-          ) || [],
+          comments: (p.comments || []).map((c) =>
+            c.id === commentId
+              ? {
+                  ...c,
+                  likeCount: Math.max(0, (c.likeCount || 0) + delta),
+                  likedByMe: delta > 0,
+                }
+              : c
+          ),
         }))
       );
-      
-      showAlert('Like agregado al comentario ✅', 'success');
+
+      showAlert(delta > 0 ? 'Like agregado al comentario ✅' : 'Like quitado del comentario ✅', 'success');
     } catch (err) {
-      console.error('Error al likear comentario:', err);
-      showAlert('Error al dar like al comentario ❌', 'error');
+      console.error('Error al actualizar like del comentario:', err);
+      showAlert('Error al actualizar like del comentario ❌', 'error');
     }
   };
 
@@ -206,12 +299,19 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  //  Carga inicial
+  //  Carga inicial y polling silencioso cada 30 segundos
   useEffect(() => {
     if (didLoadInitialPosts) return;
     didLoadInitialPosts = true;
     fetchPosts();
-  }, [fetchPosts]);
+
+    // Polling silencioso cada 30 segundos: solo agrega posts nuevos
+    const interval = setInterval(() => {
+      fetchNewPosts();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchPosts, fetchNewPosts]);
 
   return (
     <PostContext.Provider

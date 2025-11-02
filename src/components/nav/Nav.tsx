@@ -8,12 +8,16 @@ import useDarkMode from '@/hook/useDarkMode';
 import MobileMenuButton from '../sidebar/MobileMenuButton';
 import Sidebar from '../sidebar/Sidebar';
 import { useAuth } from '@/hook/useAuth';
+import { useNotifications } from '@/context/NotificationContext';
+import NotificationDropdown from './NotificationDropdown';
 
 export const Nav: React.FC = () => {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const { unreadCount, fetchNotifications } = useNotifications();
   const [mounted, setMounted] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const [theme, toggleTheme] = useDarkMode();
   const iconSrc = theme === 'dark' ? '/modoClaro.png' : '/modoD.png';
@@ -64,16 +68,19 @@ export const Nav: React.FC = () => {
       if (!target.closest('.user-menu-container')) {
         setShowUserMenu(false);
       }
+      if (!target.closest('.notification-container')) {
+        setShowNotifications(false);
+      }
     };
 
-    if (showUserMenu) {
+    if (showUserMenu || showNotifications) {
       document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [showUserMenu]);
+  }, [showUserMenu, showNotifications]);
 
   const handleLogout = async () => {
     try {
@@ -138,9 +145,20 @@ export const Nav: React.FC = () => {
               <li>
                 <img src={iconSrc} alt="toggle-theme" className="size-6 md:size-10 cursor-pointer mx-1 md:mr-4 hover:animate-pulse hover:scale-105" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'} />
               </li>
-              <li className="relative md:mr-5 mr-2">
-                <img src={campanaSrc} alt="notificaciones" className="size-5 md:size-8 cursor-pointer hover:scale-105" title="Notificaciones" />
-                <span className="bg-red-500 text-white absolute -top-1 -right-1 rounded-full text-[10px] px-1 font-bold md:px-2 md:py-0.5 md:text-xs">1</span>
+              <li className="relative md:mr-5 mr-2 notification-container">
+                <img
+                  src={campanaSrc}
+                  alt="notificaciones"
+                  className="size-5 md:size-8 cursor-pointer hover:scale-105"
+                  title="Notificaciones"
+                  onClick={() => {
+                    const next = !showNotifications;
+                    setShowNotifications(next);
+                    if (next) fetchNotifications();
+                  }}
+                />
+                {unreadCount > 0 && <span className="bg-red-500 text-white absolute -top-1 -right-1 rounded-full text-[10px] px-1 font-bold md:px-2 md:py-0.5 md:text-xs">{unreadCount}</span>}
+                <NotificationDropdown isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
               </li>
               <li className="relative md:mr-2">
                 <img src={mensajeSrc} alt="mensajes" className="size-5 md:size-8 cursor-pointer hover:scale-105" title="Mensajes" />
@@ -150,7 +168,7 @@ export const Nav: React.FC = () => {
 
             {/* Dropdown de usuario con toggle en móvil */}
             <div className="relative user-menu-container">
-              <img src="/user.png" alt="usuario" className="size-7 bg-[#ffff00] md:size-12 ml-2 cursor-pointer hover:ring-2 hover:ring-black dark:hover:ring-white rounded-full" title="Mi cuenta" onClick={() => setShowUserMenu(!showUserMenu)} />
+              <img src={user.profilePicture || '/user.png'} alt="usuario" className="size-7 bg-[#ffff00] md:size-12 ml-2 cursor-pointer hover:ring-2 hover:ring-black dark:hover:ring-white rounded-full object-cover" title="Mi cuenta" onClick={() => setShowUserMenu(!showUserMenu)} />
 
               {/* Menú desplegable - funciona con hover en desktop y click en mobile */}
               <div

@@ -56,9 +56,13 @@ export default function ProfileHeader() {
 
   // Generar iniciales del usuario
   const getInitials = () => {
-    const firstName = user.name?.charAt(0) || '';
-    const lastName = user.lastName?.charAt(0) || '';
-    return (firstName + lastName).toUpperCase() || user.email.charAt(0).toUpperCase();
+    const firstName = user.name?.trim()?.charAt(0) || '';
+    const lastName = user.lastName?.trim()?.charAt(0) || '';
+    const initials = (firstName + lastName).toUpperCase();
+
+    // Si hay iniciales, usarlas; si no, usar email; si no hay email, usar '?'
+    if (initials) return initials;
+    return user.email?.trim()?.charAt(0)?.toUpperCase() || '?';
   };
 
   // Formatear fecha de unión
@@ -101,12 +105,12 @@ export default function ProfileHeader() {
 
         {/* User Info */}
         <div className="flex items-center gap-2 mt-2">
-          <h1 className="text-xl font-semibold dark:text-white">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email}</h1>
+          <h1 className="text-xl font-semibold dark:text-white">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || 'Usuario'}</h1>
           <button onClick={() => setIsEditModalOpen(true)} className="text-gray-500 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400" title="Editar perfil">
             ✏️
           </button>
         </div>
-        <p className="text-gray-600 dark:text-gray-400">@{user.email.split('@')[0]}</p>
+        <p className="text-gray-600 dark:text-gray-400">@{user.email?.split('@')[0] || 'usuario'}</p>
 
         {user.biography && <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mt-2">{user.biography}</p>}
 
@@ -114,7 +118,7 @@ export default function ProfileHeader() {
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2 flex-wrap justify-center">
           {user.location && <span>📍 {user.location}</span>}
           <span>✅​ Miembro desde {formatJoinDate()}</span>
-          <span>📧 {user.email}</span>
+          {user.email && <span>📧 {user.email}</span>}
           {user.website && (
             <a href={user.website} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors">
               🔗 {user.website.includes('github.com') ? 'GitHub' : 'Sitio Web'}

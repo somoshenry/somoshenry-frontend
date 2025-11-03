@@ -31,28 +31,64 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setProfilePictureFile(file);
-      // Crear preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePicturePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validar tamaño máximo de 200KB (exactamente 200000 bytes)
+    const maxSize = 200000; // 200KB en bytes
+    if (file.size > maxSize) {
+      const sizeInKB = (file.size / 1024).toFixed(2);
+      setError(`⚠️ La imagen de perfil pesa ${sizeInKB}KB. El máximo permitido es 195KB (200000 bytes)`);
+      e.target.value = ''; // Limpiar el input
+      return;
     }
+
+    // Validar formato de imagen (solo JPG, JPEG, PNG, WEBP)
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setError('⚠️ Solo se permiten imágenes JPG, JPEG, PNG o WEBP');
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    setProfilePictureFile(file);
+    // Crear preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePicturePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
   };
 
   const handleCoverPictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setCoverPictureFile(file);
-      // Crear preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverPicturePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validar tamaño máximo de 200KB (exactamente 200000 bytes)
+    const maxSize = 200000; // 200KB en bytes
+    if (file.size > maxSize) {
+      const sizeInKB = (file.size / 1024).toFixed(2);
+      setError(`⚠️ La imagen de portada pesa ${sizeInKB}KB. El máximo permitido es 195KB (200000 bytes)`);
+      e.target.value = ''; // Limpiar el input
+      return;
     }
+
+    // Validar formato de imagen (solo JPG, JPEG, PNG, WEBP)
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setError('⚠️ Solo se permiten imágenes JPG, JPEG, PNG o WEBP');
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    setCoverPictureFile(file);
+    // Crear preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCoverPicturePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,14 +97,36 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
     setError(null);
 
     try {
-      // 1. Actualizar datos del perfil
-      await updateUserProfile({
-        name: name || undefined,
-        lastName: lastName || undefined,
-        biography: biography || undefined,
-        location: location || undefined,
-        website: website || undefined,
-      });
+      let hasChanges = false;
+
+      // 1. Construir objeto con solo los campos que tienen valor y son diferentes a los originales
+      const updates: any = {};
+
+      if (name && name !== user.name) {
+        updates.name = name;
+        hasChanges = true;
+      }
+      if (lastName && lastName !== user.lastName) {
+        updates.lastName = lastName;
+        hasChanges = true;
+      }
+      if (biography !== user.biography) {
+        updates.biography = biography || null;
+        hasChanges = true;
+      }
+      if (location !== user.location) {
+        updates.location = location || null;
+        hasChanges = true;
+      }
+      if (website && website !== user.website) {
+        updates.website = website;
+        hasChanges = true;
+      }
+
+      // Solo actualizar si hay cambios
+      if (Object.keys(updates).length > 0) {
+        await updateUserProfile(updates);
+      }
 
       // 2. Subir foto de perfil si hay un archivo nuevo
       if (profilePictureFile) {
@@ -78,9 +136,12 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
           await api.put(`/files/uploadProfilePicture/${user.id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
+          hasChanges = true;
         } catch (uploadErr) {
-          console.warn('Error subiendo foto de perfil:', uploadErr);
+          console.error('Error subiendo foto de perfil:', uploadErr);
           setError('Se actualizó el perfil pero hubo un error al subir la foto de perfil');
+          setLoading(false);
+          return;
         }
       }
 
@@ -92,19 +153,36 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
           await api.put(`/files/uploadCoverPicture/${user.id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
+          hasChanges = true;
         } catch (uploadErr) {
-          console.warn('Error subiendo foto de portada:', uploadErr);
+          console.error('Error subiendo foto de portada:', uploadErr);
           setError('Se actualizó el perfil pero hubo un error al subir la foto de portada');
+          setLoading(false);
+          return;
         }
+      }
+
+      if (!hasChanges) {
+        setError('No se realizaron cambios');
+        setLoading(false);
+        return;
       }
 
       // 4. Recargar datos del usuario para tener las URLs actualizadas de Cloudinary
       const { data: freshUser } = await api.get(`/users/${user.id}`);
       onUpdate(freshUser);
 
-      if (!error) {
-        onClose();
-      }
+      // Mostrar mensaje de éxito con SweetAlert
+      const Swal = (await import('sweetalert2')).default;
+      await Swal.fire({
+        icon: 'success',
+        title: '✅ Perfil actualizado',
+        text: 'Los cambios se han guardado correctamente',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      onClose();
     } catch (err: any) {
       console.error('Error al actualizar el perfil:', err);
       console.error('Response data:', err.response?.data);
@@ -149,7 +227,7 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
             <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Portada</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               onChange={handleCoverPictureChange}
               className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
             />
@@ -158,7 +236,7 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
                 <img src={coverPicturePreview} alt="Preview portada" className="w-full h-full object-cover" />
               </div>
             )}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sube una imagen desde tu computadora</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">⚠️ Máximo: 195KB | Formatos: JPG, PNG, WEBP</p>
           </div>
 
           {/* Foto de Perfil */}
@@ -166,7 +244,7 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
             <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Perfil</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               onChange={handleProfilePictureChange}
               className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
             />
@@ -175,7 +253,7 @@ export default function ProfileEditModal({ user, isOpen, onClose, onUpdate }: Pr
                 <img src={profilePicturePreview} alt="Preview perfil" className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600" />
               </div>
             )}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sube una imagen desde tu computadora</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">⚠️ Máximo: 195KB | Formatos: JPG, PNG, WEBP</p>
           </div>
 
           {/* Nombre y Apellido */}

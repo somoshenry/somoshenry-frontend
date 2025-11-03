@@ -1,28 +1,29 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, LayoutDashboard, Settings } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import {usePathname} from "next/navigation";
+import {Home, LayoutDashboard, Settings, Workflow} from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
   toggle: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({isOpen, toggle}) => {
   const pathname = usePathname();
 
   const menuItems = [
-    { name: 'Inicio', href: '/home', icon: <Home size={20} /> },
-    { name: 'Mi Tablero', href: '/profile', icon: <LayoutDashboard size={20} /> },
-    { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
+    {name: "Inicio", href: "/home", icon: <Home size={20} />},
+    {name: "Mi Tablero", href: "/profile", icon: <LayoutDashboard size={20} />},
+    {name: "Configuración", href: "/config", icon: <Settings size={20} />},
+    {name: "Planes", href: "/planes", icon: <Workflow size={20} />},
   ];
 
   return (
     <>
       {/* Overlay para móvil */}
-      {isOpen && <div className=" inset-0 bg-black bg-opacity-50 z-40 md:hidden sticky " onClick={toggle} />}
+      {isOpen && <div className=" inset-0 bg-gray-900 bg-opacity-50 z-40 md:hidden sticky" onClick={toggle} />}
 
       {/* Sidebar */}
       <aside
@@ -30,8 +31,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     fixed top-16 left-0 h-[calc(100vh-4rem)] dark:bg-gray-900 text-black  bg-white dark:text-white z-40 transition-transform duration-300 ease-in-out
     ${
       isOpen
-        ? 'translate-x-0 shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]' // 💡 Aquí se aplica la sombra si está ABIERTO
-        : '-translate-x-full'
+        ? "translate-x-0 shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]" // 💡 Aquí se aplica la sombra si está ABIERTO
+        : "-translate-x-full"
     }
     w-64
     md:translate-x-0 
@@ -53,7 +54,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                     }}
                     className={`
                       flex items-center space-x-3 p-3 rounded-lg transition-colors
-                      ${pathname === item.href ? 'bg-[#ffff00] text-black font-semibold' : 'hover:bg-gray-800'}
+                      ${
+                        pathname === item.href
+                          ? "bg-[#ffff00] text-black font-semibold text-xl"
+                          : "hover:bg-gray-100 hover:scale-105 hover:text-black"
+                      }
                     `}
                   >
                     <span className="text-xl">{item.icon}</span>

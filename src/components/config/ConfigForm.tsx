@@ -3,13 +3,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hook/useAuth';
 import { updateUserProfile } from '@/services/userService';
 import { useRouter } from 'next/navigation';
+import { api } from '@/services/api';
 
 export default function ConfigForm() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [profilePictureUrl, setProfilePictureUrl] = useState('');
-  const [coverPictureUrl, setCoverPictureUrl] = useState('');
+  // Archivos locales para subir
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [coverPictureFile, setCoverPictureFile] = useState<File | null>(null);
+
+  // Preview URLs
+  const [profilePicturePreview, setProfilePicturePreview] = useState('');
+  const [coverPicturePreview, setCoverPicturePreview] = useState('');
+
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -28,8 +35,8 @@ export default function ConfigForm() {
 
   useEffect(() => {
     if (user) {
-      setProfilePictureUrl(user.profilePicture || '');
-      setCoverPictureUrl(user.coverPicture || '');
+      setProfilePicturePreview(user.profilePicture || '');
+      setCoverPicturePreview(user.coverPicture || '');
       setName(user.name || '');
       setLastName(user.lastName || '');
       setUsername(user.email?.split('@')[0] || ''); // Usamos email como base si no hay username
@@ -39,6 +46,68 @@ export default function ConfigForm() {
     }
   }, [user]);
 
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tamaño máximo de 200KB (exactamente 200000 bytes)
+    const maxSize = 200000; // 200KB en bytes
+    if (file.size > maxSize) {
+      const sizeInKB = (file.size / 1024).toFixed(2);
+      setError(`⚠️ La imagen de perfil pesa ${sizeInKB}KB. El máximo permitido es 195KB (200000 bytes)`);
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    // Validar formato de imagen (solo JPG, JPEG, PNG, WEBP)
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setError('⚠️ Solo se permiten imágenes JPG, JPEG, PNG o WEBP');
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    setProfilePictureFile(file);
+    // Crear preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePicturePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
+
+  const handleCoverPictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tamaño máximo de 200KB (exactamente 200000 bytes)
+    const maxSize = 200000; // 200KB en bytes
+    if (file.size > maxSize) {
+      const sizeInKB = (file.size / 1024).toFixed(2);
+      setError(`⚠️ La imagen de portada pesa ${sizeInKB}KB. El máximo permitido es 195KB (200000 bytes)`);
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    // Validar formato de imagen (solo JPG, JPEG, PNG, WEBP)
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setError('⚠️ Solo se permiten imágenes JPG, JPEG, PNG o WEBP');
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    setCoverPictureFile(file);
+    // Crear preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCoverPicturePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -46,23 +115,91 @@ export default function ConfigForm() {
     setSuccess(null);
 
     try {
-      await updateUserProfile({
-        name: name || undefined,
-        lastName: lastName || undefined,
-        username: username || undefined,
-        biography: biography || undefined,
-        location: location || undefined,
-        website: website || undefined,
-        profilePicture: profilePictureUrl || undefined,
-        coverPicture: coverPictureUrl || undefined,
+      let hasChanges = false;
+
+      // 1. Construir objeto con solo los campos que tienen valor y son diferentes a los originales
+      const updates: any = {};
+
+      if (name && name !== user?.name) {
+        updates.name = name;
+        hasChanges = true;
+      }
+      if (lastName && lastName !== user?.lastName) {
+        updates.lastName = lastName;
+        hasChanges = true;
+      }
+      if (biography !== user?.biography) {
+        updates.biography = biography || null;
+        hasChanges = true;
+      }
+      if (location !== user?.location) {
+        updates.location = location || null;
+        hasChanges = true;
+      }
+      if (website && website !== user?.website) {
+        updates.website = website;
+        hasChanges = true;
+      }
+
+      // Solo actualizar si hay cambios
+      if (Object.keys(updates).length > 0) {
+        await updateUserProfile(updates);
+      }
+
+      // 2. Subir foto de perfil si hay un archivo nuevo
+      if (profilePictureFile && user?.id) {
+        try {
+          const formData = new FormData();
+          formData.append('file', profilePictureFile);
+          await api.put(`/files/uploadProfilePicture/${user.id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          hasChanges = true;
+        } catch (uploadErr) {
+          console.error('Error subiendo foto de perfil:', uploadErr);
+          setError('Hubo un error al subir la foto de perfil');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // 3. Subir foto de portada si hay un archivo nuevo
+      if (coverPictureFile && user?.id) {
+        try {
+          const formData = new FormData();
+          formData.append('file', coverPictureFile);
+          await api.put(`/files/uploadCoverPicture/${user.id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          hasChanges = true;
+        } catch (uploadErr) {
+          console.error('Error subiendo foto de portada:', uploadErr);
+          setError('Hubo un error al subir la foto de portada');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      if (!hasChanges) {
+        setError('No se realizaron cambios');
+        setIsLoading(false);
+        return;
+      }
+
+      // Mostrar mensaje de éxito con SweetAlert
+      const Swal = (await import('sweetalert2')).default;
+      await Swal.fire({
+        icon: 'success',
+        title: '✅ Perfil actualizado',
+        text: 'Los cambios se han guardado correctamente',
+        timer: 2000,
+        showConfirmButton: false,
       });
 
-      setSuccess('✅ Perfil actualizado correctamente');
-
-      // Recargar la página después de 1.5 segundos para reflejar los cambios
+      // Recargar la página después del mensaje para reflejar los cambios
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
+      }, 2000);
     } catch (err: any) {
       console.error('Error al actualizar el perfil:', err);
 
@@ -123,12 +260,17 @@ export default function ConfigForm() {
 
             {/* Foto de Portada */}
             <div>
-              <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Portada (URL)</label>
-              <input type="url" value={coverPictureUrl} onChange={(e) => setCoverPictureUrl(e.target.value)} placeholder="https://ejemplo.com/mi-foto-portada.jpg" className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white" />
-              {coverPictureUrl && (
+              <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Portada</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleCoverPictureChange}
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
+              />
+              {coverPicturePreview && (
                 <div className="mt-3 rounded-lg overflow-hidden h-40 border dark:border-gray-600">
                   <img
-                    src={coverPictureUrl}
+                    src={coverPicturePreview}
                     alt="Preview portada"
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -137,17 +279,22 @@ export default function ConfigForm() {
                   />
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ingresa la URL de una imagen para tu portada</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">⚠️ Máximo: 195KB | Formatos: JPG, PNG, WEBP</p>
             </div>
 
             {/* Foto de Perfil */}
             <div>
-              <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Perfil (URL)</label>
-              <input type="url" value={profilePictureUrl} onChange={(e) => setProfilePictureUrl(e.target.value)} placeholder="https://ejemplo.com/mi-foto-perfil.jpg" className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white" />
-              {profilePictureUrl && (
+              <label className="block text-sm font-semibold mb-2 dark:text-white">Foto de Perfil</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleProfilePictureChange}
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
+              />
+              {profilePicturePreview && (
                 <div className="mt-3 flex justify-center">
                   <img
-                    src={profilePictureUrl}
+                    src={profilePicturePreview}
                     alt="Preview perfil"
                     className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600"
                     onError={(e) => {
@@ -156,7 +303,7 @@ export default function ConfigForm() {
                   />
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ingresa la URL de una imagen para tu perfil</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">⚠️ Máximo: 195KB | Formatos: JPG, PNG, WEBP</p>
             </div>
 
             {/* Nombre y Apellido */}

@@ -7,9 +7,8 @@ import Sidebar from "@/components/sidebar/Sidebar";
 
 export const Login = () => {
   return (
-    <div className="flex min-h-screen items-start justify-center bg-neutral-50 dark:bg-[#121212] py-20">
+    <div className="flex min-h-screen items-start justify-center bg-neutral-50 dark:bg-gray-900 py-20">
       <div className="flex w-full flex-col items-center justify-center">
-        <Nav />
         <LoginForm />
       </div>
     </div>

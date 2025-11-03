@@ -6,16 +6,9 @@ import { formatDateArgentina } from '@/utils/dateFormatter';
 import Image from 'next/image';
 import Avatar from '@/components/ui/Avatar';
 
-// Helpers para avatar y nombre sin alterar estilos
+// Helpers para avatar y nombre sin bloquear dominios
 function getAvatar(u: any): string {
-  const allowed = new Set(['encrypted-tbn0.gstatic.com', 'lh3.googleusercontent.com', 'res.cloudinary.com', 'e0.pxfuel.com', 'localhost']);
   const candidate: string = u?.profilePicture || u?.avatar || '';
-  try {
-    if (candidate.startsWith('http')) {
-      const url = new URL(candidate);
-      if (!allowed.has(url.hostname)) return '/avatars/default.svg';
-    }
-  } catch {}
   return candidate || '/avatars/default.svg';
 }
 

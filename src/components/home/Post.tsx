@@ -6,17 +6,11 @@ import CommentSection from './CommentSection';
 import LikeButton from './LikeButton';
 import Image from 'next/image';
 import Avatar from '@/components/ui/Avatar';
+import VideoPlayer from './VideoPlayer';
 
-// Helpers para resolver avatar y nombre sin cambiar estilos
+// Helpers para resolver avatar y nombre sin bloquear dominios
 function getAvatar(u: any): string {
-  const allowed = new Set(['encrypted-tbn0.gstatic.com', 'lh3.googleusercontent.com', 'res.cloudinary.com', 'e0.pxfuel.com', 'localhost']);
   const candidate: string = u?.profilePicture || u?.avatar || '';
-  try {
-    if (candidate.startsWith('http')) {
-      const url = new URL(candidate);
-      if (!allowed.has(url.hostname)) return '/avatars/default.svg';
-    }
-  } catch {}
   return candidate || '/avatars/default.svg';
 }
 
@@ -57,7 +51,22 @@ export default function Post({ post, onUpdatePost }: { post: PostType; onUpdateP
       {post.content && <p className="text-gray-800 whitespace-pre-line bg-gray-200 rounded-xl p-3">{post.content}</p>}
 
       {/* Multimedia */}
-      {(post.mediaURL || post.mediaUrl) && <div className="overflow-hidden rounded-xl border border-gray-300">{post.mediaType === 'video' ? <video src={post.mediaURL || post.mediaUrl || undefined} controls className="w-full rounded-xl" /> : <img src={post.mediaURL || post.mediaUrl || ''} alt="media" className="w-full object-cover max-h-[400px] rounded-xl" />}</div>}
+      {(post.mediaURL || post.mediaUrl) && (
+        <div className="overflow-hidden rounded-xl border border-gray-300">
+          {post.mediaType === 'video' || post.type === 'VIDEO' ? (
+            <VideoPlayer
+              src={post.mediaURL || post.mediaUrl || ''}
+              className="w-full rounded-xl max-h-[600px]"
+            />
+          ) : (
+            <img
+              src={post.mediaURL || post.mediaUrl || ''}
+              alt="media"
+              className="w-full object-cover max-h-[400px] rounded-xl"
+            />
+          )}
+        </div>
+      )}
 
       {/* Likes y contador de comentarios */}
       <div className="flex items-center justify-between mt-2">

@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { api } from '../services/api';
 import { tokenStore } from '../services/tokenStore';
 import { PostType } from '../interfaces/interfaces.post/post';
@@ -18,16 +18,17 @@ interface PostContextType {
   reportPost: (postId: string) => Promise<void>;
 }
 
-const PostContext = createContext<PostContextType | null>(null);
+export const PostContext = createContext<PostContextType | null>(null);
 
-// Evita doble fetch en desarrollo (React StrictMode monta/desmonta)
-let didLoadInitialPosts = false;
+// Evita doble fetch en desarrollo sin bloquear remounts entre rutas/HMR
+// Usamos un ref dentro del provider en lugar de una variable de módulo
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(false);
   const { showAlert } = useAlert();
   const { user } = useAuth();
+  const hasMountedRef = useRef(false);
 
   // Función auxiliar para normalizar un post
   const normalizePost = async (p: PostType) => {
@@ -50,6 +51,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
         likeCount = 0; // fallback silencioso
       }
 
+      // Determinar mediaType basándose en el tipo de post o la URL
+      let mediaType: 'image' | 'video' | null = null;
+      if (p.type === 'VIDEO') {
+        mediaType = 'video';
+      } else if (p.type === 'IMAGE') {
+        mediaType = 'image';
+      } else if (p.mediaURL || p.mediaUrl) {
+        // Fallback: detectar por extensión de archivo
+        const url = p.mediaURL || p.mediaUrl || '';
+        const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.mkv', '.m4v'];
+        const isVideo = videoExtensions.some((ext) => url.toLowerCase().includes(ext));
+        mediaType = isVideo ? 'video' : 'image';
+      }
+
       return {
         ...p,
         comments: comments,
@@ -57,20 +72,34 @@ export function PostProvider({ children }: { children: ReactNode }) {
         // Compatibilidad con ambos campos de media
         mediaUrl: p.mediaURL || p.mediaUrl || null,
         mediaURL: p.mediaURL || p.mediaUrl || null,
-        mediaType: p.mediaType || null,
+        mediaType: mediaType,
         // Estado local para resaltar el botón (no persiste):
         likedByMe: false as unknown as boolean,
       };
     } catch (err) {
       // Si falla la carga de comentarios, continuar con array vacío
       console.warn(`No se pudieron cargar comentarios del post ${p.id}`, err);
+
+      // Aún así intentar detectar el tipo de media
+      let mediaType: 'image' | 'video' | null = null;
+      if (p.type === 'VIDEO') {
+        mediaType = 'video';
+      } else if (p.type === 'IMAGE') {
+        mediaType = 'image';
+      } else if (p.mediaURL || p.mediaUrl) {
+        const url = p.mediaURL || p.mediaUrl || '';
+        const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.mkv', '.m4v'];
+        const isVideo = videoExtensions.some((ext) => url.toLowerCase().includes(ext));
+        mediaType = isVideo ? 'video' : 'image';
+      }
+
       return {
         ...p,
         comments: [],
         likes: 0,
         mediaUrl: p.mediaURL || p.mediaUrl || null,
         mediaURL: p.mediaURL || p.mediaUrl || null,
-        mediaType: p.mediaType || null,
+        mediaType: mediaType,
         likedByMe: false as unknown as boolean,
       };
     }
@@ -96,30 +125,18 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   }, [showAlert, user?.id]);
 
-  // Polling silencioso: solo agrega posts nuevos sin mostrar loading ni afectar scroll
-  const fetchNewPosts = useCallback(async () => {
+  // Refresco silencioso: reobtiene y reemplaza la lista sin mostrar loading
+  const refreshPostsSilently = useCallback(async () => {
     try {
       const { data } = await api.get('/posts');
       const postsArray = Array.isArray(data) ? data : data.data;
-
-      if (!postsArray || postsArray.length === 0) return;
-
-      // Identificar posts nuevos comparando IDs
-      const currentIds = new Set(posts.map((p) => p.id));
-      const newPosts = postsArray.filter((p: PostType) => !currentIds.has(p.id));
-
-      if (newPosts.length > 0) {
-        // Normalizar solo los posts nuevos
-        const normalizedNewPosts = await Promise.all(newPosts.map(normalizePost));
-
-        // Agregar los nuevos posts al inicio sin reemplazar los existentes
-        setPosts((prev) => [...normalizedNewPosts, ...prev]);
-      }
+      const normalized = await Promise.all((postsArray || []).map(normalizePost));
+      setPosts(normalized);
     } catch (err) {
-      // Polling silencioso: no mostrar errores al usuario
-      console.warn('Error en polling silencioso:', err);
+      // silencioso
+      console.warn('Error refrescando publicaciones (silencioso):', err);
     }
-  }, [posts, user?.id]);
+  }, [user?.id]);
 
   //  Crear un nuevo post
   const addPost = async (content: string, media?: File | null) => {
@@ -146,11 +163,25 @@ export function PostProvider({ children }: { children: ReactNode }) {
           });
           // El backend actualiza el post y devuelve el post actualizado
           const updated = uploadResp.data;
+
+          // Detectar tipo de media desde el archivo o la respuesta del backend
+          let mediaType: 'image' | 'video' | null = null;
+          if (updated.type === 'VIDEO') {
+            mediaType = 'video';
+          } else if (updated.type === 'IMAGE') {
+            mediaType = 'image';
+          } else if (media.type.startsWith('video/')) {
+            mediaType = 'video';
+          } else if (media.type.startsWith('image/')) {
+            mediaType = 'image';
+          }
+
           newPost = {
             ...newPost,
+            type: updated.type || newPost.type,
             mediaUrl: updated.mediaURL ?? updated.mediaUrl ?? null,
             mediaURL: updated.mediaURL ?? updated.mediaUrl ?? null,
-            mediaType: updated.mediaType ?? null,
+            mediaType: mediaType,
             user: updated.user || newPost.user, // Asegura usuario correcto si backend lo retorna
           };
         } catch (uploadErr) {
@@ -164,17 +195,46 @@ export function PostProvider({ children }: { children: ReactNode }) {
       try {
         if (postId) {
           const { data: fresh } = await api.get(`/posts/${postId}`);
+
+          // Detectar tipo de media
+          let mediaType: 'image' | 'video' | null = null;
+          if (fresh.type === 'VIDEO') {
+            mediaType = 'video';
+          } else if (fresh.type === 'IMAGE') {
+            mediaType = 'image';
+          } else if (fresh.mediaURL || fresh.mediaUrl) {
+            const url = fresh.mediaURL || fresh.mediaUrl || '';
+            const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.wmv', '.mkv', '.m4v'];
+            const isVideo = videoExtensions.some((ext) => url.toLowerCase().includes(ext));
+            mediaType = isVideo ? 'video' : 'image';
+          }
+
           finalPost = {
             ...fresh,
             comments: Array.isArray(fresh?.comments) ? fresh.comments : [],
             likes: typeof fresh?.likes === 'number' ? fresh.likes : 0,
             mediaUrl: fresh?.mediaURL ?? fresh?.mediaUrl ?? null,
             mediaURL: fresh?.mediaURL ?? fresh?.mediaUrl ?? null,
-            mediaType: fresh?.mediaType ?? null,
+            mediaType: mediaType,
           };
         }
       } catch (refreshErr) {
         // Si falla, usa el newPost
+      }
+
+      // Completa datos de usuario localmente si no vinieron del backend
+      if (!finalPost.user && user) {
+        finalPost = {
+          ...finalPost,
+          user: {
+            id: user.id,
+            name: user.name || undefined,
+            lastName: user.lastName || undefined,
+            email: user.email,
+            avatar: user.profilePicture || '',
+            profilePicture: user.profilePicture || null,
+          } as any,
+        } as any;
       }
 
       setPosts((prev) => [finalPost, ...prev]);
@@ -247,7 +307,26 @@ export function PostProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await api.post(`/comment/post/${postId}`, { content: text });
 
-      const comment = data;
+      // Algunos backends devuelven { data }, otros el comentario directo
+      let comment: any = data?.data ?? data;
+
+      // Si no viene el autor completo, completarlo con el usuario logueado
+      if (!comment?.author && user) {
+        comment = {
+          ...comment,
+          author: {
+            id: user.id,
+            name: user.name || undefined,
+            lastName: user.lastName || undefined,
+            email: user.email,
+            avatar: user.profilePicture || '',
+            profilePicture: user.profilePicture || null,
+          },
+        };
+      }
+      // Defaults de campos usados en UI
+      if (!comment.createdAt) comment.createdAt = new Date().toISOString();
+      if (typeof comment.likeCount !== 'number') comment.likeCount = 0;
 
       setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, comments: [...(p.comments || []), comment] } : p)));
 
@@ -299,19 +378,23 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  //  Carga inicial y polling silencioso cada 30 segundos
+  //  Carga inicial y refresco silencioso periódicamente
   useEffect(() => {
-    if (didLoadInitialPosts) return;
-    didLoadInitialPosts = true;
+    if (hasMountedRef.current) return;
+    hasMountedRef.current = true;
+
+    // Carga inicial
     fetchPosts();
 
-    // Polling silencioso cada 30 segundos: solo agrega posts nuevos
+    // Refresco silencioso cada 10s para ver nuevos posts de otros usuarios
     const interval = setInterval(() => {
-      fetchNewPosts();
-    }, 30000);
+      refreshPostsSilently();
+    }, 10000);
 
     return () => clearInterval(interval);
-  }, [fetchPosts, fetchNewPosts]);
+    // Intencionado: sin dependencias para no re-registrar el intervalo
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <PostContext.Provider

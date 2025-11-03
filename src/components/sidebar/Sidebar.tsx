@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import {Home, LayoutDashboard, Settings, Workflow} from "lucide-react";
+import {Home, LayoutDashboard, Settings, Workflow, ShieldUser} from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({isOpen, toggle}) => {
     {name: "Mi Tablero", href: "/profile", icon: <LayoutDashboard size={20} />},
     {name: "Configuración", href: "/config", icon: <Settings size={20} />},
     {name: "Planes", href: "/planes", icon: <Workflow size={20} />},
+    {name: "Administrador", href: "/home", icon: <ShieldUser size={20} />}, //EDITAAAAAAAAAR
   ];
 
   return (

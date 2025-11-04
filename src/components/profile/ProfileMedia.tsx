@@ -70,7 +70,7 @@ export default function ProfileMedia() {
             <div key={post.id} className="relative group cursor-pointer" onClick={() => setSelectedMedia(post)}>
               {isVideo ? (
                 <div className="relative">
-                  <video className="rounded-lg w-full h-48 object-cover" src={mediaUrl || ''} muted />
+                  <VideoPlayer src={mediaUrl || ''} className="rounded-lg w-full h-48" objectFit="cover" muted={true} autoPlay={false} loop={false} controlsVisible={false} />
                   {/* Icono de play */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="bg-black bg-opacity-60 rounded-full p-4 group-hover:bg-opacity-80 transition-all">

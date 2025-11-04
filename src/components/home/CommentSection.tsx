@@ -5,6 +5,7 @@ import { usePost } from '@/context/PostContext';
 import { formatDateArgentina } from '@/utils/dateFormatter';
 import Image from 'next/image';
 import Avatar from '@/components/ui/Avatar';
+import { useRouter } from 'next/navigation';
 
 // Helpers para avatar y nombre sin bloquear dominios
 function getAvatar(u: any): string {
@@ -24,6 +25,7 @@ export default function CommentSection({ comments, postId }: { comments?: Commen
   const [comment, setComment] = useState('');
   const [isSending, setIsSending] = useState(false);
   const { addComment, likeComment } = usePost();
+  const router = useRouter();
 
   //  Aseguramos que siempre haya un array válido
   const safeComments = Array.isArray(comments) ? comments : [];
@@ -42,6 +44,13 @@ export default function CommentSection({ comments, postId }: { comments?: Commen
     }
   };
 
+  // Navegar al perfil del usuario del comentario
+  const handleUserClick = (userId?: string) => {
+    if (userId) {
+      router.push(`/user/${userId}`);
+    }
+  };
+
   return (
     <div className="border-t pt-3">
       {/* Lista de comentarios */}
@@ -51,11 +60,15 @@ export default function CommentSection({ comments, postId }: { comments?: Commen
         <ul className="space-y-3 text-sm text-gray-700">
           {safeComments.map((c) => (
             <li key={c.id} className="flex items-start gap-3 bg-gray-100 rounded-xl p-3 shadow-sm">
-              <Avatar src={getAvatar(c.author)} alt={getDisplayName(c.author)} width={32} height={32} className="rounded-full object-cover mt-1" />
+              <div className="cursor-pointer" onClick={() => handleUserClick(c.author?.id)}>
+                <Avatar src={getAvatar(c.author)} alt={getDisplayName(c.author)} width={32} height={32} className="rounded-full object-cover mt-1" />
+              </div>
 
               <div className="flex-1 flex flex-col">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-gray-800">{getDisplayName(c.author)}</span>
+                  <span className="font-semibold text-gray-800 cursor-pointer hover:text-yellow-500 transition-colors" onClick={() => handleUserClick(c.author?.id)}>
+                    {getDisplayName(c.author)}
+                  </span>
                   <span className="text-xs text-gray-500">{formatDateArgentina(c.createdAt)}</span>
                 </div>
 

@@ -16,6 +16,7 @@ interface PostContextType {
   addComment: (postId: string, text: string) => Promise<void>;
   likeComment: (commentId: string) => Promise<void>;
   reportPost: (postId: string) => Promise<void>;
+  deletePost: (postId: string) => Promise<void>;
 }
 
 export const PostContext = createContext<PostContextType | null>(null);
@@ -142,7 +143,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const addPost = async (content: string, media?: File | null) => {
     try {
       // 1. Crear el post (sin mediaURL)
-      const { data: postResp } = await api.post('/posts', { content });
+      const hasText = typeof content === 'string' && content.trim().length > 0;
+      // Backend requiere content obligatorio (minLength 1). Si subimos solo media, mandamos un placeholder seguro.
+      const contentToSend = hasText ? content : ' ';
+      // Opcional: si ya sabemos el tipo por el archivo, lo mandamos para mejorar consistencia (el backend igual lo ajusta al subir media)
+      const maybeType = media ? (media.type.startsWith('video/') ? 'VIDEO' : media.type.startsWith('image/') ? 'IMAGE' : undefined) : undefined;
+
+      const payload: any = { content: contentToSend };
+      if (maybeType) payload.type = maybeType;
+
+      const { data: postResp } = await api.post('/posts', payload);
       const postId = postResp?.data?.id || postResp?.id;
       let newPost = {
         ...postResp.data,
@@ -378,6 +388,19 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  //  Borrar post
+  const deletePost = async (postId: string) => {
+    try {
+      const { deletePost: deletePostService } = await import('../services/postService');
+      await deletePostService(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      showAlert('Publicación eliminada correctamente ✅', 'success');
+    } catch (err) {
+      console.error('Error al borrar post:', err);
+      showAlert('Error al eliminar la publicación ❌', 'error');
+    }
+  };
+
   //  Carga inicial y refresco silencioso periódicamente
   useEffect(() => {
     if (hasMountedRef.current) return;
@@ -407,6 +430,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         addComment,
         likeComment,
         reportPost,
+        deletePost,
       }}
     >
       {children}

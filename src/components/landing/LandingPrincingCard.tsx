@@ -12,7 +12,7 @@ export interface PricingPlan {
   name: string;
   badge: string;
   badgeColor: string;
-  price: number | "Gratis";
+  price: number | string;
   currency?: string;
   features: PricingFeature[];
   buttonText: string;

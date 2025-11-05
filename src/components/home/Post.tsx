@@ -33,7 +33,7 @@ export default function Post({ post, onUpdatePost }: { post: PostType; onUpdateP
   const likedByMe: boolean = Boolean((post as any).likedByMe);
 
   // Permiso para borrar: autor o admin
-  const canDelete = user && (user.id === post.user.id || user.role === 'ADMIN');
+  const canDelete = user && post.user && (user.id === post.user.id || user.role === 'ADMIN');
 
   // Borrar post
   const handleDelete = async () => {

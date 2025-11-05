@@ -23,7 +23,6 @@ export const Nav: React.FC = () => {
   const iconSrc = theme === 'dark' ? '/modoClaro.png' : '/modoD.png';
   const logoSrc = theme === 'dark' ? '/smLogoD.png' : '/smlogoC.png';
   const campanaSrc = theme === 'dark' ? '/campanaD.png' : '/campanaC.png';
-  const mensajeSrc = theme === 'dark' ? '/mensajeD.png' : '/mensajeC.png';
 
   const [isMenuOpen, setIsMenuOpen] = useState(() => {
     // Verifica si estamos en el navegador (lado del cliente)
@@ -158,10 +157,6 @@ export const Nav: React.FC = () => {
                 />
                 {unreadCount > 0 && <span className="bg-red-500 text-white absolute -top-1 -right-1 rounded-full text-[10px] px-1 font-bold md:px-2 md:py-0.5 md:text-xs">{unreadCount}</span>}
                 <NotificationDropdown isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
-              </li>
-              <li className="relative md:mr-2">
-                <img src={mensajeSrc} alt="mensajes" className="size-5 md:size-8 cursor-pointer hover:scale-105" title="Mensajes" />
-                <span className="bg-[#ffff00] dark:text-black absolute -top-1 -right-1 rounded-full text-[10px] px-1 font-bold md:px-2 md:py-0.5 md:text-xs">1</span>
               </li>
             </ol>
 

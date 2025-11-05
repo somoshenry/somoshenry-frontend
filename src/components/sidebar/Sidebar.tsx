@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutDashboard, Settings, Workflow, ShieldUser } from 'lucide-react';
+import { Home, LayoutDashboard, Settings, Workflow, ShieldUser, MessageCircle } from 'lucide-react';
+import { useAuth } from '@/hook/useAuth';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -12,13 +13,16 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const menuItems = [
     { name: 'Inicio', href: '/home', icon: <Home size={20} /> },
     { name: 'Mi Tablero', href: '/profile', icon: <LayoutDashboard size={20} /> },
+    { name: 'Mensajes', href: '/chat', icon: <MessageCircle size={20} /> },
     { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
     { name: 'Planes', href: '/planes', icon: <Workflow size={20} /> },
-    { name: 'Administrador', href: '/admin', icon: <ShieldUser size={20} /> },
+    // Mostrar Administrador solo si el usuario es ADMIN
+    ...(user?.role === 'ADMIN' ? [{ name: 'Administrador' as const, href: '/admin', icon: <ShieldUser size={20} /> }] : []),
   ];
 
   return (

@@ -4,6 +4,8 @@ import { getUserPosts, Post } from '@/services/postService';
 import { getUserProfile } from '@/services/userService';
 import { api } from '@/services/api';
 import { useAuth } from '@/hook/useAuth';
+import { useRouter } from 'next/navigation';
+import VideoPlayer from '@/components/home/VideoPlayer';
 
 export default function ProfilePosts() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -11,6 +13,7 @@ export default function ProfilePosts() {
   const [error, setError] = useState<string | null>(null);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserPosts = async () => {
@@ -102,9 +105,22 @@ export default function ProfilePosts() {
     });
   };
 
-  const handleDeletePost = (postId: string) => {
-    // Función placeholder para eliminar post (sin implementar aún)
-    console.log('Eliminar post:', postId);
+  // Navegar al perfil del usuario del comentario
+  const handleUserClick = (userId?: string) => {
+    if (userId) {
+      router.push(`/user/${userId}`);
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm('¿Seguro que quieres borrar este post?')) return;
+    try {
+      const { deletePost } = await import('@/services/postService');
+      await deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (err) {
+      alert('No se pudo borrar el post');
+    }
   };
 
   // Toggle like en un post (manejo local similar a PostContext)
@@ -194,9 +210,9 @@ export default function ProfilePosts() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 gap-6 w-full items-center justify-center">
       {posts.map((post) => (
-        <div key={post.id} className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+        <div key={post.id} className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden mx-auto" style={{ maxWidth: '480px', width: '100%' }}>
           {/* Header de la tarjeta con botón de eliminar */}
           <div className="px-6 pt-5 pb-3 flex justify-between items-start border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3">
@@ -205,8 +221,6 @@ export default function ProfilePosts() {
                 <p className="font-semibold text-gray-900 dark:text-gray-100">{getDisplayName(post.user)}</p>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   <span>{formatDateTime(post.createdAt)}</span>
-                  <span>•</span>
-                  <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{post.type}</span>
                 </div>
               </div>
             </div>
@@ -219,10 +233,30 @@ export default function ProfilePosts() {
           <div className="px-6 py-4">
             <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
-            {/* Mostrar multimedia si existe */}
-            {post.mediaURL && post.type === 'IMAGE' && <img src={post.mediaURL} alt="Post media" className="mt-4 rounded-lg max-h-96 w-full object-cover border border-gray-200 dark:border-gray-700" />}
-
-            {post.mediaURL && post.type === 'VIDEO' && <video controls className="mt-4 rounded-lg max-h-96 w-full border border-gray-200 dark:border-gray-700" src={post.mediaURL} />}
+            {/* Mostrar multimedia si existe (acepta mediaURL o mediaUrl, detecta tipo por extensión si es necesario) */}
+            {(() => {
+              // Soporte para mediaURL o mediaUrl (compatibilidad)
+              const url = post.mediaURL || (post as any).mediaUrl || '';
+              if (!url) return null;
+              // Detectar tipo por campo o extensión
+              let type = post.type;
+              if (!type || type === 'TEXT') {
+                const ext = url.split('.').pop()?.toLowerCase() || '';
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) type = 'IMAGE';
+                if (['mp4', 'webm', 'mov', 'avi', 'wmv', 'mkv', 'm4v'].includes(ext)) type = 'VIDEO';
+              }
+              if (type === 'IMAGE') {
+                return <img src={url} alt="Post media" className="mt-4 rounded-lg max-h-96 w-full object-cover border border-gray-200 dark:border-gray-700" />;
+              }
+              if (type === 'VIDEO') {
+                return (
+                  <div className="mt-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <VideoPlayer src={url} className="w-full max-h-96" objectFit="contain" />
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
 
           {/* Sección de interacciones - siempre visible */}
@@ -251,10 +285,14 @@ export default function ProfilePosts() {
                   {post.comments.map((comment: any) => (
                     <div key={comment.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                       <div className="flex items-start gap-3">
-                        {comment.author.profilePicture ? <img src={comment.author.profilePicture} alt={comment.author.name || 'Usuario'} className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold">{comment.author.name?.charAt(0) || comment.author.email.charAt(0).toUpperCase()}</div>}
+                        <div className="cursor-pointer" onClick={() => handleUserClick(comment.author?.id)}>
+                          {comment.author.profilePicture ? <img src={comment.author.profilePicture} alt={comment.author.name || 'Usuario'} className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold">{comment.author.name?.charAt(0) || comment.author.email.charAt(0).toUpperCase()}</div>}
+                        </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{comment.author.name && comment.author.lastName ? `${comment.author.name} ${comment.author.lastName}` : comment.author.name || comment.author.email}</span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer hover:text-yellow-500 transition-colors" onClick={() => handleUserClick(comment.author?.id)}>
+                              {comment.author.name && comment.author.lastName ? `${comment.author.name} ${comment.author.lastName}` : comment.author.name || comment.author.email}
+                            </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(comment.createdAt).toLocaleDateString('es-ES')}</span>
                           </div>
                           <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{comment.content}</p>

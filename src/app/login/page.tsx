@@ -1,9 +1,5 @@
 "use client";
 import LoginForm from "@/components/login/register/LoginForm";
-import Nav from "@/components/nav/Nav";
-import Sidebar from "@/components/sidebar/Sidebar";
-
-// ... y llama al botón así:
 
 export const Login = () => {
   return (

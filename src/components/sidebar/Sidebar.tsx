@@ -1,28 +1,31 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, LayoutDashboard, Settings, Workflow, ShieldUser, MessageCircle } from 'lucide-react';
-import { useAuth } from '@/hook/useAuth';
+import React from "react";
+import Link from "next/link";
+import {usePathname} from "next/navigation";
+import {Home, LayoutDashboard, Settings, Workflow, ShieldUser, MessageCircle, BookOpenText} from "lucide-react";
+import {useAuth} from "@/hook/useAuth";
 
 interface SidebarProps {
   isOpen: boolean;
   toggle: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({isOpen, toggle}) => {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const {user} = useAuth();
 
   const menuItems = [
-    { name: 'Inicio', href: '/home', icon: <Home size={20} /> },
-    { name: 'Mi Tablero', href: '/profile', icon: <LayoutDashboard size={20} /> },
-    { name: 'Mensajes', href: '/chat', icon: <MessageCircle size={20} /> },
-    { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
-    { name: 'Planes', href: '/planes', icon: <Workflow size={20} /> },
+    {name: "Inicio", href: "/home", icon: <Home size={20} />},
+    {name: "Mi Tablero", href: "/profile", icon: <LayoutDashboard size={20} />},
+    {name: "Mensajes", href: "/chat", icon: <MessageCircle size={20} />},
+    {name: "Configuración", href: "/config", icon: <Settings size={20} />},
+    {name: "Cohorte", href: "/cohorte", icon: <BookOpenText size={20} />},
+    {name: "Planes", href: "/planes", icon: <Workflow size={20} />},
     // Mostrar Administrador solo si el usuario es ADMIN
-    ...(user?.role === 'ADMIN' ? [{ name: 'Administrador' as const, href: '/admin', icon: <ShieldUser size={20} /> }] : []),
+    ...(user?.role === "ADMIN"
+      ? [{name: "Administrador" as const, href: "/admin", icon: <ShieldUser size={20} />}]
+      : []),
   ];
 
   return (
@@ -36,8 +39,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     fixed top-16 left-0 h-[calc(100vh-4rem)] dark:bg-gray-900 text-black  bg-white dark:text-white z-40 transition-transform duration-300 ease-in-out
     ${
       isOpen
-        ? 'translate-x-0 shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]' // 💡 Aquí se aplica la sombra si está ABIERTO
-        : '-translate-x-full'
+        ? "translate-x-0 shadow-[4px_0_15px_-3px_rgba(255,255,0,0.5)]" // 💡 Aquí se aplica la sombra si está ABIERTO
+        : "-translate-x-full"
     }
     w-64
     md:translate-x-0 
@@ -59,7 +62,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                     }}
                     className={`
                       flex items-center space-x-3 p-3 rounded-lg transition-colors
-                      ${pathname === item.href ? 'bg-[#ffff00] text-black font-semibold text-xl' : 'hover:bg-gray-100 hover:scale-105 hover:text-black'}
+                      ${
+                        pathname === item.href
+                          ? "bg-[#ffff00] text-black font-semibold text-xl"
+                          : "hover:bg-gray-100 hover:scale-105 hover:text-black"
+                      }
                     `}
                   >
                     <span className="text-xl">{item.icon}</span>

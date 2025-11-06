@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { usePost } from '@/context/PostContext';
 import { PostType } from '@/interfaces/interfaces.post/post';
 import { formatDateArgentina } from '@/utils/dateFormatter';
@@ -9,6 +10,7 @@ import Avatar from '@/components/ui/Avatar';
 import VideoPlayer from './VideoPlayer';
 import { useAuth } from '@/hook/useAuth';
 import { useRouter } from 'next/navigation';
+import ReportModal from '@/components/common/ReportModal';
 
 // Helpers para resolver avatar y nombre sin bloquear dominios
 function getAvatar(u: any): string {
@@ -28,6 +30,7 @@ export default function Post({ post, onUpdatePost }: { post: PostType; onUpdateP
   const { likePost, addComment, reportPost, deletePost } = usePost();
   const { user } = useAuth();
   const router = useRouter();
+  const [showReportModal, setShowReportModal] = useState(false);
   const safeComments = post.comments ?? [];
   const likesCount: number = (post as any).likes || 0;
   const likedByMe: boolean = Boolean((post as any).likedByMe);
@@ -68,7 +71,7 @@ export default function Post({ post, onUpdatePost }: { post: PostType; onUpdateP
           </div>
         </div>
         <div className="flex gap-2 items-center">
-          <button onClick={() => reportPost(post.id)} className="text-gray-400 hover:text-red-500 transition text-sm">
+          <button onClick={() => setShowReportModal(true)} className="text-gray-400 hover:text-red-500 transition text-sm">
             Reportar
           </button>
           {canDelete && (
@@ -95,6 +98,9 @@ export default function Post({ post, onUpdatePost }: { post: PostType; onUpdateP
       <div className="border-t border-gray-300 pt-3">
         <CommentSection comments={safeComments} postId={post.id} />
       </div>
+
+      {/* Modal de reportes */}
+      {showReportModal && <ReportModal type="post" targetId={post.id} targetTitle={post.content ? post.content.substring(0, 100) : 'Post'} onClose={() => setShowReportModal(false)} />}
     </div>
   );
 }

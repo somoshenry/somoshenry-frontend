@@ -2,6 +2,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { usePost } from '@/context/PostContext';
 import { useAlert } from '@/context/AlertContext';
+import { useAuth } from '@/hook/useAuth';
 import VideoPlayer from './VideoPlayer';
 
 export default function CreatePost() {
@@ -10,9 +11,18 @@ export default function CreatePost() {
   const [preview, setPreview] = useState<string | null>(null);
   const { addPost } = usePost();
   const { showAlert } = useAlert();
+  const { user } = useAuth();
+
+  // Usuario suspendido no puede publicar
+  const isSuspended = user?.status === 'SUSPENDED';
 
   //  Manejo de archivos con validaciones
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (isSuspended) {
+      showAlert('Tu cuenta está suspendida. No puedes publicar contenido 🚫', 'error');
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -36,6 +46,11 @@ export default function CreatePost() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    if (isSuspended) {
+      showAlert('Tu cuenta está suspendida. No puedes publicar contenido 🚫', 'error');
+      return;
+    }
+
     if (!content.trim() && !media) {
       showAlert('Escribe algo o agrega un archivo antes de publicar 📝', 'error');
       return;
@@ -46,6 +61,21 @@ export default function CreatePost() {
     setMedia(null);
     setPreview(null);
   };
+
+  // Si está suspendido, mostrar mensaje
+  if (isSuspended) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl shadow p-6">
+        <div className="flex items-center gap-3 text-red-700 dark:text-red-400">
+          <span className="text-2xl">🚫</span>
+          <div>
+            <h3 className="font-semibold">Cuenta Suspendida</h3>
+            <p className="text-sm">Tu cuenta ha sido suspendida. No puedes crear publicaciones ni comentarios.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="bg-gray-100 rounded-2xl shadow p-6 flex flex-col gap-3">

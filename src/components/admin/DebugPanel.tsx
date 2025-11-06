@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/hook/useAuth';
-import { getUsers, getPosts, getComments } from '@/services/adminService';
+import { getUsers, getPosts } from '@/services/adminService';
 import { Bug, Play, CheckCircle, XCircle } from 'lucide-react';
 
 export default function DebugPanel() {
@@ -36,33 +36,17 @@ export default function DebugPanel() {
       });
     }
 
-    // Test 3: GET /post
+    // Test 3: GET /posts
     try {
       const postsData = await getPosts({ page: 1, limit: 5 });
       testResults.push({
-        test: 'GET /post',
+        test: 'GET /posts',
         success: true,
         data: { total: postsData.total, count: postsData.posts.length },
       });
     } catch (error: any) {
       testResults.push({
-        test: 'GET /post',
-        success: false,
-        error: error.response?.data?.message || error.message,
-      });
-    }
-
-    // Test 4: GET /comment
-    try {
-      const commentsData = await getComments({ page: 1, limit: 5 });
-      testResults.push({
-        test: 'GET /comment',
-        success: true,
-        data: { total: commentsData.total, count: commentsData.comments.length },
-      });
-    } catch (error: any) {
-      testResults.push({
-        test: 'GET /comment',
+        test: 'GET /posts',
         success: false,
         error: error.response?.data?.message || error.message,
       });

@@ -1,11 +1,11 @@
 'use client';
-import { Activity, UserPlus, FileText, MessageSquare } from 'lucide-react';
+import { Activity, UserPlus, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getUsers, getPosts, getComments } from '@/services/adminService';
+import { getUsers, getPosts } from '@/services/adminService';
 
 interface ActivityItem {
   id: string;
-  type: 'user' | 'post' | 'comment';
+  type: 'user' | 'post';
   userName: string;
   action: string;
   time: Date;
@@ -26,9 +26,16 @@ export default function RecentActivity() {
       setLoading(true);
 
       // Obtener datos recientes
-      const [usersData, postsData, commentsData] = await Promise.all([getUsers({ page: 1, limit: 10 }), getPosts({ page: 1, limit: 10 }), getComments({ page: 1, limit: 10 })]);
+      const [usersData, postsData] = await Promise.all([getUsers({ page: 1, limit: 10 }), getPosts({ page: 1, limit: 10 })]);
 
-      // Crear actividades
+      // Validar que tenemos datos
+      if (!usersData || !usersData.users) {
+        console.error('No se recibieron datos de usuarios');
+        setActivities([]);
+        return;
+      }
+
+      // Crear actividades de usuarios
       const userActivities: ActivityItem[] = usersData.users.map((user) => ({
         id: `user-${user.id}`,
         type: 'user' as const,
@@ -39,32 +46,27 @@ export default function RecentActivity() {
         color: 'text-green-500',
       }));
 
-      const postActivities: ActivityItem[] = postsData.posts.map((post) => ({
-        id: `post-${post.id}`,
-        type: 'post' as const,
-        userName: post.user.name || post.user.username || post.user.email.split('@')[0],
-        action: 'publicó un nuevo post',
-        time: new Date(post.createdAt),
-        icon: FileText,
-        color: 'text-blue-500',
-      }));
-
-      const commentActivities: ActivityItem[] = commentsData.comments.map((comment) => ({
-        id: `comment-${comment.id}`,
-        type: 'comment' as const,
-        userName: comment.user.name || comment.user.username || comment.user.email.split('@')[0],
-        action: 'comentó en un post',
-        time: new Date(comment.createdAt),
-        icon: MessageSquare,
-        color: 'text-purple-500',
-      }));
+      // Crear actividades de posts solo si tenemos datos
+      const postActivities: ActivityItem[] =
+        postsData && postsData.posts
+          ? postsData.posts.map((post) => ({
+              id: `post-${post.id}`,
+              type: 'post' as const,
+              userName: post.user.name || post.user.username || post.user.email.split('@')[0],
+              action: 'publicó un nuevo post',
+              time: new Date(post.createdAt),
+              icon: FileText,
+              color: 'text-blue-500',
+            }))
+          : [];
 
       // Combinar y ordenar por fecha
-      const allActivities = [...userActivities, ...postActivities, ...commentActivities].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 15);
+      const allActivities = [...userActivities, ...postActivities].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 15);
 
       setActivities(allActivities);
     } catch (error) {
       console.error('Error al cargar actividades:', error);
+      setActivities([]);
     } finally {
       setLoading(false);
     }
@@ -94,6 +96,8 @@ export default function RecentActivity() {
 
       {loading ? (
         <div className="p-8 text-center text-gray-500 dark:text-gray-400">Cargando actividades...</div>
+      ) : activities.length === 0 ? (
+        <div className="p-8 text-center text-gray-500 dark:text-gray-400">No hay actividad reciente para mostrar</div>
       ) : (
         <div className="p-6">
           <div className="flow-root">

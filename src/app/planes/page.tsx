@@ -1,6 +1,6 @@
 'use client';
 
-import PricingCard from '@/components/landing/LandingPrincingCard';
+import PricingCard from '@/components/planes/PlansCard';
 import { pricingPlans } from '@/components/landing/dataPlans';
 
 export default function PlansPage() {

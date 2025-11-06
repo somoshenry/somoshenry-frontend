@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 import ValidatedInput from "./ValidatedInput";
 import Link from "next/link";
 import Image from "next/image";
-import IRegisterFormProps from "@/interfaces/IRegisterFormProps";
+import IRegisterFormProps from "@/interfaces/login-register/IRegisterFormProps";
 import axios from "axios";
 import LoadingTransition from "@/components/ui/LoadingTransition";
 import {text} from "node:stream/consumers";

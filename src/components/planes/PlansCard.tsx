@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { tokenStore } from '@/services/tokenStore';
 
@@ -30,25 +30,16 @@ interface PricingCardProps {
 const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // 🔒 Detecta si el usuario está logueado al montar
-  useEffect(() => {
-    const token = tokenStore.getAccess();
-    setIsLoggedIn(!!token);
-  }, []);
 
   const handleSubscribe = async () => {
     const token = tokenStore.getAccess();
 
-    // 🚫 Si no está logueado, redirige al login
     if (!token) {
-      alert('Debes iniciar sesión o registrarte para suscribirte.');
-      router.push('/register');
+      router.push('/login');
       return;
     }
 
-    // 🎟️ Si el plan es gratuito, envía al registro
+    // Evita redirección a MP para el plan gratuito
     if (plan.id === 'free') {
       router.push('/register');
       return;
@@ -81,9 +72,11 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
       );
 
       const data = await res.json();
-      if (!data.success) throw new Error('No se pudo crear la preferencia de pago.');
 
-      // 🔗 Redirige a Mercado Pago
+      if (!data.success) {
+        throw new Error('No se pudo crear la preferencia de pago.');
+      }
+
       window.location.href = data.initPoint;
     } catch (err) {
       console.error('Error al crear la preferencia de pago:', err);
@@ -109,7 +102,9 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
         {plan.badge}
       </span>
 
-      <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">{plan.name}</h3>
+      <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
+        {plan.name}
+      </h3>
 
       <div className="text-5xl font-bold mb-3 text-gray-900 dark:text-white">
         {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
@@ -155,11 +150,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
           loading ? 'opacity-70 cursor-not-allowed' : ''
         }`}
       >
-        {loading
-          ? 'Redirigiendo...'
-          : isLoggedIn
-          ? plan.buttonText
-          : 'Iniciá sesión o registrate'}
+        {loading ? 'Redirigiendo...' : plan.buttonText}
       </button>
     </div>
   );

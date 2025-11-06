@@ -12,9 +12,11 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
   const { notifications, markAsRead, markAllAsRead } = useNotifications();
   const router = useRouter();
 
-  const handleNotificationClick = (notificationId: string, postId: string) => {
+  const handleNotificationClick = (notificationId: string, postId?: string) => {
     markAsRead(notificationId);
-    router.push(`/home`); // Podrías navegar a `/post/${postId}` si tienes esa ruta
+    if (postId) {
+      router.push(`/home`); // Podrías navegar a `/post/${postId}` si tienes esa ruta
+    }
     onClose();
   };
 
@@ -43,22 +45,37 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
             <div key={notification.id} onClick={() => handleNotificationClick(notification.id, notification.postId)} className={`p-4 cursor-pointer transition hover:bg-gray-50 dark:hover:bg-gray-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
               <div className="flex items-start gap-3">
                 {/* Avatar */}
-                <img src={notification.authorAvatar || '/avatars/default.svg'} alt={notification.authorName} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                {notification.type !== 'system' && <img src={notification.authorAvatar || '/avatars/default.svg'} alt={notification.authorName} className="w-10 h-10 rounded-full object-cover shrink-0" />}
+                {notification.type === 'system' && (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shrink-0">
+                    <span className="text-white text-xl">🔔</span>
+                  </div>
+                )}
 
                 {/* Contenido */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">
-                    <span className="font-semibold">{notification.authorName}</span>
-                    {notification.type === 'like' && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu publicación</span>}
-                    {notification.type === 'comment' && <span className="text-gray-700 dark:text-gray-300"> comentó en tu publicación</span>}
-                    {notification.type === 'comment-like' && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu comentario</span>}
-                  </p>
+                  {notification.type === 'system' ? (
+                    <>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{notification.systemTitle}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{notification.systemMessage}</p>
+                      {notification.postContent && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">"{notification.postContent}"</p>}
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm">
+                        <span className="font-semibold">{notification.authorName}</span>
+                        {notification.type === 'like' && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu publicación</span>}
+                        {notification.type === 'comment' && <span className="text-gray-700 dark:text-gray-300"> comentó en tu publicación</span>}
+                        {notification.type === 'comment-like' && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu comentario</span>}
+                      </p>
 
-                  {/* Preview del post */}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{notification.postContent}</p>
+                      {/* Preview del post */}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{notification.postContent}</p>
 
-                  {/* Si es comentario o like a comentario, mostrar el texto del comentario */}
-                  {(notification.type === 'comment' || notification.type === 'comment-like') && notification.commentContent && <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{notification.commentContent}"</p>}
+                      {/* Si es comentario o like a comentario, mostrar el texto del comentario */}
+                      {(notification.type === 'comment' || notification.type === 'comment-like') && notification.commentContent && <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{notification.commentContent}"</p>}
+                    </>
+                  )}
 
                   {/* Fecha */}
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{formatDateArgentina(notification.createdAt)}</p>

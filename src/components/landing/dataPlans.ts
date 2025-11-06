@@ -33,7 +33,7 @@ export const pricingPlans = [
       {text: "Soporte prioritario"},
       {text: "Sin anuncios"},
     ],
-    buttonText: "Suscribirse",
+    buttonText: "Suscribirse Ahora",
     buttonColor: "bg-gray-400 hover:bg-gray-500 mt-27 text-white",
     borderColor: "border-t-4 border-gray-400 dark:border-gray-400",
   },

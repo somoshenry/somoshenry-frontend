@@ -2,8 +2,9 @@
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
 import SearchUserModal from '@/components/chat/SearchUserModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hook/useAuth';
+import { useChat } from '@/context/ChatContext';
 
 export interface Message {
   id: string;
@@ -43,6 +44,13 @@ export default function ChatPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const { user } = useAuth();
+  const { markMessagesAsRead } = useChat();
+
+  // Marcar mensajes como leídos cuando el usuario entra a la página de chat
+  useEffect(() => {
+    markMessagesAsRead();
+  }, [markMessagesAsRead]);
+
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '1',

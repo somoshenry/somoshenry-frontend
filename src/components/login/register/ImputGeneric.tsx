@@ -1,4 +1,4 @@
-import IinputGenericProps from "../../../interfaces/IImputGenericProps";
+import IinputGenericProps from "../../../interfaces/login-register/IImputGenericProps";
 
 export const ImputGeneric = ({id, label, labelRightContent, rightContent, ...props}: IinputGenericProps) => {
   return (

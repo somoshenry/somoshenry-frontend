@@ -2,7 +2,7 @@
 import {useState} from "react";
 import ImputGeneric from "./ImputGeneric";
 import {Info, Check, X, Eye, EyeClosed} from "lucide-react";
-import IinputGenericProps from "../../../interfaces/IImputGenericProps";
+import IinputGenericProps from "../../../interfaces/login-register/IImputGenericProps";
 
 type Rule = {
   text: string;

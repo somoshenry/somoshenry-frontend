@@ -1,3 +1,44 @@
+import CardMensaje, {CardMensajeProps} from "@/components/cohorte/ProfesorCard";
+
+const mockedPosts: CardMensajeProps[] = [
+  {
+    nombre: "Dr. Ana López",
+    rol: "Decana de Ingeniería",
+    fecha: "16:45 · 2 Nov", // Formato string simplificado
+    titulo: "Recordatorio: ¡Semana de Proyectos Finales!",
+    mensaje:
+      "Estimados alumnos, les recuerdo que esta semana es crucial para sus proyectos. No olviden subir sus avances y cumplir con los requisitos del manual. ¡Éxito a todos!",
+    linkConectate: "https://plataforma.uni.edu/proyectos",
+  },
+  {
+    nombre: "Lic. Raúl Martínez",
+    rol: "Profesor de Matemáticas",
+    fecha: "09:10 · 30 Oct",
+    titulo: "Aviso: Cambio de horario en Tutorías",
+    mensaje:
+      "Por motivos de un seminario, la tutoría de este viernes 3 de noviembre se moverá de 10:00 AM a 12:00 PM. Por favor, revisen el aula asignada en la plataforma.",
+    linkConectate: undefined, // Esta publicación no tiene enlace
+  },
+  {
+    nombre: "Mtra. Sofía Vargas",
+    rol: "Coordinadora de Posgrado",
+    fecha: "11:20 · 1 Nov",
+    titulo: "¡Conferencia Invitada la Próxima Semana!",
+    mensaje:
+      "Tendremos el honor de recibir al Dr. Kenji Sato, experto en IA ética, el martes. Es una oportunidad única para aprender sobre las últimas tendencias. ¡No falten!",
+    linkConectate: "https://zoom.us/webinar/2345678",
+  },
+  {
+    nombre: "Ing. Carlos Reyes",
+    rol: "Director de TI",
+    fecha: "18:00 · 29 Oct",
+    titulo: "Mantenimiento de Servidores Programado",
+    mensaje:
+      "La plataforma estará inactiva por mantenimiento el domingo 5 de noviembre de 01:00 AM a 06:00 AM. Agradecemos su comprensión.",
+    linkConectate: "https://estatus.servidores.uni.com",
+  },
+];
+
 const Cohorte = () => {
   return (
     <div className="h-full bg-white dark:bg-gray-900 pt-16 md:ml-64">
@@ -48,7 +89,20 @@ const Cohorte = () => {
           </div>
         </div>
       </div>
-      <div className=" rounded-xl md:m-5 m-2 md:pt-5 pt-2 p-5 bg-gray-100  dark:bg-gray-800 min-h-screen"></div>
+      <div className=" rounded-xl md:m-5 m-2 md:pt-5 pt- p-5 bg-gray-100 mt-6  dark:bg-gray-800 min-h-screen">
+        {mockedPosts.map((post, index) => (
+          <CardMensaje
+            key={index}
+            {...post}
+            // Esto asegurará que al menos un mensaje se renderice si no se usa el mockedPosts
+            // nombre="Nayeil Arias"
+            // rol="Maestra"
+            // fecha="13 Nov 11:20"
+            // titulo="¡Bienvenido, esta será nuestra primera clase!"
+            // mensaje="Asegúrate de conectarte a este dewegvfguwedvugewuwefhwfbe hfbe edfefefefefefefffe wjhf..."
+          />
+        ))}
+      </div>
     </div>
   );
 };

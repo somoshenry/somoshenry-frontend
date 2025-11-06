@@ -6,7 +6,7 @@ import {ValidationError} from "yup";
 import Swal from "sweetalert2";
 import ImputGeneric from "./ImputGeneric";
 import ButtonForm from "./ButtonForm";
-import ILoginFormProps from "@/interfaces/ILoginFormProps";
+import ILoginFormProps from "@/interfaces/login-register/ILoginFormProps";
 import {useRouter} from "next/navigation";
 import {useAuth} from "@/hook/useAuth";
 import axios from "axios";

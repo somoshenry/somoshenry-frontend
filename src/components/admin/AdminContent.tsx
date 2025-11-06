@@ -7,9 +7,8 @@ import StatsOverview from './StatsOverview';
 import ReportedPosts from './ReportedPosts';
 import ReportedComments from './ReportedComments';
 import UserManagement from './UserManagement';
-import RecentActivity from './RecentActivity';
+import AuditLog from './AuditLog';
 import { Shield, AlertTriangle } from 'lucide-react';
-import DebugPanel from './DebugPanel';
 
 export default function AdminContent() {
   const { user, loading } = useAuth();
@@ -85,10 +84,6 @@ export default function AdminContent() {
         </div>
 
         {/* Estadísticas generales */}
-        {/* Panel de Debug */}
-        <DebugPanel />
-
-        {/* Estadísticas generales */}
         <StatsOverview />
 
         {/* Grid de secciones principales */}
@@ -103,8 +98,10 @@ export default function AdminContent() {
         {/* Gestión de usuarios */}
         <UserManagement />
 
-        {/* Actividad reciente */}
-        <RecentActivity />
+        {/* Registro de Auditoría - TEMPORALMENTE DESHABILITADO hasta que se corrija el backend */}
+        {/* El archivo admin-audit.module.ts.ts tiene extensión incorrecta (.ts.ts) y el import también está mal */}
+        {/* Para habilitar: corregir en backend el nombre de archivo y el import en admin-dashboard.module.ts */}
+        {/* <AuditLog /> */}
       </div>
     </div>
   );

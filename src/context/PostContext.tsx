@@ -14,7 +14,7 @@ interface PostContextType {
   likePost: (id: string) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<void>;
   likeComment: (commentId: string) => Promise<void>;
-  reportPost: (postId: string) => Promise<void>;
+  reportPost: (postId: string, reason: string, description?: string) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
 }
 
@@ -86,9 +86,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   // ✅ Obtiene y normaliza los posts (con control de token)
   const fetchPosts = useCallback(async () => {
-    if (!hasValidToken()) {
-      console.warn('No hay token válido, omitiendo fetch de posts.');
-      setPosts([]);
+    // No intentar cargar posts si no hay token
+    const token = tokenStore.getAccess();
+    if (!token) {
+      console.log('No hay token, saltando carga de posts');
       return;
     }
 
@@ -98,17 +99,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
       const postsArray = Array.isArray(data) ? data : data.data;
       const postsWithComments = await Promise.all((postsArray || []).map(normalizePost));
       setPosts(postsWithComments);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        console.warn('Token expirado o inválido. Cerrando sesión automáticamente.');
-        tokenStore.clear();
-        setPosts([]);
-        showAlert('Tu sesión expiró. Iniciá sesión nuevamente.', 'info');
-        if (typeof window !== 'undefined') window.location.href = '/login';
-      } else {
-        console.error('Error al cargar posts:', err);
+    } catch (err) {
+      console.error('Error al cargar posts:', err);
+      // Solo mostrar alerta si no es un error 401 (no autenticado)
+      if ((err as any)?.response?.status !== 401) {
         showAlert('Error al cargar publicaciones ❌', 'error');
       }
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -116,14 +113,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   // ✅ Refresco silencioso con protección
   const refreshPostsSilently = useCallback(async () => {
-    if (!hasValidToken()) return;
+    // No intentar refrescar si no hay token
+    const token = tokenStore.getAccess();
+    if (!token) return;
+
     try {
       const { data } = await api.get('/posts');
       const postsArray = Array.isArray(data) ? data : data.data;
       const normalized = await Promise.all((postsArray || []).map(normalizePost));
       setPosts(normalized);
     } catch (err) {
-      console.warn('Error refrescando publicaciones (silencioso):', err);
+      // silencioso - no mostrar error si es 401
+      if ((err as any)?.response?.status !== 401) {
+        console.warn('Error refrescando publicaciones (silencioso):', err);
+      }
     }
   }, [user?.id]);
 
@@ -253,9 +256,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       setPosts((prev) =>
         prev.map((p) => ({
           ...p,
-          comments: (p.comments || []).map((c) =>
-            c.id === commentId ? { ...c, likeCount: Math.max(0, (c.likeCount || 0) + delta) } : c
-          ),
+          comments: (p.comments || []).map((c) => (c.id === commentId ? { ...c, likeCount: Math.max(0, (c.likeCount || 0) + delta) } : c)),
         }))
       );
       showAlert(delta > 0 ? 'Like agregado ✅' : 'Like quitado ✅', 'success');
@@ -265,10 +266,15 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const reportPost = async (postId: string) => {
+  //  Reportar post
+  const reportPost = async (postId: string, reason: string, description?: string) => {
     try {
-      await api.post(`/posts/${postId}/report`);
-      showAlert('Reporte enviado correctamente ✅', 'success');
+      await api.post('/reports', {
+        postId,
+        reason,
+        description,
+      });
+      showAlert('Reporte enviado correctamente. Será revisado por los administradores ✅', 'success');
     } catch (err) {
       console.error('Error al reportar post:', err);
       showAlert('Error al enviar el reporte ❌', 'error');

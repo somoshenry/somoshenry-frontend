@@ -2,17 +2,22 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../hook/useAuth';
+import { getSystemNotifications, markSystemNotificationAsRead, SystemNotification } from '../services/notificationService';
 
 export interface Notification {
   id: string;
-  type: 'like' | 'comment' | 'comment-like';
-  postId: string;
-  postContent: string;
+  type: 'like' | 'comment' | 'comment-like' | 'system';
+  postId?: string;
+  postContent?: string;
   authorName: string;
   authorAvatar?: string;
-  commentContent?: string; // Si es un comentario, el texto del comentario
+  commentContent?: string;
   createdAt: string;
   read: boolean;
+  // Para notificaciones del sistema
+  systemType?: string;
+  systemTitle?: string;
+  systemMessage?: string;
 }
 
 interface NotificationContextType {
@@ -191,6 +196,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Agregar notificaciones del sistema
+      const systemNotifs = getSystemNotifications(user.id);
+      for (const sn of systemNotifs) {
+        built.push({
+          id: sn.id,
+          type: 'system',
+          authorName: 'Sistema',
+          createdAt: sn.createdAt,
+          read: sn.read,
+          systemType: sn.type,
+          systemTitle: sn.title,
+          systemMessage: sn.message,
+          postId: sn.metadata?.postId,
+          postContent: sn.metadata?.postContent,
+        });
+      }
+
       // Deduplicar por id y re-aplicar estado de lectura persistido
       const uniqMap = new Map<string, Notification>();
       for (const n of built) {
@@ -213,6 +235,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // Marcar notificación como leída
   const markAsRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+
+    // Si es una notificación del sistema, marcarla en su storage
+    const notification = notifications.find((n) => n.id === id);
+    if (notification?.type === 'system' && user) {
+      markSystemNotificationAsRead(user.id, id);
+    }
+
     // Persistir
     setReadIds((prev) => {
       const next = new Set(prev);
@@ -294,7 +323,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       fetchNotifications();
     }, 60000); // Cada 60 segundos
 
-    return () => clearInterval(interval);
+    // Listener para notificaciones del sistema en tiempo real
+    const handleSystemNotification = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('systemNotification', handleSystemNotification);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('systemNotification', handleSystemNotification);
+    };
   }, [fetchNotifications, user]);
 
   return (

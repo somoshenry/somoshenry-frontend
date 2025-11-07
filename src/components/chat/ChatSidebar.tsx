@@ -1,66 +1,89 @@
 'use client';
-import { Conversation } from '@/app/chat/page';
+import { useEffect, useState } from 'react';
+import { useChat } from '@/context/ChatContext';
+import { api } from '@/services/api';
+import { useAuth } from '@/'; // Asegúrate de tener esto o algo equivalente
 
-interface ChatSidebarProps {
-  conversations: Conversation[];
-  selectedId: string | null;
-  onSelectConversation: (id: string) => void;
-  onOpenSearch: () => void;
+interface Conversation {
+  id: string;
+  userName?: string;
+  userAvatar?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  unreadCount?: number;
 }
 
-export default function ChatSidebar({ conversations, selectedId, onSelectConversation, onOpenSearch }: ChatSidebarProps) {
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+export default function ChatSidebar({ onSelectConversation, onOpenSearch }: { onSelectConversation: (id: string) => void; onOpenSearch: () => void }) {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const { currentConversation, joinConversation } = useChat();
+  const { currentUser } = useAuth(); // tu usuario logueado (debe tener id, name, etc.)
 
-    if (minutes < 1) return 'Ahora';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-  };
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const { data } = await api.get('/chat/conversations');
+
+        // Si tu backend devuelve { data: [...] }, ajustamos eso:
+        const list = Array.isArray(data) ? data : data.data;
+
+        const formatted = list.map((c: any) => {
+          // encontrar el otro usuario (no el actual)
+          const peer = c.participants?.find((p: any) => p.id !== currentUser?.id);
+
+          return {
+            id: c.id,
+            userName: peer?.name || `${peer?.username || 'Usuario'}`,
+            userAvatar: peer?.profilePicture || '/default-avatar.png',
+            lastMessage: c.lastMessage?.content || '',
+            lastMessageTime: c.lastMessage?.createdAt,
+            unreadCount: c.unreadCount || 0,
+          };
+        });
+
+        setConversations(formatted);
+      } catch (error) {
+        console.error('❌ Error cargando conversaciones:', error);
+      }
+    };
+
+    fetchConversations();
+  }, [currentConversation, currentUser]);
+
+  const formatTime = (date?: string) => (date ? new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '');
 
   return (
     <div className="w-full md:w-80 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
-      {/* Header */}
+      {/* HEADER */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mensajes</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{conversations.length} conversaciones</p>
-        </div>
-        <button onClick={onOpenSearch} className="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500 text-black transition-colors" title="Nueva conversación">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mensajes</h1>
+        <button onClick={onOpenSearch} className="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500 text-black transition-colors">
+          +
         </button>
       </div>
 
-      {/* Lista de conversaciones */}
+      {/* CONVERSATIONS LIST */}
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             <p>No tienes conversaciones aún</p>
-            <p className="text-sm mt-2">Envía un mensaje para empezar</p>
           </div>
         ) : (
           conversations.map((conv) => (
-            <button key={conv.id} onClick={() => onSelectConversation(conv.id)} className={`w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${selectedId === conv.id ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-l-yellow-500' : ''}`}>
-              {/* Avatar */}
-              <div className="relative shrink-0">
-                {conv.userAvatar ? <img src={conv.userAvatar} alt={conv.userName || conv.groupName || 'Usuario'} className="w-12 h-12 rounded-full object-cover" /> : <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold">{(conv.userName || conv.groupName || 'U').charAt(0).toUpperCase()}</div>}
-                {conv.unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{conv.unreadCount}</span>}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0 text-left">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className={`font-semibold truncate ${conv.unreadCount > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>{conv.userName || conv.groupName || 'Conversación'}</h3>
+            <button
+              key={conv.id}
+              onClick={() => {
+                joinConversation(conv.id);
+                onSelectConversation(conv.id);
+              }}
+              className={`w-full p-4 flex items-start gap-3 border-b hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${currentConversation?.id === conv.id ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}
+            >
+              <img src={conv.userAvatar} alt={conv.userName} className="w-12 h-12 rounded-full object-cover" />
+              <div className="flex-1 text-left">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 dark:text-white truncate">{conv.userName}</h3>
                   <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 shrink-0">{formatTime(conv.lastMessageTime)}</span>
                 </div>
-                <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'}`}>{conv.lastMessage}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{conv.lastMessage || 'Sin mensajes aún'}</p>
               </div>
             </button>
           ))

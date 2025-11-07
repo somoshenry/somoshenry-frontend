@@ -9,7 +9,6 @@ import { ChatProvider } from '../context/ChatContext';
 import Nav from '../components/nav/Nav';
 import FloatingChatButton from '../components/chat/FloatingChatButton';
 
-// Importar herramientas de desarrollo del chat (solo en desarrollo)
 if (process.env.NODE_ENV === 'development') {
   import('../utils/chatDevTools');
 }

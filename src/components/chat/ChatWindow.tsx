@@ -1,178 +1,132 @@
 'use client';
-import { Conversation } from '@/app/chat/page';
-import { useState, useRef, useEffect } from 'react';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'; // 👈 agregado
+import { useEffect, useRef, useState } from 'react';
+import { useChat } from '@/context/ChatContext';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+import { uploadFile } from '@/services/upload';
 
-interface ChatWindowProps {
-  conversation: Conversation | undefined;
-  onSendMessage: (content: string) => void;
-}
-
-export default function ChatWindow({ conversation, onSendMessage }: ChatWindowProps) {
+export default function ChatWindow() {
+  const { currentConversation, messages, sendMessage } = useChat();
   const [newMessage, setNewMessage] = useState('');
-  const [showEmoji, setShowEmoji] = useState(false); // 👈 estado para mostrar/ocultar picker
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll al último mensaje
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation?.messages]);
+  }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim() && conversation) {
-      onSendMessage(newMessage);
+    if (!currentConversation) return;
+
+    if (file) {
+      setUploading(true);
+      try {
+        const url = await uploadFile(file);
+        const fileType = file.type.startsWith('image') ? 'IMAGE' : file.type.startsWith('video') ? 'VIDEO' : file.type.startsWith('audio') ? 'AUDIO' : 'FILE';
+        await sendMessage(currentConversation.id, '', fileType, url);
+        setPreview(null);
+        setFile(null);
+      } finally {
+        setUploading(false);
+      }
+    } else if (newMessage.trim()) {
+      await sendMessage(currentConversation.id, newMessage, 'TEXT');
       setNewMessage('');
     }
   };
 
-  const handleEmojiClick = (emojiData: EmojiClickData) => {
-    setNewMessage((prev) => prev + emojiData.emoji);
+  const handleEmojiClick = (emojiData: EmojiClickData) => setNewMessage((prev) => prev + emojiData.emoji);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
+    setPreview(URL.createObjectURL(selectedFile));
   };
 
-  const formatMessageTime = (date: Date) => {
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  };
+  const formatTime = (date: string) => new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
-  if (!conversation) {
+  if (!currentConversation) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <svg
-            className="w-24 h-24 mx-auto mb-4 text-gray-300 dark:text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-          <p className="text-lg font-medium">Selecciona una conversación</p>
-          <p className="text-sm mt-2">Elige un chat de la lista para empezar a conversar</p>
-        </div>
+        <p className="text-gray-500">Selecciona una conversación</p>
       </div>
     );
   }
 
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
-      {/* Header del chat */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center gap-3">
-        {conversation.userAvatar ? (
-          <img
-            src={conversation.userAvatar}
-            alt={conversation.userName || conversation.groupName || 'Chat'}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold">
-            {(conversation.userName || conversation.groupName || 'C').charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div>
-          <h2 className="font-semibold text-gray-900 dark:text-white">
-            {conversation.userName || conversation.groupName || 'Conversación'}
-          </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">En línea</p>
-        </div>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3 bg-white dark:bg-gray-800">
+        <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold">{(currentConversation.participants[1]?.name || 'U').charAt(0).toUpperCase()}</div>
+        <h2 className="font-semibold text-gray-900 dark:text-white">{currentConversation.participants[1]?.name || 'Usuario'}</h2>
       </div>
 
-      {/* Mensajes */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
-        {conversation.messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`flex gap-2 max-w-[70%] ${
-                message.isOwn ? 'flex-row-reverse' : 'flex-row'
-              }`}
-            >
-              {!message.isOwn && (
-                <div className="shrink-0">
-                  {conversation.userAvatar ? (
-                    <img
-                      src={conversation.userAvatar}
-                      alt={message.senderName}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-black text-xs font-bold">
-                      {message.senderName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.senderId === currentConversation.participants[0]?.id ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[70%] px-4 py-2 rounded-2xl ${msg.senderId === currentConversation.participants[0]?.id ? 'bg-yellow-400 text-black' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'}`}>
+              {msg.mediaUrl ? (
+                msg.type === 'IMAGE' ? (
+                  <img src={msg.mediaUrl} alt="img" className="rounded-lg max-w-[250px]" />
+                ) : msg.type === 'VIDEO' ? (
+                  <video controls className="rounded-lg max-w-[250px]">
+                    <source src={msg.mediaUrl} />
+                  </video>
+                ) : msg.type === 'AUDIO' ? (
+                  <audio controls src={msg.mediaUrl} />
+                ) : (
+                  <a href={msg.mediaUrl} target="_blank" rel="noreferrer" className="underline">
+                    Archivo adjunto
+                  </a>
+                )
+              ) : (
+                <p className="text-sm break-words">{msg.content}</p>
               )}
-
-              <div>
-                <div
-                  className={`rounded-2xl px-4 py-2 ${
-                    message.isOwn
-                      ? 'bg-yellow-400 text-black'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-word">
-                    {message.content}
-                  </p>
-                </div>
-                <p
-                  className={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${
-                    message.isOwn ? 'text-right' : 'text-left'
-                  }`}
-                >
-                  {formatMessageTime(message.timestamp)}
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 mt-1">{formatTime(msg.createdAt)}</p>
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input de mensaje con emojis */}
-      <form
-        onSubmit={handleSubmit}
-        className="relative p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-      >
-        {/* Picker flotante */}
+      <form onSubmit={handleSubmit} className="relative p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         {showEmoji && (
           <div className="absolute bottom-20 left-4 z-50">
             <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.LIGHT} />
           </div>
         )}
 
+        {preview && (
+          <div className="p-2 mb-2 border rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center gap-3">
+            {file?.type.startsWith('image') && <img src={preview} className="w-16 h-16 rounded object-cover" alt="preview" />}
+            <p className="text-sm truncate flex-1">{file?.name}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setFile(null);
+                setPreview(null);
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
-          {/* Botón emoji */}
-          <button
-            type="button"
-            onClick={() => setShowEmoji(!showEmoji)}
-            className="text-2xl hover:scale-110 transition-transform"
-          >
+          <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="text-2xl hover:scale-110 transition-transform">
             😊
           </button>
-
-          {/* Input de texto */}
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
-
-          {/* Botón enviar */}
-          <button
-            type="submit"
-            disabled={!newMessage.trim()}
-            className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-medium rounded-full transition-colors"
-          >
-            Enviar
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="text-2xl hover:scale-110 transition-transform">
+            📎
+          </button>
+          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+          <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escribe un mensaje..." className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+          <button type="submit" disabled={uploading || (!newMessage.trim() && !file)} className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-black font-medium rounded-full transition-colors">
+            {uploading ? 'Enviando...' : 'Enviar'}
           </button>
         </div>
       </form>

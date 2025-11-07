@@ -1,12 +1,16 @@
 'use client';
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { useAuth } from '../hook/useAuth';
+import { useSocket } from '../hook/useSocket';
+import { getUserConversations, Message } from '@/services/chatService';
+import { tokenStore } from '@/services/tokenStore';
 
 interface ChatContextType {
   unreadMessagesCount: number;
   hasNewMessages: boolean;
   markMessagesAsRead: () => void;
   refreshUnreadCount: () => void;
+  isSocketConnected: boolean;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -16,48 +20,82 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { user } = useAuth();
 
+  // Verificar si el chat está habilitado
+  const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED !== 'false';
+
+  // Obtener token para WebSocket
+  const token = tokenStore.getAccess();
+
+  // Conectar al WebSocket solo si el chat está habilitado
+  const socket = useSocket({
+    token: token || null,
+    enabled: chatEnabled && !!user && !!token,
+  });
+
   // Función para obtener el conteo de mensajes no leídos
   const refreshUnreadCount = useCallback(async () => {
-    if (!user) {
+    if (!user || !chatEnabled) {
       setUnreadMessagesCount(0);
       setHasNewMessages(false);
       return;
     }
 
     try {
-      // TODO: Aquí deberías hacer una petición al backend para obtener
-      // el conteo real de mensajes no leídos
-      // Ejemplo:
-      // const { data } = await api.get('/messages/unread-count');
-      // setUnreadMessagesCount(data.count);
+      // Obtener todas las conversaciones del usuario
+      const conversations = await getUserConversations();
 
-      // Por ahora, usamos datos de ejemplo del localStorage
-      const storedCount = localStorage.getItem('unreadMessagesCount');
-      const count = storedCount ? parseInt(storedCount, 10) : 0;
-      setUnreadMessagesCount(count);
-      setHasNewMessages(count > 0);
-    } catch (error) {
+      // Contar mensajes no leídos (mensajes donde el sender no es el usuario actual y no están leídos)
+      let totalUnread = 0;
+      conversations.forEach((conv) => {
+        const unreadInConv = conv.messages.filter((msg: Message) => msg.sender?.id !== user?.id && !msg.isRead).length;
+        totalUnread += unreadInConv;
+      });
+
+      setUnreadMessagesCount(totalUnread);
+      setHasNewMessages(totalUnread > 0);
+    } catch (error: any) {
+      // Si el módulo de chat no está disponible (404), no hacer nada
+      if (error?.response?.status === 404) {
+        console.log('ℹ️ Módulo de chat no disponible en el backend');
+        setUnreadMessagesCount(0);
+        setHasNewMessages(false);
+        return;
+      }
       console.error('Error al obtener mensajes no leídos:', error);
     }
-  }, [user]);
+  }, [user, chatEnabled]);
 
   // Función para marcar mensajes como leídos
   const markMessagesAsRead = useCallback(() => {
     setUnreadMessagesCount(0);
     setHasNewMessages(false);
-    localStorage.setItem('unreadMessagesCount', '0');
   }, []);
 
-  // Simular recepción de nuevos mensajes (esto se reemplazará con WebSocket/polling real)
+  // Escuchar nuevos mensajes por WebSocket
+  useEffect(() => {
+    if (!socket.isConnected) return;
+
+    const cleanup = socket.onMessageReceived((message: Message) => {
+      // SOLO incrementar contador si el mensaje NO es del usuario actual
+      // (cuando alguien te envía un mensaje, no cuando tú envías)
+      if (message.sender?.id && message.sender.id !== user?.id) {
+        setUnreadMessagesCount((prev) => prev + 1);
+        setHasNewMessages(true);
+      }
+    });
+
+    return cleanup;
+  }, [socket.isConnected, socket, user]);
+
+  // Actualizar contador al montar y cada 30 segundos
   useEffect(() => {
     if (!user) return;
 
     refreshUnreadCount();
 
-    // Verificar nuevos mensajes cada 10 segundos
     const interval = setInterval(() => {
       refreshUnreadCount();
-    }, 10000);
+    }, 30000); // cada 30 segundos
 
     return () => clearInterval(interval);
   }, [user, refreshUnreadCount]);
@@ -69,6 +107,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         hasNewMessages,
         markMessagesAsRead,
         refreshUnreadCount,
+        isSocketConnected: socket.isConnected,
       }}
     >
       {children}

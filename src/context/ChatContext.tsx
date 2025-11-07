@@ -76,8 +76,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (!socket.isConnected) return;
 
     const cleanup = socket.onMessageReceived((message: Message) => {
-      // Si el mensaje no es del usuario actual, incrementar contador
-      if (message.sender.id !== user?.id) {
+      // SOLO incrementar contador si el mensaje NO es del usuario actual
+      // (cuando alguien te envía un mensaje, no cuando tú envías)
+      if (message.sender?.id && message.sender.id !== user?.id) {
         setUnreadMessagesCount((prev) => prev + 1);
         setHasNewMessages(true);
       }

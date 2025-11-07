@@ -93,19 +93,51 @@ export async function markMessageAsRead(messageId: string): Promise<Message> {
 }
 
 /**
+ * Marca todos los mensajes de una conversación como leídos
+ */
+export async function markConversationAsRead(conversationId: string): Promise<void> {
+  try {
+    // Obtener las conversaciones y encontrar los mensajes no leídos
+    const conversations = await getUserConversations();
+    const conversation = conversations.find((c) => c.id === conversationId);
+
+    if (conversation) {
+      // Marcar cada mensaje no leído
+      const unreadMessages = conversation.messages.filter((msg) => !msg.isRead);
+      await Promise.all(unreadMessages.map((msg) => markMessageAsRead(msg.id).catch(() => {})));
+    }
+  } catch (error) {
+    console.error('Error al marcar conversación como leída:', error);
+  }
+}
+
+/**
  * Sube un archivo multimedia para el chat
  */
 export async function uploadChatMedia(file: File): Promise<{ url: string }> {
-  const formData = new FormData();
-  formData.append('file', file);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const { data } = await api.post<{ url: string }>('/chat/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+    console.log('📤 Enviando archivo:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
 
-  return data;
+    const { data } = await api.post<{ url: string }>('/chat/upload', formData);
+
+    console.log('✅ Respuesta del servidor:', data);
+    return data;
+  } catch (error: any) {
+    console.error('❌ Error al subir archivo:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
 }
 
 /**

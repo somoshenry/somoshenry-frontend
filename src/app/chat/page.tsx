@@ -101,6 +101,23 @@ export default function ChatPage() {
     [getConversationCache]
   );
 
+  // Funciones para persistir última lectura de conversaciones
+  const getLastReadTimestamp = useCallback((conversationId: string): Date | null => {
+    if (typeof window === 'undefined') return null;
+    const cached = localStorage.getItem('chat_last_read');
+    if (!cached) return null;
+    const timestamps = JSON.parse(cached);
+    return timestamps[conversationId] ? new Date(timestamps[conversationId]) : null;
+  }, []);
+
+  const saveLastReadTimestamp = useCallback((conversationId: string) => {
+    if (typeof window === 'undefined') return;
+    const cached = localStorage.getItem('chat_last_read');
+    const timestamps = cached ? JSON.parse(cached) : {};
+    timestamps[conversationId] = new Date().toISOString();
+    localStorage.setItem('chat_last_read', JSON.stringify(timestamps));
+  }, []);
+
   const getUserIdFromConversation = useCallback(
     (conversationId: string) => {
       const cache = getConversationCache();
@@ -181,8 +198,17 @@ export default function ChatPage() {
       const messages = (conv.messages || []).map((msg) => convertMessage(msg, currentUserId));
       const lastMsg = messages[messages.length - 1];
 
-      // Contar mensajes no leídos
-      const unreadCount = (conv.messages || []).filter((msg) => msg.sender?.id !== currentUserId && !msg.isRead).length;
+      // Obtener el timestamp de la última vez que leíste esta conversación
+      const lastReadTime = getLastReadTimestamp(conv.id);
+
+      // Contar mensajes no leídos: mensajes del otro usuario que llegaron después de la última lectura
+      let unreadCount = 0;
+      if (lastReadTime) {
+        unreadCount = messages.filter((msg) => !msg.isOwn && msg.timestamp > lastReadTime).length;
+      } else {
+        // Si nunca has leído esta conversación, contar todos los mensajes del otro usuario
+        unreadCount = messages.filter((msg) => !msg.isOwn).length;
+      }
 
       // Obtener userId del otro usuario
       let userId = otherUser?.id;
@@ -203,6 +229,15 @@ export default function ChatPage() {
       // Intentar obtener info del usuario
       let userName = otherUser ? getDisplayName(otherUser) : undefined;
       let userAvatar = otherUser?.profilePicture;
+
+      // Si tenemos otherUser, guardarlo en cache
+      if (otherUser && userId) {
+        saveUserToCache(userId, {
+          name: getDisplayName(otherUser),
+          avatar: otherUser.profilePicture || undefined,
+        });
+        saveConversationUserMapping(conv.id, userId);
+      }
 
       // Si no tenemos info completa y tenemos userId, buscar en cache
       if (userId && (!userName || userName === 'Conversación')) {
@@ -238,7 +273,7 @@ export default function ChatPage() {
         isGroup: false,
       };
     },
-    [convertMessage, getUserFromCache, getUserIdFromConversation]
+    [convertMessage, getUserFromCache, getUserIdFromConversation, getLastReadTimestamp, saveUserToCache, saveConversationUserMapping]
   ); // Cargar conversaciones del usuario
   const loadConversations = useCallback(async () => {
     if (!user?.id || !chatEnabled) return;
@@ -277,6 +312,20 @@ export default function ChatPage() {
     loadConversations();
   }, [loadConversations]);
 
+  // Cuando seleccionas una conversación, resetear el contador de mensajes no leídos
+  useEffect(() => {
+    if (selectedConversationId) {
+      // Guardar timestamp de lectura
+      saveLastReadTimestamp(selectedConversationId);
+
+      // Marcar la conversación como leída (resetear unreadCount)
+      setConversations((prev) => prev.map((conv) => (conv.id === selectedConversationId ? { ...conv, unreadCount: 0 } : conv)));
+
+      // Notificar al ChatContext que se leyeron los mensajes
+      markMessagesAsRead();
+    }
+  }, [selectedConversationId, markMessagesAsRead, saveLastReadTimestamp]);
+
   // Unirse a la conversación seleccionada
   useEffect(() => {
     if (selectedConversationId && socket.isConnected) {
@@ -291,7 +340,50 @@ export default function ChatPage() {
     const cleanup = socket.onMessageReceived((message: BackendMessage) => {
       const frontendMessage = convertMessage(message, user.id);
       const convId = message.conversation.id;
+
       setConversations((prev) => {
+        // Verificar si la conversación existe
+        const convIndex = prev.findIndex((c) => c.id === convId);
+
+        // Si la conversación NO existe, crearla
+        if (convIndex === -1) {
+          console.log('Nueva conversación detectada, creando...', convId);
+
+          // Obtener info del otro usuario desde el mensaje
+          const otherUserInfo = frontendMessage.isOwn
+            ? null
+            : {
+                userId: frontendMessage.senderId,
+                userName: frontendMessage.senderName,
+                userAvatar: frontendMessage.senderAvatar,
+              };
+
+          // Si no es mensaje propio, guardar info en cache
+          if (!frontendMessage.isOwn) {
+            saveUserToCache(frontendMessage.senderId, {
+              name: frontendMessage.senderName,
+              avatar: frontendMessage.senderAvatar,
+            });
+            saveConversationUserMapping(convId, frontendMessage.senderId);
+          }
+
+          const newConversation: Conversation = {
+            id: convId,
+            userId: otherUserInfo?.userId,
+            userName: otherUserInfo?.userName || 'Conversación',
+            userAvatar: otherUserInfo?.userAvatar,
+            lastMessage: frontendMessage.content,
+            lastMessageTime: frontendMessage.timestamp,
+            unreadCount: frontendMessage.isOwn ? 0 : 1,
+            messages: [frontendMessage],
+            isGroup: false,
+          };
+
+          // Agregar la nueva conversación al principio
+          return [newConversation, ...prev];
+        }
+
+        // La conversación existe, actualizarla
         return prev.map((conv) => {
           if (conv.id === convId) {
             // Preservar información del otro usuario o actualizarla
@@ -349,6 +441,12 @@ export default function ChatPage() {
             const exists = conv.messages.some((m) => m.id === frontendMessage.id && !m.id.startsWith('temp-'));
             if (exists) return conv;
 
+            // Determinar si incrementar unreadCount:
+            // - Si es mensaje propio, no incrementar
+            // - Si es mensaje recibido Y estás viendo esta conversación, no incrementar
+            // - Si es mensaje recibido Y NO estás en esta conversación, incrementar
+            const shouldIncrementUnread = !frontendMessage.isOwn && conv.id !== selectedConversationId;
+
             // Agregar nuevo mensaje
             return {
               ...conv,
@@ -356,7 +454,7 @@ export default function ChatPage() {
               messages: [...conv.messages, frontendMessage],
               lastMessage: frontendMessage.content,
               lastMessageTime: frontendMessage.timestamp,
-              unreadCount: frontendMessage.isOwn ? conv.unreadCount : conv.unreadCount + 1,
+              unreadCount: shouldIncrementUnread ? conv.unreadCount + 1 : conv.unreadCount,
             };
           }
           return conv;
@@ -365,7 +463,7 @@ export default function ChatPage() {
     });
 
     return cleanup;
-  }, [socket.isConnected, socket, user, convertMessage]);
+  }, [socket.isConnected, socket, user, convertMessage, selectedConversationId]);
 
   // Escuchar confirmaciones de mensajes enviados
   useEffect(() => {

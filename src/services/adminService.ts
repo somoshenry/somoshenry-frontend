@@ -249,7 +249,8 @@ export interface Report {
   comment?: {
     id: string;
     content: string;
-    user: {
+    authorId: string;
+    author?: {
       id: string;
       email: string;
       username?: string | null;
@@ -288,7 +289,8 @@ export interface ReportedCommentsResponse {
     comment: {
       id: string;
       content: string;
-      user: {
+      authorId: string;
+      author?: {
         id: string;
         email: string;
         username?: string | null;
@@ -358,6 +360,30 @@ export async function getDashboardReportedComments(params?: { page?: number; lim
  */
 export async function deleteComment(commentId: string): Promise<void> {
   await api.delete(`/comment/${commentId}`);
+}
+
+/**
+ * Obtiene un comentario por ID con toda su información (incluye author)
+ */
+export async function getCommentById(commentId: string): Promise<{
+  id: string;
+  content: string;
+  authorId: string;
+  author: {
+    id: string;
+    email: string;
+    username?: string | null;
+    name?: string | null;
+    lastName?: string | null;
+  };
+} | null> {
+  try {
+    const { data } = await api.get(`/comment/${commentId}`);
+    return data;
+  } catch (error) {
+    console.error('Error al obtener comentario:', error);
+    return null;
+  }
 }
 
 // Nota: No hay endpoint para obtener todos los comentarios en el backend

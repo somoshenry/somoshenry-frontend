@@ -9,7 +9,7 @@ export interface UserResult {
   lastName?: string | null;
   email: string;
   profilePicture?: string | null;
-  role: "ADMIN" | "TEACHER" | "STUDENT";
+  role: "ADMIN" | "MEMBER" | "TEACHER" | "TA";
 }
 
 interface GenericListProps {
@@ -60,7 +60,15 @@ const GenericList: React.FC<GenericListProps> = ({data, onClose}) => {
               <p className="font-semibold text-gray-900 dark:text-white truncate">{getDisplayName(user)}</p>
               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 font-medium">
-                {user.role === "STUDENT" ? "🎓 Estudiante" : user.role === "TEACHER" ? "📚 Docente" : ""}
+                {
+                  user.role === "MEMBER"
+                    ? "🎓 Estudiante"
+                    : user.role === "TEACHER"
+                    ? "📚 Docente"
+                    : user.role === "TA"
+                    ? "👨‍💻 TA"
+                    : user.role // Muestra el rol si es desconocido
+                }
               </p>
             </div>
           </div>

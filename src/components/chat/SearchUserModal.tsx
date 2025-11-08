@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { getUserById } from '@/services/userService';
-import { api } from '@/services/api';
+import { getUsers } from '@/services/adminService';
 
 interface SearchUserModalProps {
   isOpen: boolean;
@@ -35,44 +34,15 @@ export default function SearchUserModal({ isOpen, onClose, onSelectUser, current
 
     setIsSearching(true);
     try {
-      // Simular búsqueda de usuarios (en producción sería: await api.get('/users/search', { params: { q: query } }))
-      // Por ahora creamos usuarios mock basados en la búsqueda
-      const mockUsers: SearchResult[] = [
-        {
-          id: 'user-' + Math.random(),
-          name: 'Carlos',
-          lastName: 'Rodríguez',
-          email: 'carlos.rodriguez@henry.com',
-          profilePicture: null,
-        },
-        {
-          id: 'user-' + Math.random(),
-          name: 'Laura',
-          lastName: 'Martínez',
-          email: 'laura.martinez@henry.com',
-          profilePicture: null,
-        },
-        {
-          id: 'user-' + Math.random(),
-          name: 'Pedro',
-          lastName: 'Gómez',
-          email: 'pedro.gomez@henry.com',
-          profilePicture: null,
-        },
-        {
-          id: 'user-' + Math.random(),
-          name: 'Sofia',
-          lastName: 'Torres',
-          email: 'sofia.torres@henry.com',
-          profilePicture: null,
-        },
-      ];
-
-      // Filtrar por query (simulado)
-      const filtered = mockUsers.filter((user) => user.name?.toLowerCase().includes(query.toLowerCase()) || user.lastName?.toLowerCase().includes(query.toLowerCase()) || user.email.toLowerCase().includes(query.toLowerCase()));
+      // Buscar usuarios en el backend
+      const { users } = await getUsers({
+        page: 1,
+        limit: 20,
+        name: query.trim(),
+      });
 
       // Excluir el usuario actual
-      const results = filtered.filter((user) => user.id !== currentUserId);
+      const results = users.filter((user) => user.id !== currentUserId);
       setSearchResults(results);
     } catch (error) {
       console.error('Error al buscar usuarios:', error);

@@ -1,8 +1,6 @@
 import type {NextConfig} from "next";
 
 const nextConfig: NextConfig = {
-  // Puedes añadir otras opciones de configuración de Next.js aquí
-  /* config options here */
   images: {
     remotePatterns: [
       {
@@ -40,16 +38,30 @@ const nextConfig: NextConfig = {
         hostname: "e0.pxfuel.com",
         pathname: "/**",
       },
-      // Dominio añadido previamente para resolver el error de Avatar.tsx
       {
         protocol: "https",
         hostname: "nubecolectiva.com",
         pathname: "/**",
       },
-      // Nuevo dominio de Bing añadido para resolver el error de next/image
       {
         protocol: "https",
         hostname: "tse2.mm.bing.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.com",
+        pathname: "/**",
+      },
+      // 👇 Añade estos dos nuevos dominios
+      {
+        protocol: "https",
+        hostname: "cdn-icons-png.flaticon.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.pixabay.com",
         pathname: "/**",
       },
     ],

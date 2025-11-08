@@ -14,7 +14,7 @@ export interface CardMensajeProps {
 
 const CardMensaje: React.FC<CardMensajeProps> = ({nombre, rol, fecha, titulo, mensaje, linkConectate}) => {
   return (
-    <div className="relative flex flex-col w-full md:mt-2 mt-3 mb-5 rounded-xl border border-gray-300 bg-white shadow-sm p-4 overflow-hidden">
+    <div className="relative flex flex-col w-full md:mt-2 mt-3 mb-5 rounded-xl border border-gray-300 bg-white dark:bg-gray-200 dark: shadow-sm p-4 overflow-hidden">
       {/* Borde lateral rosado */}
       <div className="absolute left-0 top-0 h-full w-2 bg-[#ffff00] rounded-l-xl"></div>
 

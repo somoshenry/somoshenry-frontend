@@ -1,7 +1,7 @@
 'use client';
 import { MessageSquare, Eye, CheckCircle, User, Calendar, AlertCircle, Ban } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getPendingReports, updateReportStatus, ReportStatus, Report, deleteComment } from '@/services/adminService';
+import { getPendingReports, updateReportStatus, ReportStatus, Report, deleteComment, getCommentById } from '@/services/adminService';
 import { useAuth } from '@/hook/useAuth';
 import { createSystemNotification, SystemNotificationType } from '@/services/notificationService';
 
@@ -9,7 +9,8 @@ interface ReportedComment {
   comment: {
     id: string;
     content: string;
-    user?: {
+    authorId: string;
+    author?: {
       id: string;
       email: string;
       username?: string | null;
@@ -77,8 +78,22 @@ export default function ReportedComments() {
         return acc;
       }, {} as Record<string, ReportedComment>);
 
-      // Convertir a array y ordenar por cantidad de reportes
-      const commentsArray = Object.values(groupedByComment).sort((a: ReportedComment, b: ReportedComment) => b.reportCount - a.reportCount);
+      // Enriquecer comentarios con información del autor si no está presente
+      const commentsArray = await Promise.all(
+        Object.values(groupedByComment).map(async (item: ReportedComment) => {
+          // Si el comentario no tiene author, obtenerlo del backend
+          if (!item.comment.author) {
+            const fullComment = await getCommentById(item.comment.id);
+            if (fullComment?.author) {
+              item.comment.author = fullComment.author;
+            }
+          }
+          return item;
+        })
+      );
+
+      // Ordenar por cantidad de reportes
+      commentsArray.sort((a: ReportedComment, b: ReportedComment) => b.reportCount - a.reportCount);
 
       console.log('📦 Comentarios agrupados:', commentsArray.length);
       console.log('📦 Primer comentario agrupado:', commentsArray[0]);
@@ -132,7 +147,7 @@ export default function ReportedComments() {
     setActionLoading(true);
     try {
       const commentId = selectedComment.comment.id;
-      const authorId = selectedComment.comment.user?.id;
+      const authorId = selectedComment.comment.author?.id || selectedComment.comment.authorId;
 
       // Eliminar el comentario (soft delete)
       await deleteComment(commentId);
@@ -235,7 +250,7 @@ export default function ReportedComments() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <User size={16} className="text-gray-500" />
-                          <span className="font-semibold text-gray-900 dark:text-white">{item.comment.user ? getDisplayName(item.comment.user) : 'Usuario desconocido'}</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{item.comment.author ? getDisplayName(item.comment.author) : 'Usuario desconocido'}</span>
                           <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">
                             • Reportado: {reportDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })} {reportDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                           </span>
@@ -304,8 +319,8 @@ export default function ReportedComments() {
               <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-3">
                   <User size={20} className="text-gray-500" />
-                  <span className="font-semibold text-gray-900 dark:text-white">{getDisplayName(selectedComment.comment.user)}</span>
-                  {selectedComment.comment.user?.email && <span className="text-sm text-gray-500">({selectedComment.comment.user.email})</span>}
+                  <span className="font-semibold text-gray-900 dark:text-white">{getDisplayName(selectedComment.comment.author)}</span>
+                  {selectedComment.comment.author?.email && <span className="text-sm text-gray-500">({selectedComment.comment.author.email})</span>}
                 </div>
 
                 <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">{selectedComment.comment.content}</p>

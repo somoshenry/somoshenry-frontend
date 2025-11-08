@@ -90,8 +90,8 @@ export default function CreatePost() {
 
       {/* Vista previa */}
       {preview && (
-        <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-300">
-          {media?.type.startsWith('video') ? <VideoPlayer src={preview} className="w-full rounded-xl max-h-[400px]" autoPlay={false} /> : <img src={preview} alt="Vista previa" className="w-full object-cover rounded-xl" />}
+        <div className="mt-3 relative rounded-xl flex justify-center border border-gray-300">
+          {media?.type.startsWith('video') ? <VideoPlayer src={preview} className="w-full rounded-xl max-h-[400px]" autoPlay={false} /> : <img src={preview} alt="Vista previa" className="w-auto max-w-full object-contain rounded-xl max-h-[400px]" />}
           <button
             type="button"
             onClick={() => {

@@ -225,7 +225,7 @@ export default function UserProfilePosts({ userId }: UserProfilePostsProps) {
               if (['mp4', 'webm', 'mov', 'avi', 'wmv', 'mkv', 'm4v'].includes(ext)) type = 'VIDEO';
               else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) type = 'IMAGE';
             }
-            return <div className="overflow-hidden rounded-xl border border-gray-300 dark:border-gray-600">{type === 'VIDEO' ? <VideoPlayer src={url} className="w-full rounded-xl max-h-96" objectFit="contain" /> : <img src={url} alt="media" className="w-full object-cover max-h-96 rounded-xl" />}</div>;
+            return <div className="rounded-xl flex justify-center">{type === 'VIDEO' ? <VideoPlayer src={url} className="w-full rounded-xl max-h-96" objectFit="contain" /> : <img src={url} alt="media" className="w-auto max-w-full object-contain max-h-96 rounded-xl border border-gray-300 dark:border-gray-600" />}</div>;
           })()}
 
           {/* Likes y contador de comentarios */}

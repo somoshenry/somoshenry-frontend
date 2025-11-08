@@ -9,11 +9,15 @@ interface ChatContextType {
   unreadMessagesCount: number;
   hasNewMessages: boolean;
   markMessagesAsRead: () => void;
+  markConversationAsRead: (conversationId: string) => void;
   refreshUnreadCount: () => void;
   isSocketConnected: boolean;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
+
+// 🔔 Evento personalizado para sincronizar entre componentes
+const CHAT_SYNC_EVENT = 'chat-sync';
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
@@ -71,6 +75,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setHasNewMessages(false);
   }, []);
 
+  // Función para marcar una conversación específica como leída
+  const markConversationAsRead = useCallback(
+    (conversationId: string) => {
+      // Guardar timestamp de última lectura en localStorage
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('chat_last_read');
+        const timestamps = cached ? JSON.parse(cached) : {};
+        timestamps[conversationId] = new Date().toISOString();
+        localStorage.setItem('chat_last_read', JSON.stringify(timestamps));
+
+        // 🔔 Emitir evento para sincronizar con otros componentes
+        window.dispatchEvent(
+          new CustomEvent(CHAT_SYNC_EVENT, {
+            detail: { conversationId, action: 'read' },
+          })
+        );
+      }
+
+      // Refrescar el contador global
+      setTimeout(() => {
+        refreshUnreadCount();
+      }, 100);
+    },
+    [refreshUnreadCount]
+  );
+
   // Escuchar nuevos mensajes por WebSocket
   useEffect(() => {
     if (!socket.isConnected) return;
@@ -100,12 +130,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user, refreshUnreadCount]);
 
+  // 🔔 Escuchar eventos de sincronización entre componentes
+  useEffect(() => {
+    const handleSync = () => {
+      // Cuando otro componente marca como leído, actualizar contador
+      refreshUnreadCount();
+    };
+
+    window.addEventListener(CHAT_SYNC_EVENT, handleSync);
+    return () => window.removeEventListener(CHAT_SYNC_EVENT, handleSync);
+  }, [refreshUnreadCount]);
+
   return (
     <ChatContext.Provider
       value={{
         unreadMessagesCount,
         hasNewMessages,
         markMessagesAsRead,
+        markConversationAsRead,
         refreshUnreadCount,
         isSocketConnected: socket.isConnected,
       }}

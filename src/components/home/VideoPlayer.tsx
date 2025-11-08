@@ -22,20 +22,36 @@ export default function VideoPlayer({ src, className = '', autoPlay = false, mut
   const [showControls, setShowControls] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [poster, setPoster] = useState<string | undefined>(getPosterForVideo(src));
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadAttemptRef = useRef(0);
 
   useEffect(() => {
     setPoster(getPosterForVideo(src));
+    setIsReady(false);
+    setIsLoading(true);
+    setHasError(false);
+    loadAttemptRef.current = 0;
   }, [src]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    // Timeout de seguridad: si después de 10 segundos no está listo, forzar ready
+    const safetyTimeout = setTimeout(() => {
+      if (!isReady && !hasError) {
+        console.warn('Video tardó demasiado en cargar, forzando estado ready');
+        setIsReady(true);
+        setIsLoading(false);
+      }
+    }, 10000);
+
     const handleLoadedMetadata = async () => {
       setDuration(video.duration);
       setIsLoading(false);
+      setIsReady(true); // Marcar como listo cuando se cargan los metadatos
 
       if (!poster) {
         try {
@@ -81,30 +97,58 @@ export default function VideoPlayer({ src, className = '', autoPlay = false, mut
       }
     };
 
-    const handleError = () => {
+    const handleError = (e: Event) => {
+      console.error('Error al cargar video:', e);
       setIsLoading(false);
       setHasError(true);
+      setIsReady(false);
     };
 
     const handleCanPlay = () => {
       setIsLoading(false);
       setHasError(false);
+      setIsReady(true);
+    };
+
+    const handleLoadedData = () => {
+      // Cuando los datos están cargados, marcar como listo
+      setIsLoading(false);
+      setIsReady(true);
+    };
+
+    const handleWaiting = () => {
+      // Solo mostrar loading si ya estaba listo (buffering durante reproducción)
+      if (isReady) {
+        setIsLoading(true);
+      }
+    };
+
+    const handlePlaying = () => {
+      setIsLoading(false);
+      setIsReady(true);
     };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('ended', handleEnded);
     video.addEventListener('error', handleError);
     video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('waiting', handleWaiting);
+    video.addEventListener('playing', handlePlaying);
 
     return () => {
+      clearTimeout(safetyTimeout);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('error', handleError);
       video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('waiting', handleWaiting);
+      video.removeEventListener('playing', handlePlaying);
     };
-  }, [loop, poster]);
+  }, [loop, poster, isReady, hasError]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -114,8 +158,16 @@ export default function VideoPlayer({ src, className = '', autoPlay = false, mut
       video.pause();
       setIsPlaying(false);
     } else {
-      video.play();
-      setIsPlaying(true);
+      // Intentar reproducir incluso si no está 100% listo
+      video
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setIsReady(true);
+        })
+        .catch((err) => {
+          console.error('Error al reproducir video:', err);
+        });
     }
   };
 
@@ -191,17 +243,23 @@ export default function VideoPlayer({ src, className = '', autoPlay = false, mut
   return (
     <div className={`relative bg-black ${className}`} onMouseMove={handleMouseMove} onMouseLeave={() => isPlaying && setShowControls(false)}>
       {/* Video Element */}
-      <video ref={videoRef} src={src} className={`w-full h-full ${videoObjectFit}`} autoPlay={autoPlay} muted={muted} loop={loop} playsInline preload="metadata" poster={poster} crossOrigin="anonymous" onClick={togglePlay} />
+      <video ref={videoRef} src={src} className={`w-full h-full ${videoObjectFit} transition-opacity duration-300 ${!isReady ? 'opacity-0' : 'opacity-100'}`} autoPlay={autoPlay} muted={muted} loop={loop} playsInline preload="metadata" poster={poster} crossOrigin="anonymous" onClick={togglePlay} />
 
-      {/* Loading Spinner */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      {/* Loading Spinner - Mostrar hasta que el video esté listo */}
+      {(isLoading || !isReady) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          {poster && <img src={poster} alt="Video thumbnail" className={`absolute inset-0 w-full h-full ${videoObjectFit} object-cover`} />}
+          <div className="relative z-10 flex flex-col items-center gap-3">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <button onClick={togglePlay} className="text-white text-sm bg-black/50 px-4 py-2 rounded-full hover:bg-black/70 transition">
+              Cargar video
+            </button>
+          </div>
         </div>
       )}
 
       {/* Play/Pause Overlay */}
-      {controlsVisible && !isPlaying && !isLoading && (
+      {controlsVisible && !isPlaying && !isLoading && isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
           <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 transition-all transform hover:scale-110">
             <svg className="w-10 h-10 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">

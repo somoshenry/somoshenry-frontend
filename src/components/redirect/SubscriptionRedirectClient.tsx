@@ -14,19 +14,24 @@ export default function SubscriptionRedirectClient() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Detecta el estado del pago desde la URL (derivado, no guardado en state)
+  // Detecta el estado del pago desde la URL y sessionStorage
   const paymentStatus = useMemo(() => {
-    return searchParams.get('collection_status') || searchParams.get('status') || 'unknown';
+    const urlStatus = searchParams.get('collection_status') || searchParams.get('status');
+    if (urlStatus) {
+      // Si hay estado en la URL, guardarlo en sessionStorage
+      sessionStorage.setItem('lastPaymentStatus', urlStatus);
+      return urlStatus;
+    }
+    // Si no hay estado en la URL, intentar recuperarlo de sessionStorage
+    return sessionStorage.getItem('lastPaymentStatus') || 'unknown';
   }, [searchParams]);
 
-  // Derivamos el estado que usará la UI; evitamos setState dentro del efecto
+  // Derivamos el estado que usará la UI
   const status = paymentStatus === 'unknown' ? 'checking' : paymentStatus;
 
   useEffect(() => {
     const validatePayment = async () => {
-      // Extraer datos importantes antes de limpiar
       const paymentId = searchParams.get('payment_id');
-      const collectionId = searchParams.get('collection_id');
       const token = localStorage.getItem('access_token');
 
       if (paymentId && paymentStatus !== 'unknown') {
@@ -48,25 +53,26 @@ export default function SubscriptionRedirectClient() {
 
           if (!response.ok) {
             console.error('Error validating payment:', await response.text());
+          } else {
+            // Si la validación fue exitosa, esperamos un segundo antes de limpiar la URL
+            setTimeout(() => {
+              if (searchParams.toString()) {
+                try {
+                  router.replace('/redirect', { scroll: false });
+                } catch (e) {
+                  console.warn('Failed to replace pathname', e);
+                }
+              }
+            }, 1000);
           }
         } catch (error) {
           console.error('Error sending payment validation:', error);
         }
       }
-
-      // Limpiar la URL después de extraer los datos
-      if (searchParams.toString()) {
-        try {
-          router.replace(pathname, { scroll: false });
-        } catch (e) {
-          // Silently ignore navigation errors in this cleanup
-          console.warn('Failed to replace pathname', e);
-        }
-      }
     };
 
     validatePayment();
-  }, [paymentStatus, searchParams, router, pathname]);
+  }, [paymentStatus, searchParams, router]);
 
   const getStatusMessage = (): StatusInfo => {
     switch (status) {

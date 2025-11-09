@@ -31,10 +31,17 @@ export default function SubscriptionRedirectClient() {
 
   useEffect(() => {
     const validatePayment = async () => {
+      // Primero guardamos el estado actual si existe en la URL
+      const currentStatus = searchParams.get('collection_status') || searchParams.get('status');
+      if (currentStatus) {
+        sessionStorage.setItem('lastPaymentStatus', currentStatus);
+      }
+
       const paymentId = searchParams.get('payment_id');
       const token = localStorage.getItem('access_token');
 
-      if (paymentId && paymentStatus !== 'unknown') {
+      // Solo procedemos si tenemos un paymentId y un estado válido
+      if (paymentId && currentStatus) {
         try {
           const response = await fetch('https://somoshenry-backend.onrender.com/mercadopago/webhook', {
             method: 'POST',
@@ -53,17 +60,11 @@ export default function SubscriptionRedirectClient() {
 
           if (!response.ok) {
             console.error('Error validating payment:', await response.text());
-          } else {
-            // Si la validación fue exitosa, esperamos un segundo antes de limpiar la URL
-            setTimeout(() => {
-              if (searchParams.toString()) {
-                try {
-                  router.replace('/redirect', { scroll: false });
-                } catch (e) {
-                  console.warn('Failed to replace pathname', e);
-                }
-              }
-            }, 1000);
+          }
+
+          // Siempre limpiamos la URL después de guardar el estado
+          if (searchParams.toString()) {
+            router.replace('/redirect', { scroll: false });
           }
         } catch (error) {
           console.error('Error sending payment validation:', error);
@@ -72,7 +73,7 @@ export default function SubscriptionRedirectClient() {
     };
 
     validatePayment();
-  }, [paymentStatus, searchParams, router]);
+  }, [searchParams, router]);
 
   const getStatusMessage = (): StatusInfo => {
     switch (status) {

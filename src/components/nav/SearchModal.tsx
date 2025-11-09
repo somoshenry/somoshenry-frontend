@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/services/api';
-import { usePost } from '@/context/PostContext';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -39,7 +38,6 @@ type TabType = 'users' | 'posts';
 
 export default function SearchModal({ isOpen, onClose, initialQuery = '' }: SearchModalProps) {
   const router = useRouter();
-  const { posts } = usePost();
   const [activeTab, setActiveTab] = useState<TabType>('users');
   const [query, setQuery] = useState(initialQuery);
   const [userResults, setUserResults] = useState<UserResult[]>([]);
@@ -88,40 +86,49 @@ export default function SearchModal({ isOpen, onClose, initialQuery = '' }: Sear
     }
   }, []);
 
-  // Búsqueda de posts (local - temporal hasta tener endpoint en backend)
-  const searchPosts = useCallback(
-    (searchQuery: string) => {
-      if (!searchQuery.trim()) {
-        setPostResults([]);
-        return;
-      }
+  // Búsqueda de posts (backend)
+  const searchPosts = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setPostResults([]);
+      return;
+    }
 
+    try {
       setIsSearching(true);
-      const lowerQuery = searchQuery.toLowerCase();
-      const filtered = posts
-        .filter((post) => post.content?.toLowerCase().includes(lowerQuery))
-        .slice(0, 10)
-        .map((post) => ({
-          id: post.id,
-          content: post.content,
-          createdAt: post.createdAt,
-          user: {
-            id: post.user.id,
-            name: post.user.name || '',
-            lastName: null,
-            email: '',
-            profilePicture: post.user.avatar || null,
-          },
-          mediaURL: post.mediaURL || (post as any).mediaUrl || null,
-          type: post.type,
-        })); // Limitar a 10 resultados y mapear al tipo correcto
+      const { data } = await api.get('/posts', {
+        params: {
+          search: searchQuery.trim(),
+          limit: 10,
+          page: 1,
+        },
+      });
 
-      setPostResults(filtered);
+      // El backend devuelve data.posts o data.data
+      const postsData = data?.posts || data?.data || [];
+      const mapped = postsData.map((post: any) => ({
+        id: post.id,
+        content: post.content,
+        createdAt: post.createdAt,
+        user: {
+          id: post.user?.id || '',
+          name: post.user?.name || '',
+          lastName: post.user?.lastName || null,
+          email: post.user?.email || '',
+          profilePicture: post.user?.profilePicture || post.user?.avatar || null,
+        },
+        mediaURL: post.mediaURL || post.mediaUrl || null,
+        type: post.type,
+      }));
+
+      setPostResults(mapped);
+    } catch (error) {
+      console.error('Error al buscar posts:', error);
+      setPostResults([]);
+    } finally {
       setIsSearching(false);
       setHasSearched(true);
-    },
-    [posts]
-  );
+    }
+  }, []);
 
   // Debounce para búsqueda automática
   useEffect(() => {

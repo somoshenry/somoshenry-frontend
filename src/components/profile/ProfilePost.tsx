@@ -246,7 +246,11 @@ export default function ProfilePosts() {
                 if (['mp4', 'webm', 'mov', 'avi', 'wmv', 'mkv', 'm4v'].includes(ext)) type = 'VIDEO';
               }
               if (type === 'IMAGE') {
-                return <img src={url} alt="Post media" className="mt-4 rounded-lg max-h-96 w-full object-cover border border-gray-200 dark:border-gray-700" />;
+                return (
+                  <div className="mt-4 flex justify-center">
+                    <img src={url} alt="Post media" className="rounded-lg max-h-96 w-auto max-w-full object-contain border border-gray-200 dark:border-gray-700" />
+                  </div>
+                );
               }
               if (type === 'VIDEO') {
                 return (

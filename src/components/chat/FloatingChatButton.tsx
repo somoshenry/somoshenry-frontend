@@ -47,7 +47,7 @@ export default function FloatingChatButton() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-  const { hasNewMessages, unreadMessagesCount, markMessagesAsRead, refreshUnreadCount } = useChat();
+  const { hasNewMessages, unreadMessagesCount, markMessagesAsRead, markConversationAsRead: markConversationAsReadGlobal, refreshUnreadCount } = useChat();
   const menuRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [theme] = useDarkMode();
@@ -142,6 +142,22 @@ export default function FloatingChatButton() {
       loadConversations();
     }
   }, [isOpen, user, chatEnabled, loadConversations]);
+
+  // 🔔 Escuchar eventos de sincronización entre chat flotante y página /chat
+  useEffect(() => {
+    const handleChatSync = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { conversationId, action } = customEvent.detail || {};
+
+      if (action === 'read' && conversationId) {
+        // Marcar localmente la conversación como leída
+        setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv)));
+      }
+    };
+
+    window.addEventListener('chat-sync', handleChatSync);
+    return () => window.removeEventListener('chat-sync', handleChatSync);
+  }, []);
 
   // Escuchar nuevos mensajes por WebSocket
   useEffect(() => {
@@ -284,13 +300,12 @@ export default function FloatingChatButton() {
     // Inmediatamente limpiar el contador de esa conversación
     setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv)));
 
-    // Marcar los mensajes como leídos en el backend
+    // Marcar los mensajes como leídos usando el ChatContext (sincroniza automáticamente)
+    markConversationAsReadGlobal(conversationId);
+
+    // También marcar en el backend
     try {
       await markConversationAsRead(conversationId);
-      // Refrescar el contador global después de marcar como leídos
-      setTimeout(() => {
-        refreshUnreadCount();
-      }, 500);
     } catch (error) {
       console.error('Error al marcar conversación como leída:', error);
     }

@@ -1,6 +1,6 @@
 'use client';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface StatusInfo {
@@ -11,16 +11,38 @@ interface StatusInfo {
 
 export default function SubscriptionRedirectClient() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<string>('checking');
+  const pathname = usePathname();
+  const router = useRouter();
 
-  // Detecta el estado del pago desde la URL
+  // Detecta el estado del pago desde la URL (derivado, no guardado en state)
   const paymentStatus = useMemo(() => {
     return searchParams.get('collection_status') || searchParams.get('status') || 'unknown';
   }, [searchParams]);
 
+  // Derivamos el estado que usará la UI; evitamos setState dentro del efecto
+  const status = paymentStatus === 'unknown' ? 'checking' : paymentStatus;
+
   useEffect(() => {
-    setStatus(paymentStatus);
-  }, [paymentStatus]);
+    // Extraer datos importantes antes de limpiar
+    const paymentId = searchParams.get('payment_id');
+    const collectionId = searchParams.get('collection_id');
+
+    // Aquí podrías enviar estos datos a tu backend para validar
+    if (paymentId && paymentStatus !== 'unknown') {
+      // Ejemplo: await fetch('/api/validate-payment', { ... })
+      console.log('Payment ID:', paymentId, 'Collection ID:', collectionId, 'Status:', paymentStatus);
+    }
+
+    // Limpiar la URL después de extraer los datos
+    if (searchParams.toString()) {
+      try {
+        router.replace(pathname, { scroll: false });
+      } catch (e) {
+        // Silently ignore navigation errors in this cleanup
+        console.warn('Failed to replace pathname', e);
+      }
+    }
+  }, [paymentStatus, searchParams, router, pathname]);
 
   const getStatusMessage = (): StatusInfo => {
     switch (status) {

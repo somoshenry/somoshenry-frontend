@@ -23,25 +23,49 @@ export default function SubscriptionRedirectClient() {
   const status = paymentStatus === 'unknown' ? 'checking' : paymentStatus;
 
   useEffect(() => {
-    // Extraer datos importantes antes de limpiar
-    const paymentId = searchParams.get('payment_id');
-    const collectionId = searchParams.get('collection_id');
+    const validatePayment = async () => {
+      // Extraer datos importantes antes de limpiar
+      const paymentId = searchParams.get('payment_id');
+      const collectionId = searchParams.get('collection_id');
+      const token = localStorage.getItem('access_token');
 
-    // Aquí podrías enviar estos datos a tu backend para validar
-    if (paymentId && paymentStatus !== 'unknown') {
-      // Ejemplo: await fetch('/api/validate-payment', { ... })
-      console.log('Payment ID:', paymentId, 'Collection ID:', collectionId, 'Status:', paymentStatus);
-    }
+      if (paymentId && paymentStatus !== 'unknown') {
+        try {
+          const response = await fetch('https://somoshenry-backend.onrender.com/mercadopago/webhook', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              data: {
+                id: paymentId,
+              },
+              type: 'payment',
+              action: 'payment.updated',
+            }),
+          });
 
-    // Limpiar la URL después de extraer los datos
-    if (searchParams.toString()) {
-      try {
-        router.replace(pathname, { scroll: false });
-      } catch (e) {
-        // Silently ignore navigation errors in this cleanup
-        console.warn('Failed to replace pathname', e);
+          if (!response.ok) {
+            console.error('Error validating payment:', await response.text());
+          }
+        } catch (error) {
+          console.error('Error sending payment validation:', error);
+        }
       }
-    }
+
+      // Limpiar la URL después de extraer los datos
+      if (searchParams.toString()) {
+        try {
+          router.replace(pathname, { scroll: false });
+        } catch (e) {
+          // Silently ignore navigation errors in this cleanup
+          console.warn('Failed to replace pathname', e);
+        }
+      }
+    };
+
+    validatePayment();
   }, [paymentStatus, searchParams, router, pathname]);
 
   const getStatusMessage = (): StatusInfo => {

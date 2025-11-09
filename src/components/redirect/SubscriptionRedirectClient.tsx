@@ -56,7 +56,7 @@ export default function SubscriptionRedirectClient() {
   const info = getStatusMessage();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800 px-6">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -65,7 +65,10 @@ export default function SubscriptionRedirectClient() {
       >
         <h1 className="text-2xl font-bold mb-4">{info.title}</h1>
         <p className="mb-6">{info.message}</p>
-        <button onClick={() => (window.location.href = '/')} className="mt-4 bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition">
+        <button
+          onClick={() => (window.location.href = '/home')}
+          className="mt-4 bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition"
+        >
           Volver al inicio
         </button>
       </motion.div>

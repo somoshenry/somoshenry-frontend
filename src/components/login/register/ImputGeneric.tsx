@@ -14,7 +14,7 @@ export const ImputGeneric = ({id, label, labelRightContent, rightContent, ...pro
         <input
           id={id}
           {...props}
-          className="bg-transparent w-full rounded-lg px-3 py-2 pr-12 text-lg focus:outline-none"
+          className="bg-transparent w-full rounded-lg px-3 py-2 pr-12 text-lg focus:outline-[#ffff00] focus:duration-150 ease-in"
         />
 
         {rightContent && (

@@ -8,6 +8,8 @@ import FilePage from "@/components/cohorte/FilePage";
 import Lecture, {lectureProp} from "@/components/cohorte/Lecture";
 import ChatGrupal from "@/components/cohorte/ChatGrupal";
 import {useSearchParams} from "next/navigation";
+import PostAviso from "./PostAviso";
+import AvisoPage from "./AvisoPage";
 
 const CP = () => {
   // 🔹 Mock de publicaciones
@@ -18,7 +20,6 @@ const CP = () => {
       fecha: "16:45 · 2 Nov",
       titulo: "Recordatorio: ¡Semana de Proyectos Finales!",
       mensaje: "Estimados alumnos, les recuerdo que esta semana es crucial para sus proyectos.",
-      linkConectate: "https://plataforma.uni.edu/proyectos",
     },
     {
       nombre: "Lic. Raúl Martínez",
@@ -121,30 +122,30 @@ const CP = () => {
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // 🔹 Obtener usuarios
-  /* useEffect(() => {
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
         const {data} = await api.get(`/users`);
-        console.log("🔍 Respuesta cruda del backend:", data);
+        //console.log("🔍 Respuesta cruda del backend:", data);
 
         const users = data?.users || data?.data || [];
-        console.log("📦 Array de usuarios procesado:", users);
+        //console.log("📦 Array de usuarios procesado:", users);
 
         setUserResults(users);
       } catch (error) {
-        console.error("❌ Error al obtener usuarios:", error);
+        //console.error("❌ Error al obtener usuarios:", error);
       }
     };
     fetchUsers();
   }, []);
-*/
-  // 🔹 Filtrar usuarios por rol
-  //const students = userResults.filter((u) => u.role === "STUDENT");
-  //const teachers = userResults.filter((u) => u.role === "TEACHER");
 
-  const students = userResults.filter((user) => user.role?.toLowerCase() === "member");
-  const teachers = userResults.filter((user) => user.role?.toLowerCase() === "teacher");
-  const tasistand = userResults.filter((user) => user.role?.toLowerCase() === "ta");
+  // 🔹 Filtrar usuarios por rol
+  const students = userResults.filter((u) => u.role === "MEMBER");
+  const teachers = userResults.filter((u) => u.role === "TEACHER");
+
+  //const students = userResults.filter((user) => user.role?.toLowerCase() === "member");
+  //const teachers = userResults.filter((user) => user.role?.toLowerCase() === "teacher");
+  const tasistand = userResults.filter((u) => u.role === "TA");
 
   // 🔹 Cerrar desplegables si se hace clic fuera
   useEffect(() => {
@@ -218,7 +219,7 @@ const CP = () => {
                   {showTeachers && <GenericList data={teachers} onClose={() => setShowTeachers(false)} />}
                 </div>
 
-                {/* Docentes */}
+                {/* TA */}
                 <div className="relative">
                   <button
                     className="bg-white hover:scale-105 hover:bg-gray-100 rounded-lg dark:bg-gray-900 dark:text-white text-black font-bold py-1 px-2 text-xs md:h-7 md:mt-2 h-6 md:text-xs lg:h-8 lg:text-md lg:px-3 lg:py-0 transition duration-300 cursor-pointer lg:mt-4 xl:text-xl xl:px-4 xl:py-2 xl:h-12"
@@ -259,9 +260,9 @@ const CP = () => {
 
       {/* Contenido dinámico según el tab */}
       <div className="rounded-xl lg:mt-8 md:mt-7 xl:mt-10 md:m-5 m-2 md:pt-5 p-5 bg-gray-100 mt-10 dark:bg-gray-800 min-h-screen">
-        {activeTab === "avisos" && mockedPosts.map((post, index) => <CardMensaje key={index} {...post} />)}
-
+        {activeTab === "avisos" && <AvisoPage />}
         {activeTab === "material extra" && <FilePage />}
+        {activeTab === "chat grupal" && <ChatGrupal />}
         {activeTab === "Lecturas" &&
           /*  <iframe
             // 1. Reemplazamos 'class' por 'className'
@@ -276,8 +277,6 @@ const CP = () => {
             frameBorder={0}
           />*/
           mockLectures.map((post, index) => <Lecture key={index} {...post} />)}
-
-        {activeTab === "chat grupal" && <ChatGrupal />}
       </div>
     </div>
   );

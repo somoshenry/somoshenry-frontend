@@ -21,7 +21,7 @@ export const Nav: React.FC = () => {
 
   const [theme, toggleTheme] = useDarkMode();
   const iconSrc = theme === "dark" ? "/modoClaro.png" : "/modoD.png";
-  const logoSrc = theme === "dark" ? "/smlogoD.png" : "/smlogoC.png";
+  const logoSrc = theme === "dark" ? "/smLogoD.png" : "/smLogoC.png";
   const campanaSrc = theme === "dark" ? "/campanaD.png" : "/campanaC.png";
 
   const [isMenuOpen, setIsMenuOpen] = useState(() => {

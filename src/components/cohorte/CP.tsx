@@ -122,7 +122,7 @@ const CP = () => {
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // 🔹 Obtener usuarios
-  /* useEffect(() => {
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
         const {data} = await api.get(`/users`);
@@ -138,14 +138,14 @@ const CP = () => {
     };
     fetchUsers();
   }, []);
-*/
-  // 🔹 Filtrar usuarios por rol
-  //const students = userResults.filter((u) => u.role === "STUDENT");
-  //const teachers = userResults.filter((u) => u.role === "TEACHER");
 
-  const students = userResults.filter((user) => user.role?.toLowerCase() === "member");
-  const teachers = userResults.filter((user) => user.role?.toLowerCase() === "teacher");
-  const tasistand = userResults.filter((user) => user.role?.toLowerCase() === "ta");
+  // 🔹 Filtrar usuarios por rol
+  const students = userResults.filter((u) => u.role === "MEMBER");
+  const teachers = userResults.filter((u) => u.role === "TEACHER");
+
+  // const students = userResults.filter((user) => user.role?.toLowerCase() === "member");
+  //const teachers = userResults.filter((user) => user.role?.toLowerCase() === "teacher");
+  const tasistand = userResults.filter((user) => user.role === "TA");
 
   // 🔹 Cerrar desplegables si se hace clic fuera
   useEffect(() => {

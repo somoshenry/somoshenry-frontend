@@ -2,10 +2,8 @@
 
 import IFileCardProps from "@/interfaces/cohorte/IFileCardProps";
 import React, {useEffect, useState} from "react";
-// 💡 Importar la función de utilidad
 import {mapMimeToCategory} from "@/utils/file-mappers";
 import {getUserProfile, User} from "@/services/userService";
-import Swal from "sweetalert2";
 import Link from "next/link";
 
 const FileCard: React.FC<IFileCardProps> = ({name, description, uploadedAt, type, url}) => {
@@ -56,14 +54,14 @@ const FileCard: React.FC<IFileCardProps> = ({name, description, uploadedAt, type
   };
 
   return (
-    <div className="flex items-center bg-white border mb-3 mt-3 md:mb-0 dark:bg-gray-200  border-gray-200 rounded-xl shadow-sm p-4 w-[380px] hover:shadow-md hover:shadow-black transition-shadow duration-300">
+    <div className="flex items-center bg-white border mb-3 mt-3 md:mb-0 dark:bg-gray-200  border-gray-200 rounded-xl shadow-sm p-4 w-[96%] hover:shadow-md hover:shadow-black transition-shadow duration-300 m-3">
       {/* Ícono del archivo */}
       <div className="mr-3 shrink-0">{getFileIcon()}</div>
 
       {/* Información */}
-      <div className="flex flex-col text-black justify-center">
-        <p className="font-bold text-sky-700 text-md truncate">{name}</p>
-        <p className=" text-xs mb-1">{description}</p>
+      <div className="flex flex-col w-[60%] md:w-[80%] text-black justify-center">
+        <p className="font-bold text-sky-700 text-md ">{name}</p>
+        <p className=" text-xs mb-2">{description}</p>
         <p className=" text-xs">Subido: {uploadedAt}</p>
         <p className="text-xs">
           Por: {firstName} {lastName}

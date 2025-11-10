@@ -35,7 +35,7 @@ const mockedPosts: CardMensajeProps[] = [
     titulo: "Aviso Importante: Plazo de Becas",
     mensaje:
       "Les recordamos de la manera más atenta y urgente que el plazo límite e improrrogable para la entrega y carga de la documentación requerida para las becas finaliza el próximo viernes a las [Añadir una hora específica si la hay, por ejemplo: 23:59 horas (GMT-5)].\n\n Es fundamental que se aseguren de que todos los archivos (incluyendo formularios, comprobantes académicos, cartas de recomendación y cualquier otro requisito detallado en la convocatoria) sean subidos correctamente al portal oficial antes de que concluya esta fecha. Les instamos a no dejar este proceso para el último momento, ya que el sistema podría presentar saturación o inconvenientes técnicos de último minuto que no serán considerados como excusa válida. .",
-    linkConectate: "https://portal.universidad.com/becas",
+    linkConectate: "https://www.ucm.es/becas-ayudas",
   },
   {
     nombre: "Dr. Carlos Ruiz",

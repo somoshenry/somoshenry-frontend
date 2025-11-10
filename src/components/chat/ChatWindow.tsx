@@ -1,7 +1,7 @@
 'use client';
 import { Conversation } from '@/app/chat/page';
 import { useState, useRef, useEffect } from 'react';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'; // 👈 agregado
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 
 interface ChatWindowProps {
   conversation: Conversation | undefined;
@@ -11,7 +11,7 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ conversation, onSendMessage, onDeleteConversation }: ChatWindowProps) {
   const [newMessage, setNewMessage] = useState('');
-  const [showEmoji, setShowEmoji] = useState(false); // 👈 estado para mostrar/ocultar picker
+  const [showEmoji, setShowEmoji] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll al último mensaje
@@ -76,7 +76,7 @@ export default function ChatWindow({ conversation, onSendMessage, onDeleteConver
             <div className={`flex flex-col max-w-[70%]`}>
               {/* Burbuja del mensaje */}
               <div className={`rounded-2xl px-4 py-2.5 ${message.isOwn ? 'bg-yellow-400 text-black rounded-br-sm' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-sm'}`}>
-                <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-all leading-relaxed">{message.content}</p>
               </div>
 
               {/* Hora del mensaje */}

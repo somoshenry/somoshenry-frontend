@@ -49,7 +49,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [chatAvailable, setChatAvailable] = useState(true);
   const { user } = useAuth();
-  const { markMessagesAsRead } = useChat();
+  const { markMessagesAsRead, markConversationAsRead: markConversationAsReadGlobal } = useChat();
 
   // Verificar si el chat está habilitado
   const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED !== 'false';
@@ -312,19 +312,32 @@ export default function ChatPage() {
     loadConversations();
   }, [loadConversations]);
 
+  // 🔔 Escuchar eventos de sincronización entre chat flotante y página /chat
+  useEffect(() => {
+    const handleChatSync = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { conversationId, action } = customEvent.detail || {};
+
+      if (action === 'read' && conversationId) {
+        // Marcar localmente la conversación como leída
+        setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv)));
+      }
+    };
+
+    window.addEventListener('chat-sync', handleChatSync);
+    return () => window.removeEventListener('chat-sync', handleChatSync);
+  }, []);
+
   // Cuando seleccionas una conversación, resetear el contador de mensajes no leídos
   useEffect(() => {
     if (selectedConversationId) {
-      // Guardar timestamp de lectura
-      saveLastReadTimestamp(selectedConversationId);
+      // Marcar la conversación como leída usando el ChatContext (sincroniza automáticamente)
+      markConversationAsReadGlobal(selectedConversationId);
 
-      // Marcar la conversación como leída (resetear unreadCount)
+      // También actualizar localmente
       setConversations((prev) => prev.map((conv) => (conv.id === selectedConversationId ? { ...conv, unreadCount: 0 } : conv)));
-
-      // Notificar al ChatContext que se leyeron los mensajes
-      markMessagesAsRead();
     }
-  }, [selectedConversationId, markMessagesAsRead, saveLastReadTimestamp]);
+  }, [selectedConversationId, markConversationAsReadGlobal]);
 
   // Unirse a la conversación seleccionada
   useEffect(() => {

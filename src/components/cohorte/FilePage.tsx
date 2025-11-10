@@ -10,7 +10,7 @@ import {getUserProfile, User} from "@/services/userService";
 const fileMocks: IFileCardProps[] = [
   {
     name: "Guía de Inicio Rápido de React",
-    description: "Documento PDF con los pasos iniciales para configurar un proyecto React.",
+    description: "Documento PDF para configurar un proyecto React.",
     uploadedAt: "28/10/2025", // Fecha amigable (DD/MM/AAAA)
     type: "application/pdf",
     url: "https://ejemplos.com/files/react-quickstart-guide.pdf", // URL que intentará abrirse en línea (PDF)

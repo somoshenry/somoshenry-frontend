@@ -32,7 +32,7 @@ const GenericList: React.FC<GenericListProps> = ({data, onClose}) => {
   };
 
   return (
-    <div className="absolute md:right-0 right-1 mt-2 bg-white dark:bg-gray-900 border border-gray-300 rounded-xl shadow-xl w-70 max-h-96 max-w-svh overflow-y-auto z-50">
+    <div className="absolute bg-white dark:bg-gray-900 border border-gray-300 rounded-xl shadow-xl  max-w-svh overflow-y-auto z-50">
       {data.length === 0 ? (
         <p className="p-4 text-center text-gray-500 text-sm">No hay usuarios</p>
       ) : (

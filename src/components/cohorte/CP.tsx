@@ -8,6 +8,7 @@ import FilePage from "@/components/cohorte/FilePage";
 import Lecture, {lectureProp} from "@/components/cohorte/Lecture";
 import ChatGrupal from "@/components/cohorte/ChatGrupal";
 import {useSearchParams} from "next/navigation";
+import AvisoPage from "./AvisoPage";
 
 const CP = () => {
   // 🔹 Mock de publicaciones
@@ -259,8 +260,9 @@ const CP = () => {
 
       {/* Contenido dinámico según el tab */}
       <div className="rounded-xl lg:mt-8 md:mt-7 xl:mt-10 md:m-5 m-2 md:pt-5 p-5 bg-gray-100 mt-10 dark:bg-gray-800 min-h-screen">
-        {activeTab === "avisos" && mockedPosts.map((post, index) => <CardMensaje key={index} {...post} />)}
-        {activeTab === "material extra" && <FilePage />}        {activeTab === "chat grupal" && <ChatGrupal />}
+        {activeTab === "avisos" && <AvisoPage />}
+        {activeTab === "material extra" && <FilePage />}
+        {activeTab === "chat grupal" && <ChatGrupal />}
         {activeTab === "Lecturas" &&
           /*  <iframe
             // 1. Reemplazamos 'class' por 'className'

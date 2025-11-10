@@ -5,6 +5,7 @@ import {useState, ChangeEvent, Dispatch, SetStateAction} from "react";
 import ImputGeneric from "../login/register/ImputGeneric";
 import {mapMimeToCategory} from "@/utils/file-mappers";
 import {X} from "lucide-react";
+import Swal from "sweetalert2";
 
 // Interfaz para las props que recibiremos del componente padre (FilePage.tsx)
 interface FilePageRealProps {
@@ -41,7 +42,13 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
     if (fileUp.type && fileUp.name) {
       // Agregar el archivo actual a la lista global usando el setter del padre
       setFilesList((prevList) => [...prevList, fileUp]);
-
+      Swal.fire({
+        icon: "success", // O 'error', si lo prefieres
+        text: "Archivo subido con exito",
+        confirmButtonText: "Entendido",
+        // Opcional: para que se cierre al hacer clic fuera
+        allowOutsideClick: true,
+      });
       // Resetear el estado de subida local
       handleDeleteFile();
     } else {
@@ -77,7 +84,7 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
     const fileCategory = mapMimeToCategory(fileUp.type);
     switch (fileCategory) {
       case "doc":
-        return <img src="./doc.png" className="size-36" alt="Documento" />;
+        return <img src="./doc.png" className="size-36 " alt="Documento" />;
       case "video":
         return <img src="./movie.png" className="size-36" alt="Video" />;
       case "image":
@@ -90,9 +97,6 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
         return <img src="./default.png" className="size-36" alt="Archivo" />;
     }
   };
-
-  const baseClasses = "rounded-lg text-xs pl-4 py-2 transition-colors duration-300";
-  const conditionalColor = fileUp.type ? "bg-[#ffff00] text-black" : "bg-gray-200 text-black";
 
   return (
     // 💡 AÑADIDO: 'relative' para posicionar la 'X' de forma absoluta
@@ -110,8 +114,8 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
             <X className="size-5" />
           </button>
 
-          <div className="flex flex-col md:flex-row w-full ">
-            <div className="mr-4 md:w-[80%] w-full">
+          <div className="md:flex w-full flex-col md:flex-row">
+            <div className="mr-4 md:w-[80%] w-full flex-col md:flex-row">
               <ImputGeneric
                 id="name"
                 label="Titulo"
@@ -129,23 +133,15 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
                 onChange={changeHandler}
               />
 
-              <div className="flex items-center md:justify-start justify-center text-black mt-3">
-                <input type="file" onChange={handleFileChange} className={`${baseClasses} ${conditionalColor}`} />
-
-                {/* BOTÓN DE BORRADO ANTERIOR ELIMINADO */}
-
-                {/* BOTÓN GUARDAR: Llama a handleSaveFile */}
-                <button
-                  type="button"
-                  className="bg-gray-200 text-black hover:scale-105 dark:bg-gray-800 dark:text-white duration-150 ease-in cursor-pointer rounded-lg md:mr-3 text-xs px-4 py-2 ml-3"
-                  onClick={handleSaveFile}
-                >
-                  Subir Archivo
-                </button>
-              </div>
+              {/* BOTÓN GUARDAR: Llama a handleSaveFile */}
+              <button
+                className="bg-[#ffff00] text-black hover:scale-110 dark:bg-gray-900  dark:text-white duration-150 ease-in cursor-pointer rounded-lg  text-xs md:text-md mt-2 px-3 py-2 font-bold"
+                onClick={() => handleSaveFile()}
+              >
+                Subir
+              </button>
             </div>
-            {/* PREVISUALIZACIÓN */}
-            <div className="md:w-[20%] flex items-center justify-center mt-3 md:mt-0">{getFileIcon()}</div>
+            <div className="md:w-[20%]  flex items-center justify-center mt-3 md:mt-6">{getFileIcon()}</div>
           </div>
         </>
       ) : (
@@ -160,12 +156,12 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
             name="description"
             onChange={changeHandler}
           />
-          <div className="flex items-center mt-3">
+          <div className="flex flex-col md:flex items-center mt-3">
             <label className="mb-2 font-medium text-black md:mr-3">Subir archivo</label>
             <input
               type="file"
               onChange={handleFileChange}
-              className="bg-gray-200 text-black hover:scale-105 dark:bg-gray-900 dark:text-white duration-150 ease-in cursor-pointer rounded-lg md:mr-3 text-xs pl-4 py-2"
+              className="bg-[#ffff00] text-black hover:scale-110 dark:bg-gray-900  dark:text-white duration-150 ease-in cursor-pointer rounded-lg md:mr-3 text-xs pl-4 py-2 "
             />
           </div>
         </>

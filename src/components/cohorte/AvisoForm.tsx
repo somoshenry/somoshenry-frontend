@@ -5,6 +5,7 @@
 import React, {useState} from "react";
 // La interfaz CardMensajeProps debe venir de ProfesorCard (ProfesorCard.tsx)
 import ImputGeneric from "../login/register/ImputGeneric";
+import Swal from "sweetalert2";
 
 // Estructura de datos que recolecta el formulario
 interface AvisoFormData {
@@ -25,7 +26,14 @@ const AvisoForm: React.FC<AvisoFormProps> = ({onPost}) => {
 
   const handlePost = () => {
     if (title.trim() === "" || message.trim() === "") {
-      alert("Por favor, ingresa un título y un mensaje.");
+      Swal.fire({
+        icon: "warning", // O 'error', si lo prefieres
+        title: "Campos Incompletos",
+        text: "Por favor, ingresa un título y un mensaje.",
+        confirmButtonText: "Entendido",
+        // Opcional: para que se cierre al hacer clic fuera
+        allowOutsideClick: true,
+      });
       return;
     }
 
@@ -71,10 +79,10 @@ const AvisoForm: React.FC<AvisoFormProps> = ({onPost}) => {
         className="w-full mb-2 p-3 border border-gray-300 rounded-lg focus:ring-sky-700 focus:border-sky-700 bg-gray-100 text-black text-sm"
       />
 
-      <div className="flex justify-end mt-2">
+      <div className="md:flex md:justify-end flex justify-center mt-3">
         <button
           onClick={handlePost}
-          className="bg-gray-200 hover:scale-105 cursor-pointer duration-150 ease-in text-black dark:bg-gray-800 dark:text-white font-semibold py-2 px-6 rounded-lg "
+          className="bg-[#ffff00] hover:scale-105 cursor-pointer duration-150 ease-in text-black dark:bg-gray-800 dark:text-white font-semibold py-2 px-6 rounded-lg "
         >
           Postear Aviso
         </button>

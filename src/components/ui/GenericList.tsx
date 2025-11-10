@@ -32,7 +32,7 @@ const GenericList: React.FC<GenericListProps> = ({data, onClose}) => {
   };
 
   return (
-    <div className="absolute right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-300 rounded-xl shadow-xl w-80 max-h-96 overflow-y-auto z-50">
+    <div className="absolute md:right-0 right-1 mt-2 bg-white dark:bg-gray-900 border border-gray-300 rounded-xl shadow-xl w-70 max-h-96 max-w-svh overflow-y-auto z-50">
       {data.length === 0 ? (
         <p className="p-4 text-center text-gray-500 text-sm">No hay usuarios</p>
       ) : (
@@ -47,10 +47,10 @@ const GenericList: React.FC<GenericListProps> = ({data, onClose}) => {
               <img
                 src={user.profilePicture}
                 alt={getDisplayName(user)}
-                className="w-12 h-12 rounded-full object-cover"
+                className="md:w-12 md:h-12 w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg">
+              <div className="md:w-12 md:h-12 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg">
                 {getDisplayName(user).charAt(0).toUpperCase()}
               </div>
             )}

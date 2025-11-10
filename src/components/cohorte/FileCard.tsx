@@ -1,32 +1,57 @@
 "use client";
 
+import IFileCardProps from "@/interfaces/cohorte/IFileCardProps";
+import React, {useEffect, useState} from "react";
+// 💡 Importar la función de utilidad
+import {mapMimeToCategory} from "@/utils/file-mappers";
+import {getUserProfile, User} from "@/services/userService";
+import Swal from "sweetalert2";
 import Link from "next/link";
-import React from "react";
 
-export interface FileCardProps {
-  name: string;
-  description: string;
-  uploadedAt: string;
-  type: string; // "doc", "word", "video", "image", code, folder, etc.
-  url: string;
-}
+const FileCard: React.FC<IFileCardProps> = ({name, description, uploadedAt, type, url}) => {
+  const [user, setUser] = useState<User | null>(null);
 
-const FileCard: React.FC<FileCardProps> = ({name, description, uploadedAt, type, url}) => {
-  // 🔍 Cambia el icono según el tipo de archivo
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const userData = await getUserProfile();
+        setUser(userData);
+      } catch (err) {
+        console.error("Error al cargar el perfil:", err);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  // datos del que subio archivo
+
+  const firstName = user?.name || "Colaborador";
+
+  const lastName = user?.lastName || "";
+  const roleCode = user?.role;
+  let role = roleCode ? (roleCode === "TEACHER" ? "📚 Docente" : roleCode) : "Rol no disponible";
+  if (role === "MEMBER") {
+    role = "📚 Docente"; // <-- Uso de 'role =' para asignar
+  }
+
   const getFileIcon = () => {
-    switch (type.toLowerCase()) {
+    // 💡 Corregido: Usar el nombre de la función correcta
+    const fileCategory = mapMimeToCategory(type);
+
+    switch (fileCategory) {
       case "doc":
-        return <img src="./doc.png" className="size-20" />;
+        return <img src="./doc.png" className="size-20" alt="Documento" />;
       case "video":
-        return <img src="./movie.png" className="size-20" />;
+        return <img src="./movie.png" className="size-20" alt="Video" />;
       case "image":
-        return <img src="./img.png" className="size-20" />;
+        return <img src="./img.png" className="size-20" alt="Imagen" />;
       case "code":
-        return <img src="./code.png" className="size-20" />;
+        return <img src="./code.png" className="size-20" alt="Código" />;
       case "folder":
-        return <img src="./folder.png" className="size-20" />;
+        return <img src="./folder.png" className="size-20" alt="Carpeta" />;
       default:
-        return <img src="./default.png" className="size-20" />;
+        return <img src="./default.png" className="size-20" alt="Archivo" />;
     }
   };
 
@@ -39,15 +64,21 @@ const FileCard: React.FC<FileCardProps> = ({name, description, uploadedAt, type,
       <div className="flex flex-col text-black justify-center">
         <p className="font-bold text-sky-700 text-md truncate">{name}</p>
         <p className=" text-xs mb-1">{description}</p>
-        <p className=" text-xs mb-2">Subido: {uploadedAt}</p>
+        <p className=" text-xs">Subido: {uploadedAt}</p>
+        <p className="text-xs">
+          Por: {firstName} {lastName}
+        </p>
+        <p className="text-xs mb-2"> {role}</p>
 
         {/* Botón */}
         <div className="flex items-center justify-end">
           <Link
+            // 💡 CLAVE: Esto usa la URL del archivo
             href={url}
+            // 💡 Esto abre el archivo en una pestaña nueva para verlo o descargarlo
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1.5 px-3 rounded-md transition-colors duration-300"
+            className="bg-[#ffff00] text-black  hover:scale-105 dark:bg-gray-800 dark:text-white text-xs font-medium py-1.5 px-3 rounded-md  duration-300"
           >
             Ver Archivo
           </Link>

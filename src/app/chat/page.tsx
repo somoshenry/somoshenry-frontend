@@ -15,6 +15,11 @@ import { convertMessage, convertGroupToConversation } from '@/utils/chat/convers
 import { Message as BackendMessage, MessageType, getDisplayName } from '@/services/chatService';
 import type { Message, Conversation } from '@/interfaces/chat';
 
+// Tipo para evento de grupo creado
+type GroupCreatedEvent = {
+  group: any; // Puede ser tipado mejor si tienes la interfaz
+};
+
 // Re-exportar interfaces para mantener compatibilidad con componentes
 export type { Message, Participant, Conversation } from '@/interfaces/chat';
 
@@ -95,6 +100,19 @@ export default function ChatPage() {
     }
   }, [selectedConversationId, markConversationAsReadGlobal, setConversations]);
 
+  // Escuchar evento de grupo creado por WebSocket
+  useEffect(() => {
+    if (!socket.isConnected || !socket.onGroupCreated) return;
+    const cleanup = socket.onGroupCreated((group: any) => {
+      setConversations((prev) => {
+        if (prev.some((c) => c.id === group.id)) return prev;
+        const groupConv = convertGroupToConversation(group);
+        return [groupConv, ...prev];
+      });
+    });
+    return cleanup;
+  }, [socket, socket.isConnected, setConversations]);
+
   // Unirse a la conversación seleccionada
   useEffect(() => {
     if (selectedConversationId && socket.isConnected) {
@@ -114,83 +132,76 @@ export default function ChatPage() {
       clearLoadedFlag(convId);
 
       setConversations((prev) => {
-        // Verificar si la conversación existe
-        const convIndex = prev.findIndex((c) => c.id === convId);
+        // Buscar la conversación
+        const conv = prev.find((c) => c.id === convId);
 
-        // Si la conversación NO existe, crearla
-        if (convIndex === -1) {
-          console.log('Nueva conversación detectada, creando...', convId);
-
-          const otherUserInfo = frontendMessage.isOwn
-            ? null
-            : {
-                userId: frontendMessage.senderId,
-                userName: frontendMessage.senderName,
-                userAvatar: frontendMessage.senderAvatar,
-              };
-
-          if (!frontendMessage.isOwn) {
-            cache.saveUserToCache(frontendMessage.senderId, {
-              name: frontendMessage.senderName,
-              avatar: frontendMessage.senderAvatar,
-            });
-            cache.saveConversationUserMapping(convId, frontendMessage.senderId);
+        // Si la conversación NO existe, crearla (puede ser grupo o 1:1)
+        if (!conv) {
+          // Detectar si es grupo por la estructura del mensaje (solo si existe participants)
+          const isGroup = Array.isArray((message.conversation as any).participants) && (message.conversation as any).participants.length > 2;
+          let newConversation: Conversation;
+          if (isGroup) {
+            // Si tienes un helper para convertir a grupo, úsalo
+            // Aquí se asume que message.conversation tiene la info necesaria
+            const groupConv = message.conversation as any;
+            newConversation = {
+              id: convId,
+              userId: undefined,
+              userName: groupConv.name || 'Grupo',
+              userAvatar: groupConv.imageUrl,
+              lastMessage: frontendMessage.content,
+              lastMessageTime: frontendMessage.timestamp,
+              unreadCount: frontendMessage.isOwn ? 0 : 1,
+              messages: [frontendMessage],
+              isGroup: true,
+              groupName: groupConv.name,
+              participants: groupConv.participants,
+            };
+          } else {
+            // Conversación 1:1
+            const otherUserInfo = frontendMessage.isOwn
+              ? null
+              : {
+                  userId: frontendMessage.senderId,
+                  userName: frontendMessage.senderName,
+                  userAvatar: frontendMessage.senderAvatar,
+                };
+            if (!frontendMessage.isOwn) {
+              cache.saveUserToCache(frontendMessage.senderId, {
+                name: frontendMessage.senderName,
+                avatar: frontendMessage.senderAvatar,
+              });
+              cache.saveConversationUserMapping(convId, frontendMessage.senderId);
+            }
+            newConversation = {
+              id: convId,
+              userId: otherUserInfo?.userId,
+              userName: otherUserInfo?.userName || 'Conversación',
+              userAvatar: otherUserInfo?.userAvatar,
+              lastMessage: frontendMessage.content,
+              lastMessageTime: frontendMessage.timestamp,
+              unreadCount: frontendMessage.isOwn ? 0 : 1,
+              messages: [frontendMessage],
+              isGroup: false,
+            };
           }
-
-          const newConversation: Conversation = {
-            id: convId,
-            userId: otherUserInfo?.userId,
-            userName: otherUserInfo?.userName || 'Conversación',
-            userAvatar: otherUserInfo?.userAvatar,
-            lastMessage: frontendMessage.content,
-            lastMessageTime: frontendMessage.timestamp,
-            unreadCount: frontendMessage.isOwn ? 0 : 1,
-            messages: [frontendMessage],
-            isGroup: false,
-          };
-
           return [newConversation, ...prev];
         }
 
         // La conversación existe, actualizarla
         return prev.map((conv) => {
           if (conv.id === convId) {
-            let otherUserInfo = {
-              userId: conv.userId,
-              userName: conv.userName,
-              userAvatar: conv.userAvatar,
-            };
-
-            if (!frontendMessage.isOwn) {
-              if (!otherUserInfo.userId || otherUserInfo.userName === 'Conversación') {
-                otherUserInfo = {
-                  userId: frontendMessage.senderId,
-                  userName: frontendMessage.senderName,
-                  userAvatar: frontendMessage.senderAvatar,
-                };
-                cache.saveUserToCache(frontendMessage.senderId, {
-                  name: frontendMessage.senderName,
-                  avatar: frontendMessage.senderAvatar,
-                });
-                cache.saveConversationUserMapping(convId, frontendMessage.senderId);
-              }
-            } else if (frontendMessage.senderAvatar) {
-              cache.saveUserToCache(frontendMessage.senderId, {
-                name: frontendMessage.senderName,
-                avatar: frontendMessage.senderAvatar,
-              });
-            }
+            // Si no hay mensajes cargados, inicializar el array
+            const currentMessages = Array.isArray(conv.messages) ? conv.messages : [];
 
             // Si es mi propio mensaje, buscar mensaje temporal para reemplazarlo
             if (frontendMessage.isOwn) {
-              const tempMessageIndex = conv.messages.findIndex((m) => m.tempId && m.id.startsWith('temp-'));
-
+              const tempMessageIndex = currentMessages.findIndex((m) => m.tempId && m.id.startsWith('temp-'));
               if (tempMessageIndex !== -1) {
-                const updatedMessages = [...conv.messages];
+                const updatedMessages = [...currentMessages];
                 updatedMessages[tempMessageIndex] = frontendMessage;
                 return {
                   ...conv,
-                  ...otherUserInfo,
                   messages: updatedMessages,
                   lastMessage: frontendMessage.content,
                   lastMessageTime: frontendMessage.timestamp,
@@ -199,18 +210,17 @@ export default function ChatPage() {
             }
 
             // Verificar si el mensaje ya existe
-            const exists = conv.messages.some((m) => m.id === frontendMessage.id && !m.id.startsWith('temp-'));
+            const exists = currentMessages.some((m) => m.id === frontendMessage.id && !m.id.startsWith('temp-'));
             if (exists) return conv;
 
             const shouldIncrementUnread = !frontendMessage.isOwn && conv.id !== selectedConversationId;
 
             return {
               ...conv,
-              ...otherUserInfo,
-              messages: [...conv.messages, frontendMessage],
+              messages: [...currentMessages, frontendMessage],
               lastMessage: frontendMessage.content,
               lastMessageTime: frontendMessage.timestamp,
-              unreadCount: shouldIncrementUnread ? conv.unreadCount + 1 : conv.unreadCount,
+              unreadCount: shouldIncrementUnread ? (conv.unreadCount || 0) + 1 : conv.unreadCount,
             };
           }
           return conv;

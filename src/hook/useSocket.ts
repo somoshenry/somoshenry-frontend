@@ -183,6 +183,19 @@ export function useSocket({ token, enabled = true }: UseSocketProps) {
     };
   }, []);
 
+  // Escuchar evento de grupo creado
+  const onGroupCreated = useCallback((callback: (group: any) => void) => {
+    if (!socketRef.current) return () => {};
+    const handler = (group: any) => {
+      console.log('👥 Nuevo grupo recibido:', group);
+      callback(group);
+    };
+    socketRef.current.on('groupCreated', handler);
+    return () => {
+      socketRef.current?.off('groupCreated', handler);
+    };
+  }, []);
+
   return {
     isConnected,
     onlineUsers,
@@ -195,5 +208,6 @@ export function useSocket({ token, enabled = true }: UseSocketProps) {
     onMessageError,
     onUserTyping,
     onMessageRead,
+    onGroupCreated,
   };
 }

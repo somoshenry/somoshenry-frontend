@@ -77,61 +77,19 @@ export function useChatMessages({ selectedConversationId, userId, conversations,
   const sendGroupMessage = useCallback(
     async (groupId: string, content: string) => {
       if (!userId) return;
-
       try {
-        // Enviar mensaje al backend
-        const sentMessage = await sendGroupMessageService({
+        // Enviar mensaje al backend (el WebSocket notificará a todos los miembros)
+        return await sendGroupMessageService({
           groupId,
           content: content.trim(),
           type: MessageType.TEXT,
         });
-
-        // Esperar un momento para que el backend procese
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        // Recargar todos los mensajes del grupo desde el backend
-        const response = await getGroupMessages(groupId, 1, 50);
-
-        if (!response.data || response.data.length === 0) {
-          console.warn('⚠️ Backend retornó array vacío');
-          return;
-        }
-
-        const msgs: Message[] = response.data.map((msg: GroupMessage) => ({
-          id: msg.id,
-          senderId: msg.sender.id,
-          senderName: getDisplayName(msg.sender),
-          senderAvatar: msg.sender.profilePicture || undefined,
-          content: msg.content || msg.mediaUrl || '',
-          timestamp: new Date(msg.createdAt),
-          isOwn: msg.sender.id === userId,
-        }));
-
-        // Limpiar el flag de carga para este grupo, permitiendo futuras recargas
-        loadedGroupMessagesRef.current.delete(groupId);
-
-        // Actualizar con los mensajes reales del backend
-        setConversations((prev) =>
-          prev.map((c) => {
-            if (c.id === groupId) {
-              return {
-                ...c,
-                messages: msgs,
-                lastMessage: content.trim(),
-                lastMessageTime: new Date(),
-              };
-            }
-            return c;
-          })
-        );
-
-        return sentMessage;
       } catch (e) {
         console.error('❌ Error al enviar mensaje al grupo:', e);
         throw e;
       }
     },
-    [userId, setConversations]
+    [userId]
   );
 
   /**

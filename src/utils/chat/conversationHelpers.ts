@@ -76,7 +76,7 @@ export function convertConversation(conv: BackendConversation, currentUserId: st
 
   // Si aún no tenemos userId, buscar en el mapeo de conversaciones
   if (!userId) {
-    userId = getUserIdFromConversation(conv.id);
+    userId = getUserIdFromConversation(conv.id) ?? undefined;
   }
 
   // Intentar obtener info del usuario

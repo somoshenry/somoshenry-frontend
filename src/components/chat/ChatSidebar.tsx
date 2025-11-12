@@ -1,14 +1,15 @@
 'use client';
-import { Conversation } from '@/app/chat/page';
+import { Conversation } from '@/interfaces/chat';
 
 interface ChatSidebarProps {
   conversations: Conversation[];
   selectedId: string | null;
   onSelectConversation: (id: string) => void;
   onOpenSearch: () => void;
+  onOpenCreateGroup: () => void;
 }
 
-export default function ChatSidebar({ conversations, selectedId, onSelectConversation, onOpenSearch }: ChatSidebarProps) {
+export default function ChatSidebar({ conversations, selectedId, onSelectConversation, onOpenSearch, onOpenCreateGroup }: ChatSidebarProps) {
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -24,18 +25,25 @@ export default function ChatSidebar({ conversations, selectedId, onSelectConvers
   };
 
   return (
-    <div className="w-full md:w-80 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
+    <div className="w-full h-full border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mensajes</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{conversations.length} conversaciones</p>
         </div>
-        <button onClick={onOpenSearch} className="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500 text-black transition-colors" title="Nueva conversación">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-        </button>
+        <div className="flex gap-2">
+          <button onClick={onOpenSearch} className="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500 text-black transition-colors" title="Nueva conversación">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </button>
+          <button onClick={onOpenCreateGroup} className="p-2 rounded-full bg-blue-400 hover:bg-blue-500 text-white transition-colors" title="Nuevo grupo">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Lista de conversaciones */}

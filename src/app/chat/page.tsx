@@ -2,52 +2,36 @@
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
 import SearchUserModal from '@/components/chat/SearchUserModal';
-import { useState, useEffect, useCallback } from 'react';
+import CreateGroupModal from '@/components/chat/CreateGroupModal';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hook/useAuth';
 import { useChat } from '@/context/ChatContext';
 import { useSocket } from '@/hook/useSocket';
 import { tokenStore } from '@/services/tokenStore';
-import { getUserConversations, openConversation, getMessages, Message as BackendMessage, Conversation as BackendConversation, MessageType, getDisplayName, getOtherParticipant } from '@/services/chatService';
+import { useChatConversations } from '@/hooks/chat/useChatConversations';
+import { useChatMessages } from '@/hooks/chat/useChatMessages';
+import { useChatCache } from '@/hooks/chat/useChatCache';
+import { convertMessage, convertGroupToConversation } from '@/utils/chat/conversationHelpers';
+import { Message as BackendMessage, MessageType, getDisplayName } from '@/services/chatService';
+import type { Message, Conversation } from '@/interfaces/chat';
 
-// Interfaces para el frontend
-export interface Message {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderAvatar?: string;
-  content: string;
-  timestamp: Date;
-  isOwn: boolean;
-  tempId?: string; // ID temporal para mensajes optimistas
-}
-
-export interface Participant {
-  id: string;
-  name: string;
-  avatar?: string;
-  email: string;
-}
-
-export interface Conversation {
-  id: string;
-  userId?: string;
-  userName?: string;
-  userAvatar?: string;
-  isGroup?: boolean;
-  groupName?: string;
-  participants?: Participant[];
-  lastMessage: string;
-  lastMessageTime: Date;
-  unreadCount: number;
-  messages: Message[];
-}
+// Re-exportar interfaces para mantener compatibilidad con componentes
+export type { Message, Participant, Conversation } from '@/interfaces/chat';
 
 export default function ChatPage() {
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  // Estado para manejar si el sidebar está visible en móvil
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(true);
+
+  // Restaurar conversación seleccionada desde localStorage
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('chat_selected_conversation') || null;
+    }
+    return null;
+  });
+
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [chatAvailable, setChatAvailable] = useState(true);
+  const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const { user } = useAuth();
   const { markMessagesAsRead, markConversationAsRead: markConversationAsReadGlobal } = useChat();
 
@@ -60,252 +44,18 @@ export default function ChatPage() {
     enabled: !!user && !!token,
   });
 
-  // Cache de información de usuarios para persistir entre recargas
-  const getUserCache = useCallback(() => {
-    if (typeof window === 'undefined') return {};
-    const cached = localStorage.getItem('chat_users_cache');
-    return cached ? JSON.parse(cached) : {};
-  }, []);
-
-  const getConversationCache = useCallback(() => {
-    if (typeof window === 'undefined') return {};
-    const cached = localStorage.getItem('chat_conversations_cache');
-    return cached ? JSON.parse(cached) : {};
-  }, []);
-
-  const getUserFromCache = useCallback(
-    (userId: string) => {
-      const cache = getUserCache();
-      return cache[userId];
-    },
-    [getUserCache]
-  );
-
-  const saveUserToCache = useCallback(
-    (userId: string, userData: { name: string; avatar?: string }) => {
-      if (typeof window === 'undefined') return;
-      const cache = getUserCache();
-      cache[userId] = userData;
-      localStorage.setItem('chat_users_cache', JSON.stringify(cache));
-    },
-    [getUserCache]
-  );
-
-  const saveConversationUserMapping = useCallback(
-    (conversationId: string, userId: string) => {
-      if (typeof window === 'undefined') return;
-      const cache = getConversationCache();
-      cache[conversationId] = userId;
-      localStorage.setItem('chat_conversations_cache', JSON.stringify(cache));
-    },
-    [getConversationCache]
-  );
-
-  // Funciones para persistir última lectura de conversaciones
-  const getLastReadTimestamp = useCallback((conversationId: string): Date | null => {
-    if (typeof window === 'undefined') return null;
-    const cached = localStorage.getItem('chat_last_read');
-    if (!cached) return null;
-    const timestamps = JSON.parse(cached);
-    return timestamps[conversationId] ? new Date(timestamps[conversationId]) : null;
-  }, []);
-
-  const saveLastReadTimestamp = useCallback((conversationId: string) => {
-    if (typeof window === 'undefined') return;
-    const cached = localStorage.getItem('chat_last_read');
-    const timestamps = cached ? JSON.parse(cached) : {};
-    timestamps[conversationId] = new Date().toISOString();
-    localStorage.setItem('chat_last_read', JSON.stringify(timestamps));
-  }, []);
-
-  const getUserIdFromConversation = useCallback(
-    (conversationId: string) => {
-      const cache = getConversationCache();
-      return cache[conversationId];
-    },
-    [getConversationCache]
-  );
-
-  // Guardar datos del usuario actual en cache cuando esté disponible
-  useEffect(() => {
-    if (user?.id && user?.name) {
-      const userData = {
-        name: user.name + (user.lastName ? ` ${user.lastName}` : ''),
-        avatar: user.profilePicture || undefined,
-      };
-      saveUserToCache(user.id, userData);
-    }
-  }, [user, saveUserToCache]);
-
-  // Convertir mensaje del backend a formato del frontend
-  const convertMessage = useCallback(
-    (msg: BackendMessage, currentUserId: string): Message => {
-      let senderAvatar = msg.sender?.profilePicture;
-      let senderName = msg.sender ? getDisplayName(msg.sender) : 'Usuario';
-      const senderId = msg.sender?.id || '';
-
-      // Si el mensaje tiene sender con avatar, guardarlo en cache
-      if (senderId && msg.sender.profilePicture) {
-        saveUserToCache(senderId, {
-          name: senderName,
-          avatar: msg.sender.profilePicture,
-        });
-      }
-
-      // Si no tiene avatar, buscar en cache
-      if (senderId && !senderAvatar) {
-        const cached = getUserFromCache(senderId);
-        if (cached) {
-          senderAvatar = cached.avatar;
-          senderName = cached.name || senderName;
-        }
-      }
-
-      const isOwn = senderId === currentUserId;
-
-      // Debug: verificar comparación
-      if (process.env.NODE_ENV === 'development') {
-        console.log('convertMessage:', { senderId, currentUserId, isOwn, messageContent: msg.content });
-      }
-
-      return {
-        id: msg.id,
-        senderId,
-        senderName,
-        senderAvatar: senderAvatar || undefined,
-        content: msg.content || msg.mediaUrl || '',
-        timestamp: new Date(msg.createdAt),
-        isOwn,
-      };
-    },
-    [saveUserToCache, getUserFromCache]
-  );
-
-  // Convertir conversación del backend a formato del frontend
-  const convertConversation = useCallback(
-    (conv: BackendConversation, currentUserId: string): Conversation => {
-      // Intentar obtener el otro usuario desde participants
-      let otherUser = getOtherParticipant(conv, currentUserId);
-
-      // Si no hay participants (el backend no los incluye), obtener del primer mensaje
-      if (!otherUser && conv.messages && conv.messages.length > 0) {
-        const otherMessage = conv.messages.find((msg) => msg.sender?.id !== currentUserId);
-        if (otherMessage?.sender) {
-          otherUser = otherMessage.sender;
-        }
-      }
-
-      const messages = (conv.messages || []).map((msg) => convertMessage(msg, currentUserId));
-      const lastMsg = messages[messages.length - 1];
-
-      // Obtener el timestamp de la última vez que leíste esta conversación
-      const lastReadTime = getLastReadTimestamp(conv.id);
-
-      // Contar mensajes no leídos: mensajes del otro usuario que llegaron después de la última lectura
-      let unreadCount = 0;
-      if (lastReadTime) {
-        unreadCount = messages.filter((msg) => !msg.isOwn && msg.timestamp > lastReadTime).length;
-      } else {
-        // Si nunca has leído esta conversación, contar todos los mensajes del otro usuario
-        unreadCount = messages.filter((msg) => !msg.isOwn).length;
-      }
-
-      // Obtener userId del otro usuario
-      let userId = otherUser?.id;
-
-      // Si no tenemos userId, intentar sacarlo de los mensajes
-      if (!userId && messages.length > 0) {
-        const otherMessage = messages.find((msg) => !msg.isOwn);
-        if (otherMessage) {
-          userId = otherMessage.senderId;
-        }
-      }
-
-      // Si aún no tenemos userId, buscar en el mapeo de conversaciones
-      if (!userId) {
-        userId = getUserIdFromConversation(conv.id);
-      }
-
-      // Intentar obtener info del usuario
-      let userName = otherUser ? getDisplayName(otherUser) : undefined;
-      let userAvatar = otherUser?.profilePicture;
-
-      // Si tenemos otherUser, guardarlo en cache
-      if (otherUser && userId) {
-        saveUserToCache(userId, {
-          name: getDisplayName(otherUser),
-          avatar: otherUser.profilePicture || undefined,
-        });
-        saveConversationUserMapping(conv.id, userId);
-      }
-
-      // Si no tenemos info completa y tenemos userId, buscar en cache
-      if (userId && (!userName || userName === 'Conversación')) {
-        const cached = getUserFromCache(userId);
-        if (cached) {
-          userName = cached.name;
-          userAvatar = cached.avatar;
-        }
-      } // Si aún no tenemos nombre, usar fallback
-      if (!userName) {
-        userName = 'Conversación';
-      }
-
-      // Debug: verificar avatar en conversación
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Conversation avatar:', {
-          conversationId: conv.id,
-          userName,
-          userAvatar,
-          otherUser: otherUser ? { id: otherUser.id, profilePicture: otherUser.profilePicture } : null,
-        });
-      }
-
-      return {
-        id: conv.id,
-        userId,
-        userName,
-        userAvatar: userAvatar || undefined,
-        lastMessage: lastMsg?.content || '',
-        lastMessageTime: lastMsg?.timestamp || new Date(conv.updatedAt),
-        unreadCount,
-        messages,
-        isGroup: false,
-      };
-    },
-    [convertMessage, getUserFromCache, getUserIdFromConversation, getLastReadTimestamp, saveUserToCache, saveConversationUserMapping]
-  ); // Cargar conversaciones del usuario
-  const loadConversations = useCallback(async () => {
-    if (!user?.id || !chatEnabled) return;
-
-    try {
-      setLoading(true);
-      const backendConvs = await getUserConversations();
-
-      // Debug: verificar qué llega del backend
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Backend conversations:', backendConvs);
-        if (backendConvs[0]?.messages[0]) {
-          console.log('Sample message from backend:', backendConvs[0].messages[0]);
-        }
-      }
-
-      const frontendConvs = backendConvs.map((conv) => convertConversation(conv, user.id));
-
-      // Ordenar por última actividad
-      frontendConvs.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
-
-      setConversations(frontendConvs);
-      setChatAvailable(true);
-    } catch (error: any) {
-      console.error('Error al cargar conversaciones:', error);
-      if (error?.response?.status === 404) {
-        setChatAvailable(false);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user, chatEnabled, convertConversation]);
+  // Hooks personalizados
+  const cache = useChatCache();
+  const { conversations, setConversations, loading, chatAvailable, loadConversations, openConversation } = useChatConversations({
+    userId: user?.id,
+    chatEnabled,
+  });
+  const { sendGroupMessage, clearLoadedFlag } = useChatMessages({
+    selectedConversationId,
+    userId: user?.id,
+    conversations,
+    setConversations,
+  });
 
   // Cargar conversaciones al montar
   useEffect(() => {
@@ -326,25 +76,31 @@ export default function ChatPage() {
 
     window.addEventListener('chat-sync', handleChatSync);
     return () => window.removeEventListener('chat-sync', handleChatSync);
-  }, []);
+  }, [setConversations]);
 
   // Cuando seleccionas una conversación, resetear el contador de mensajes no leídos
   useEffect(() => {
     if (selectedConversationId) {
+      // Guardar en localStorage para persistir la selección
+      localStorage.setItem('chat_selected_conversation', selectedConversationId);
+
       // Marcar la conversación como leída usando el ChatContext (sincroniza automáticamente)
       markConversationAsReadGlobal(selectedConversationId);
 
       // También actualizar localmente
       setConversations((prev) => prev.map((conv) => (conv.id === selectedConversationId ? { ...conv, unreadCount: 0 } : conv)));
+
+      // En móvil, cerrar el sidebar cuando seleccionas una conversación
+      setIsMobileSidebarOpen(false);
     }
-  }, [selectedConversationId, markConversationAsReadGlobal]);
+  }, [selectedConversationId, markConversationAsReadGlobal, setConversations]);
 
   // Unirse a la conversación seleccionada
   useEffect(() => {
     if (selectedConversationId && socket.isConnected) {
       socket.joinConversation(selectedConversationId);
     }
-  }, [selectedConversationId, socket.isConnected, socket]);
+  }, [selectedConversationId, socket]);
 
   // Escuchar nuevos mensajes por WebSocket
   useEffect(() => {
@@ -354,6 +110,9 @@ export default function ChatPage() {
       const frontendMessage = convertMessage(message, user.id);
       const convId = message.conversation.id;
 
+      // Si es un mensaje de grupo, limpiar el flag de carga para permitir recargar
+      clearLoadedFlag(convId);
+
       setConversations((prev) => {
         // Verificar si la conversación existe
         const convIndex = prev.findIndex((c) => c.id === convId);
@@ -362,7 +121,6 @@ export default function ChatPage() {
         if (convIndex === -1) {
           console.log('Nueva conversación detectada, creando...', convId);
 
-          // Obtener info del otro usuario desde el mensaje
           const otherUserInfo = frontendMessage.isOwn
             ? null
             : {
@@ -371,13 +129,12 @@ export default function ChatPage() {
                 userAvatar: frontendMessage.senderAvatar,
               };
 
-          // Si no es mensaje propio, guardar info en cache
           if (!frontendMessage.isOwn) {
-            saveUserToCache(frontendMessage.senderId, {
+            cache.saveUserToCache(frontendMessage.senderId, {
               name: frontendMessage.senderName,
               avatar: frontendMessage.senderAvatar,
             });
-            saveConversationUserMapping(convId, frontendMessage.senderId);
+            cache.saveConversationUserMapping(convId, frontendMessage.senderId);
           }
 
           const newConversation: Conversation = {
@@ -392,21 +149,18 @@ export default function ChatPage() {
             isGroup: false,
           };
 
-          // Agregar la nueva conversación al principio
           return [newConversation, ...prev];
         }
 
         // La conversación existe, actualizarla
         return prev.map((conv) => {
           if (conv.id === convId) {
-            // Preservar información del otro usuario o actualizarla
             let otherUserInfo = {
               userId: conv.userId,
               userName: conv.userName,
               userAvatar: conv.userAvatar,
             };
 
-            // Si el mensaje es del otro usuario y no teníamos su info, guardarla
             if (!frontendMessage.isOwn) {
               if (!otherUserInfo.userId || otherUserInfo.userName === 'Conversación') {
                 otherUserInfo = {
@@ -414,22 +168,17 @@ export default function ChatPage() {
                   userName: frontendMessage.senderName,
                   userAvatar: frontendMessage.senderAvatar,
                 };
-                // Guardar en cache
-                saveUserToCache(frontendMessage.senderId, {
+                cache.saveUserToCache(frontendMessage.senderId, {
                   name: frontendMessage.senderName,
                   avatar: frontendMessage.senderAvatar,
                 });
-                // Guardar mapeo conversación→usuario
-                saveConversationUserMapping(convId, frontendMessage.senderId);
+                cache.saveConversationUserMapping(convId, frontendMessage.senderId);
               }
-            } else {
-              // Si es mi propio mensaje, también guardar mi info en cache
-              if (frontendMessage.senderAvatar) {
-                saveUserToCache(frontendMessage.senderId, {
-                  name: frontendMessage.senderName,
-                  avatar: frontendMessage.senderAvatar,
-                });
-              }
+            } else if (frontendMessage.senderAvatar) {
+              cache.saveUserToCache(frontendMessage.senderId, {
+                name: frontendMessage.senderName,
+                avatar: frontendMessage.senderAvatar,
+              });
             }
 
             // Si es mi propio mensaje, buscar mensaje temporal para reemplazarlo
@@ -437,7 +186,6 @@ export default function ChatPage() {
               const tempMessageIndex = conv.messages.findIndex((m) => m.tempId && m.id.startsWith('temp-'));
 
               if (tempMessageIndex !== -1) {
-                // Reemplazar el mensaje temporal con el real
                 const updatedMessages = [...conv.messages];
                 updatedMessages[tempMessageIndex] = frontendMessage;
                 return {
@@ -450,17 +198,12 @@ export default function ChatPage() {
               }
             }
 
-            // Verificar si el mensaje ya existe (por ID real del backend)
+            // Verificar si el mensaje ya existe
             const exists = conv.messages.some((m) => m.id === frontendMessage.id && !m.id.startsWith('temp-'));
             if (exists) return conv;
 
-            // Determinar si incrementar unreadCount:
-            // - Si es mensaje propio, no incrementar
-            // - Si es mensaje recibido Y estás viendo esta conversación, no incrementar
-            // - Si es mensaje recibido Y NO estás en esta conversación, incrementar
             const shouldIncrementUnread = !frontendMessage.isOwn && conv.id !== selectedConversationId;
 
-            // Agregar nuevo mensaje
             return {
               ...conv,
               ...otherUserInfo,
@@ -476,7 +219,7 @@ export default function ChatPage() {
     });
 
     return cleanup;
-  }, [socket.isConnected, socket, user, convertMessage, selectedConversationId]);
+  }, [socket.isConnected, socket, user, selectedConversationId, cache, clearLoadedFlag, setConversations]);
 
   // Escuchar confirmaciones de mensajes enviados
   useEffect(() => {
@@ -489,7 +232,6 @@ export default function ChatPage() {
       setConversations((prev) => {
         return prev.map((conv) => {
           if (conv.id === convId) {
-            // Reemplazar mensaje temporal por el mensaje real
             return {
               ...conv,
               messages: conv.messages.map((m) => (m.tempId && m.tempId === frontendMessage.tempId ? frontendMessage : m)),
@@ -501,69 +243,56 @@ export default function ChatPage() {
     });
 
     return cleanup;
-  }, [socket.isConnected, socket, user, convertMessage]);
+  }, [socket.isConnected, socket, user, setConversations]);
 
   // Marcar mensajes como leídos al entrar a la página
   useEffect(() => {
     markMessagesAsRead();
   }, [markMessagesAsRead]);
 
+  // Selección de conversación
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
   // Crear nueva conversación con un usuario
   const handleCreateConversation = async (selectedUser: { id: string; name: string; avatar?: string; email: string }) => {
-    if (!user?.id) return;
-
     try {
-      // Verificar si ya existe una conversación con este usuario
-      const existingConv = conversations.find((c) => !c.isGroup && c.userId === selectedUser.id);
-
-      if (existingConv) {
-        // Si ya existe, solo la seleccionamos
-        setSelectedConversationId(existingConv.id);
-        return;
+      const conv = await openConversation(selectedUser);
+      if (conv) {
+        setSelectedConversationId(conv.id);
       }
-
-      // Crear nueva conversación en el backend
-      const backendConv = await openConversation(selectedUser.id);
-      const frontendConv = convertConversation(backendConv, user.id);
-
-      // Asegurarse de que tiene la info del usuario seleccionado
-      const conversationWithUserInfo = {
-        ...frontendConv,
-        userId: selectedUser.id,
-        userName: selectedUser.name,
-        userAvatar: selectedUser.avatar,
-      };
-
-      // Guardar en cache
-      saveUserToCache(selectedUser.id, {
-        name: selectedUser.name,
-        avatar: selectedUser.avatar,
-      });
-
-      // Guardar mapeo conversación→usuario
-      saveConversationUserMapping(backendConv.id, selectedUser.id);
-
-      setConversations((prev) => [conversationWithUserInfo, ...prev]);
-      setSelectedConversationId(conversationWithUserInfo.id);
     } catch (error) {
       console.error('Error al crear conversación:', error);
       alert('Error al crear la conversación');
     }
   };
 
+  // Manejar grupo recién creado
+  const handleGroupCreated = async (group: any) => {
+    console.log('✅ Grupo creado exitosamente:', group);
+
+    try {
+      const groupConv = convertGroupToConversation(group);
+      setConversations((prev) => [groupConv, ...prev]);
+      setSelectedConversationId(group.id);
+    } catch (error) {
+      console.error('❌ Error al procesar grupo creado:', error);
+      await loadConversations();
+      setSelectedConversationId(group.id);
+    }
+  };
+
   // Enviar mensaje
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     if (!selectedConversationId || !content.trim() || !user?.id) return;
 
-    // Primero buscar en cache, luego en user object
-    const cached = getUserFromCache(user.id);
+    const conv = conversations.find((c) => c.id === selectedConversationId);
+    if (!conv) return;
+
+    // Datos del usuario
+    const cached = cache.getUserFromCache(user.id);
     let userAvatar = user.profilePicture;
     let userName = getDisplayName(user);
-
     if (cached) {
-      // Usar datos del cache si están disponibles
       userAvatar = cached.avatar || userAvatar;
       userName = cached.name || userName;
     }
@@ -580,7 +309,44 @@ export default function ChatPage() {
       isOwn: true,
     };
 
-    // Agregar mensaje optimísticamente
+    // Si es grupo, usar hook de mensajes
+    if (conv.isGroup) {
+      // Agregar mensaje temporal
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === conv.id) {
+            return {
+              ...c,
+              messages: [...c.messages, tempMessage],
+              lastMessage: content.trim(),
+              lastMessageTime: new Date(),
+            };
+          }
+          return c;
+        })
+      );
+
+      try {
+        await sendGroupMessage(conv.id, content.trim());
+      } catch (e) {
+        // Remover mensaje temporal si falla
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id === conv.id) {
+              return {
+                ...c,
+                messages: c.messages.filter((m) => m.id !== tempId),
+              };
+            }
+            return c;
+          })
+        );
+        alert('Error al enviar mensaje al grupo');
+      }
+      return;
+    }
+
+    // 1-1: flujo original con WebSocket
     setConversations((prev) =>
       prev.map((conv) => {
         if (conv.id === selectedConversationId) {
@@ -603,7 +369,6 @@ export default function ChatPage() {
     });
 
     if (!sent) {
-      // Si el socket no está conectado, mostrar error
       console.error('No se pudo enviar el mensaje, socket desconectado');
       alert('Error: No hay conexión con el servidor');
 
@@ -622,84 +387,74 @@ export default function ChatPage() {
     }
   };
 
-  // Eliminar conversación (solo visual - local)
-  const handleDeleteConversation = (conversationId: string) => {
-    if (!confirm('¿Deseas ocultar esta conversación?')) return;
+  // Eliminar conversación
+  const handleDeleteConversation = async (conversationId: string) => {
+    const conv = conversations.find((c) => c.id === conversationId);
+    if (!conv) return;
 
-    // Remover la conversación del estado local (solo visual)
-    setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+    const confirmMsg = conv.isGroup ? `¿Eliminar el grupo "${conv.groupName}"?` : `¿Eliminar conversación con ${conv.userName}?`;
 
-    // Si era la conversación seleccionada, deseleccionarla
-    if (selectedConversationId === conversationId) {
-      setSelectedConversationId(null);
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      if (conv.isGroup) {
+        const { deleteGroup, leaveGroup } = await import('@/services/chatService');
+        if (conv.participants?.some((p: any) => p.id === user?.id && p.role === 'ADMIN')) {
+          await deleteGroup(conversationId);
+        } else {
+          await leaveGroup(conversationId);
+        }
+      } else {
+        const { deleteConversation } = await import('@/services/chatService');
+        await deleteConversation(conversationId);
+      }
+
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+      if (selectedConversationId === conversationId) {
+        setSelectedConversationId(null);
+      }
+    } catch (e: any) {
+      alert('Error al eliminar la conversación o grupo');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 pt-16 md:ml-64 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative inline-block">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-gray-700"></div>
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-yellow-400 absolute top-0"></div>
-          </div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando conversaciones...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar mensaje si el chat no está disponible
   if (!chatEnabled || !chatAvailable) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 pt-16 md:ml-64 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="bg-blue-100 dark:bg-blue-900/20 p-6 rounded-full inline-block mb-6">
-            <svg className="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Chat próximamente</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">La funcionalidad de mensajería instantánea estará disponible muy pronto. Estamos trabajando para habilitarla en el backend.</p>
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-left">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              <strong className="text-yellow-500">💡 Nota para desarrolladores:</strong>
-              <br />
-              El backend necesita ser actualizado con el módulo de chat. Una vez desplegado en Render, cambiar <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">NEXT_PUBLIC_CHAT_ENABLED</code> a <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">true</code>.
-            </p>
-          </div>
+      <div className="fixed top-16 left-0 md:left-64 right-0 bottom-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Chat no disponible</h2>
+          <p className="text-gray-600 dark:text-gray-400">El módulo de chat no está habilitado en este momento</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pt-16 md:ml-64">
-      {/* Indicador de conexión */}
-      {!socket.isConnected && user && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">⚠️ Reconectando al servidor de chat...</p>
-        </div>
-      )}
+    <div className="fixed top-16 left-0 md:left-64 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
+      {/* Sidebar con lista de conversaciones - Se oculta en móvil cuando hay conversación seleccionada */}
+      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-80 shrink-0 h-full`}>
+        <ChatSidebar conversations={conversations} selectedId={selectedConversationId} onSelectConversation={setSelectedConversationId} onOpenSearch={() => setIsSearchModalOpen(true)} onOpenCreateGroup={() => setIsCreateGroupOpen(true)} />
+      </div>
 
-      <div className="flex h-[calc(100vh-4rem)] max-w-7xl mx-auto border-x border-gray-200 dark:border-gray-700">
-        {/* Sidebar con lista de conversaciones */}
-        <ChatSidebar conversations={conversations} selectedId={selectedConversationId} onSelectConversation={setSelectedConversationId} onOpenSearch={() => setIsSearchModalOpen(true)} />
+      {/* Ventana de chat - Se muestra en toda la pantalla en móvil cuando hay conversación seleccionada */}
+      <div className={`${!isMobileSidebarOpen ? 'block' : 'hidden'} md:block flex-1 relative h-full`}>
+        {/* Botón de volver en móvil */}
+        {selectedConversation && (
+          <button onClick={() => setIsMobileSidebarOpen(true)} className="md:hidden absolute top-4 left-4 z-10 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700" aria-label="Volver a conversaciones">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-300">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+          </button>
+        )}
 
-        {/* Ventana de chat */}
         <ChatWindow conversation={selectedConversation} onSendMessage={handleSendMessage} onDeleteConversation={handleDeleteConversation} />
       </div>
 
       {/* Modal de búsqueda de usuarios */}
-      <SearchUserModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-        onSelectUser={(selectedUser) => {
-          handleCreateConversation(selectedUser);
-          setIsSearchModalOpen(false);
-        }}
-        currentUserId={user?.id || ''}
-      />
+      <SearchUserModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} onSelectUser={handleCreateConversation} currentUserId={user?.id || ''} />
+
+      {/* Modal de creación de grupo */}
+      <CreateGroupModal isOpen={isCreateGroupOpen} onClose={() => setIsCreateGroupOpen(false)} onGroupCreated={handleGroupCreated} />
     </div>
   );
 }

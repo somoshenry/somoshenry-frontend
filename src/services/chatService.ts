@@ -147,6 +147,119 @@ export async function deleteConversation(conversationId: string): Promise<void> 
   await api.delete(`/chat/conversations/${conversationId}`);
 }
 
+// ==================== TIPOS DE GRUPO ====================
+
+export interface ChatGroup {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  members: User[];
+  admins: User[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GroupMessage {
+  id: string;
+  group: { id: string };
+  sender: User;
+  type: MessageType;
+  content?: string | null;
+  mediaUrl?: string | null;
+  isRead: boolean;
+  readAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==================== FUNCIONES GRUPALES ====================
+
+/**
+ * Crea un grupo de chat
+ */
+export async function createGroup(dto: { name: string; userIds: string[]; imageUrl?: string; description?: string }): Promise<ChatGroup> {
+  // El backend espera 'memberIds', no 'userIds'
+  const payload = {
+    name: dto.name,
+    memberIds: dto.userIds,
+    imageUrl: dto.imageUrl,
+    description: dto.description,
+  };
+  const { data } = await api.post<ChatGroup>('/chat/groups', payload);
+  return data;
+}
+
+/**
+ * Obtiene los grupos del usuario actual
+ */
+export async function getUserGroups(): Promise<ChatGroup[]> {
+  const { data } = await api.get<ChatGroup[]>('/chat/groups');
+  return data;
+}
+
+/**
+ * Envía un mensaje a un grupo
+ * NOTA: Usar la misma ruta que chat 1:1 porque el backend trata ambos igual
+ */
+export async function sendGroupMessage(dto: { groupId: string; content: string; type: MessageType }): Promise<GroupMessage> {
+  // Usar la ruta genérica /chat/messages que funciona para AMBOS tipos
+  const { data } = await api.post<GroupMessage>('/chat/messages', {
+    conversationId: dto.groupId, // El groupId ES el conversationId
+    content: dto.content,
+    type: dto.type,
+  });
+  return data;
+}
+
+/**
+ * Obtiene los mensajes de un grupo (paginado)
+ * NOTA: El backend usa la misma ruta para grupos y conversaciones 1:1
+ * Ambos son tratados como "conversations" internamente
+ */
+export async function getGroupMessages(groupId: string, page: number = 1, limit: number = 50): Promise<{ data: GroupMessage[]; meta: any }> {
+  // Intentar primero con /chat/conversations/ que es la ruta unificada
+  const { data } = await api.get<{ data: GroupMessage[]; meta: any }>(`/chat/conversations/${groupId}/messages`, { params: { page, limit } });
+  return data;
+}
+
+/**
+ * Agrega miembros a un grupo (solo admin)
+ */
+export async function addMembersToGroup(groupId: string, userIds: string[]): Promise<ChatGroup> {
+  const { data } = await api.post<ChatGroup>(`/chat/groups/${groupId}/members`, { userIds });
+  return data;
+}
+
+/**
+ * Elimina un miembro de un grupo (solo admin)
+ */
+export async function removeMemberFromGroup(groupId: string, userId: string): Promise<ChatGroup> {
+  const { data } = await api.delete<ChatGroup>(`/chat/groups/${groupId}/members/${userId}`);
+  return data;
+}
+
+/**
+ * Promueve un miembro a admin (solo admin)
+ */
+export async function promoteMemberToAdmin(groupId: string, userId: string): Promise<ChatGroup> {
+  const { data } = await api.patch<ChatGroup>(`/chat/groups/${groupId}/members/${userId}/promote`);
+  return data;
+}
+
+/**
+ * El usuario actual abandona el grupo
+ */
+export async function leaveGroup(groupId: string): Promise<void> {
+  await api.post(`/chat/groups/${groupId}/leave`, {});
+}
+
+/**
+ * Elimina un grupo (solo admin)
+ */
+export async function deleteGroup(groupId: string): Promise<void> {
+  await api.delete(`/chat/groups/${groupId}`);
+}
+
 // ==================== HELPERS ====================
 
 /**
@@ -181,7 +294,7 @@ export function getOtherParticipant(conversation: Conversation, currentUserId: s
 }
 
 /**
- * Determina si un mensaje fue enviado por el usuario actual
+ * Determina si un mensaje fue enviado por el usuario current
  */
 export function isOwnMessage(message: Message, currentUserId: string): boolean {
   return message.sender.id === currentUserId;

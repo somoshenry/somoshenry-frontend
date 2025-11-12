@@ -141,21 +141,14 @@ export default function ChatPage() {
           const isGroup = Array.isArray((message.conversation as any).participants) && (message.conversation as any).participants.length > 2;
           let newConversation: Conversation;
           if (isGroup) {
-            // Si tienes un helper para convertir a grupo, úsalo
-            // Aquí se asume que message.conversation tiene la info necesaria
-            const groupConv = message.conversation as any;
+            // Usar helper para asegurar estructura correcta y agregar el mensaje recibido
+            const baseGroupConv = convertGroupToConversation(message.conversation as any);
             newConversation = {
-              id: convId,
-              userId: undefined,
-              userName: groupConv.name || 'Grupo',
-              userAvatar: groupConv.imageUrl,
+              ...baseGroupConv,
+              messages: [frontendMessage],
               lastMessage: frontendMessage.content,
               lastMessageTime: frontendMessage.timestamp,
               unreadCount: frontendMessage.isOwn ? 0 : 1,
-              messages: [frontendMessage],
-              isGroup: true,
-              groupName: groupConv.name,
-              participants: groupConv.participants,
             };
           } else {
             // Conversación 1:1
@@ -319,59 +312,22 @@ export default function ChatPage() {
       isOwn: true,
     };
 
-    // Si es grupo, usar hook de mensajes
-    if (conv.isGroup) {
-      // Agregar mensaje temporal
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id === conv.id) {
-            return {
-              ...c,
-              messages: [...c.messages, tempMessage],
-              lastMessage: content.trim(),
-              lastMessageTime: new Date(),
-            };
-          }
-          return c;
-        })
-      );
-
-      try {
-        await sendGroupMessage(conv.id, content.trim());
-      } catch (e) {
-        // Remover mensaje temporal si falla
-        setConversations((prev) =>
-          prev.map((c) => {
-            if (c.id === conv.id) {
-              return {
-                ...c,
-                messages: c.messages.filter((m) => m.id !== tempId),
-              };
-            }
-            return c;
-          })
-        );
-        alert('Error al enviar mensaje al grupo');
-      }
-      return;
-    }
-
-    // 1-1: flujo original con WebSocket
+    // Agregar mensaje temporal (tanto para grupo como 1:1)
     setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id === selectedConversationId) {
+      prev.map((c) => {
+        if (c.id === selectedConversationId) {
           return {
-            ...conv,
-            messages: [...conv.messages, tempMessage],
+            ...c,
+            messages: [...c.messages, tempMessage],
             lastMessage: content.trim(),
             lastMessageTime: new Date(),
           };
         }
-        return conv;
+        return c;
       })
     );
 
-    // Enviar por WebSocket
+    // Enviar por WebSocket (funciona tanto para grupo como 1:1)
     const sent = socket.sendMessage({
       conversationId: selectedConversationId,
       type: MessageType.TEXT,
@@ -384,16 +340,26 @@ export default function ChatPage() {
 
       // Remover el mensaje temporal
       setConversations((prev) =>
-        prev.map((conv) => {
-          if (conv.id === selectedConversationId) {
+        prev.map((c) => {
+          if (c.id === selectedConversationId) {
             return {
-              ...conv,
-              messages: conv.messages.filter((m) => m.id !== tempId),
+              ...c,
+              messages: c.messages.filter((m) => m.id !== tempId),
             };
           }
-          return conv;
+          return c;
         })
       );
+      return;
+    }
+
+    // Si es grupo, también enviar por HTTP como respaldo (opcional, depende del backend)
+    if (conv.isGroup) {
+      try {
+        await sendGroupMessage(conv.id, content.trim());
+      } catch (e) {
+        console.warn('⚠️ Error en respaldo HTTP para grupo (WebSocket ya envió):', e);
+      }
     }
   };
 

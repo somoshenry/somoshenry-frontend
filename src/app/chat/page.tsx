@@ -137,25 +137,25 @@ export default function ChatPage() {
 
         // Si la conversación NO existe, crearla (puede ser grupo o 1:1)
         if (!conv) {
-          // Detectar si es grupo por la estructura del mensaje
-          const isGroup = message.conversation.participants && message.conversation.participants.length > 2;
+          // Detectar si es grupo por la estructura del mensaje (solo si existe participants)
+          const isGroup = Array.isArray((message.conversation as any).participants) && (message.conversation as any).participants.length > 2;
           let newConversation: Conversation;
           if (isGroup) {
             // Si tienes un helper para convertir a grupo, úsalo
             // Aquí se asume que message.conversation tiene la info necesaria
+            const groupConv = message.conversation as any;
             newConversation = {
               id: convId,
               userId: undefined,
-              userName: message.conversation.name || 'Grupo',
-              userAvatar: message.conversation.imageUrl,
+              userName: groupConv.name || 'Grupo',
+              userAvatar: groupConv.imageUrl,
               lastMessage: frontendMessage.content,
               lastMessageTime: frontendMessage.timestamp,
               unreadCount: frontendMessage.isOwn ? 0 : 1,
               messages: [frontendMessage],
               isGroup: true,
-              groupName: message.conversation.name,
-              groupAvatar: message.conversation.imageUrl,
-              participants: message.conversation.participants,
+              groupName: groupConv.name,
+              participants: groupConv.participants,
             };
           } else {
             // Conversación 1:1

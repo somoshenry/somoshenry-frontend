@@ -55,7 +55,7 @@ export default function ChatPage() {
     userId: user?.id,
     chatEnabled,
   });
-  const { sendGroupMessage, clearLoadedFlag } = useChatMessages({
+  const { clearLoadedFlag } = useChatMessages({
     selectedConversationId,
     userId: user?.id,
     conversations,
@@ -189,7 +189,7 @@ export default function ChatPage() {
 
             // Si es mi propio mensaje, buscar mensaje temporal para reemplazarlo
             if (frontendMessage.isOwn) {
-              const tempMessageIndex = currentMessages.findIndex((m) => m.tempId && m.id.startsWith('temp-'));
+              const tempMessageIndex = currentMessages.findIndex((m) => m.tempId);
               if (tempMessageIndex !== -1) {
                 const updatedMessages = [...currentMessages];
                 updatedMessages[tempMessageIndex] = frontendMessage;
@@ -351,15 +351,6 @@ export default function ChatPage() {
         })
       );
       return;
-    }
-
-    // Si es grupo, también enviar por HTTP como respaldo (opcional, depende del backend)
-    if (conv.isGroup) {
-      try {
-        await sendGroupMessage(conv.id, content.trim());
-      } catch (e) {
-        console.warn('⚠️ Error en respaldo HTTP para grupo (WebSocket ya envió):', e);
-      }
     }
   };
 

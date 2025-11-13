@@ -17,6 +17,7 @@ import {
   markConversationAsRead,
   deleteConversation /*, uploadChatMedia */,
 } from "@/services/chatService";
+import {Send} from "lucide-react";
 
 interface Message {
   id: string;
@@ -74,7 +75,8 @@ export default function FloatingChatButton() {
     token: token || null,
     enabled: !!user && !!token && chatEnabled,
   });
-
+  const buttonBaseClasses =
+    "py-2 text-black font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90";
   // Convertir mensaje del backend a formato frontend
   const convertMessage = useCallback((msg: BackendMessage, currentUserId: string): Message => {
     // Normalizar URL de avatar
@@ -487,7 +489,7 @@ export default function FloatingChatButton() {
     <div className="fixed bottom-6 right-6 mb-20 z-50" ref={menuRef}>
       {/* Menú desplegable */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-96 h-[300px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-200">
+        <div className="absolute bottom-20 right-0 w-80 md:w-96 h-[300px] md:h-[400px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-200">
           {!selectedConversation ? (
             // Lista de conversaciones
             <>
@@ -789,10 +791,25 @@ export default function FloatingChatButton() {
                   <button
                     type="submit"
                     disabled={!newMessage.trim()}
-                    className="px-4 py-2 text-black font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm hover:opacity-90"
-                    style={{backgroundColor: "#ffff00"}}
+                    className={`
+        ${buttonBaseClasses}
+        bg-[#ffff00] 
+        hover:bg-yellow-300
+        
+        // Estilos para MÓVIL (Por defecto, solo el icono)
+        px-3 md:hidden 
+        
+        // Estilos para ESCRITORIO (Aparece a partir de 'md')
+        md:px-4 md:inline-flex md:text-sm
+      `}
                   >
-                    Enviar
+                    {/* 1. Botón para ESCRITORIO (Md en adelante) */}
+                    <span className="hidden md:inline">Enviar</span>
+
+                    {/* 2. Botón para MÓVIL (Menos de Md) */}
+                    <span className="md:hidden">
+                      <Send size={20} />
+                    </span>
                   </button>
                 </div>
               </form>

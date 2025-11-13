@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { tokenStore } from '@/services/tokenStore';
+import React, {useState} from "react";
+import {useRouter} from "next/navigation";
+import {tokenStore} from "@/services/tokenStore";
+import Swal from "sweetalert2";
 
 export interface PricingFeature {
   text: string;
@@ -27,7 +28,7 @@ interface PricingCardProps {
   plan: PricingPlan;
 }
 
-const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
+const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -35,52 +36,55 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
     const token = tokenStore.getAccess();
 
     if (!token) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     // Evita redirección a MP para el plan gratuito
-    if (plan.id === 'free') {
-      router.push('/register');
+    if (plan.id === "free") {
+      router.push("/register");
       return;
     }
 
     try {
       setLoading(true);
 
-      const clientEmail = 'test_user_123456789@testuser.com';
+      const clientEmail = "test_user_123456789@testuser.com";
 
-      const res = await fetch(
-        'https://somoshenry-backend.onrender.com/mercadopago/create-preference',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            clientEmail,
-            products: [
-              {
-                title: plan.name,
-                quantity: 1,
-                price: typeof plan.price === 'number' ? plan.price : 0,
-              },
-            ],
-          }),
-        }
-      );
+      const res = await fetch("https://somoshenry-backend.onrender.com/mercadopago/create-preference", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          clientEmail,
+          products: [
+            {
+              title: plan.name,
+              quantity: 1,
+              price: typeof plan.price === "number" ? plan.price : 0,
+            },
+          ],
+        }),
+      });
 
       const data = await res.json();
 
       if (!data.success) {
-        throw new Error('No se pudo crear la preferencia de pago.');
+        Swal.fire({
+          title: "No se pudo crear la preferencia de pago.",
+          icon: "error",
+        });
       }
 
       window.location.href = data.initPoint;
     } catch (err) {
-      console.error('Error al crear la preferencia de pago:', err);
-      alert('Hubo un problema al iniciar el pago. Intenta nuevamente.');
+      console.error("Error al crear la preferencia de pago:", err);
+      Swal.fire({
+        title: "Hubo un problema al iniciar el pago. Intenta nuevamente.",
+        icon: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -102,16 +106,12 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
         {plan.badge}
       </span>
 
-      <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
-        {plan.name}
-      </h3>
+      <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">{plan.name}</h3>
 
       <div className="text-5xl font-bold mb-3 text-gray-900 dark:text-white">
-        {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
+        {typeof plan.price === "number" ? `$${plan.price}` : plan.price}
         {plan.currency && (
-          <span className="text-lg font-normal text-gray-600 dark:text-gray-400 ml-1">
-            {plan.currency}
-          </span>
+          <span className="text-lg font-normal text-gray-600 dark:text-gray-400 ml-1">{plan.currency}</span>
         )}
       </div>
 
@@ -123,19 +123,15 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
           >
             <span
               className={`shrink-0 w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
-                feature.limited
-                  ? 'bg-orange-100 dark:bg-orange-900'
-                  : 'bg-green-100 dark:bg-green-900'
+                feature.limited ? "bg-orange-100 dark:bg-orange-900" : "bg-green-100 dark:bg-green-900"
               }`}
             >
               <span
                 className={`text-sm ${
-                  feature.limited
-                    ? 'text-orange-500 dark:text-orange-400'
-                    : 'text-green-500 dark:text-green-400'
+                  feature.limited ? "text-orange-500 dark:text-orange-400" : "text-green-500 dark:text-green-400"
                 }`}
               >
-                {feature.limited ? '⚠' : '✓'}
+                {feature.limited ? "⚠" : "✓"}
               </span>
             </span>
             {feature.text}
@@ -146,11 +142,11 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
       <button
         onClick={handleSubscribe}
         disabled={loading}
-        className={`w-full py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${plan.buttonColor} ${
-          loading ? 'opacity-70 cursor-not-allowed' : ''
-        }`}
+        className={`w-full py-4 rounded-lg cursor-pointer font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+          plan.buttonColor
+        } ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
       >
-        {loading ? 'Redirigiendo...' : plan.buttonText}
+        {loading ? "Redirigiendo..." : plan.buttonText}
       </button>
     </div>
   );

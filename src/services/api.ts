@@ -6,7 +6,7 @@ const IS_DEV = process.env.NODE_ENV === 'development';
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000, // 30 segundos timeout
+  timeout: 60000, // 60 segundos timeout (aumentado para chat grupal)
 });
 
 // 🔹 REQUEST INTERCEPTOR - Agrega token automáticamente

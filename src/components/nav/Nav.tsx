@@ -244,7 +244,7 @@ export const Nav: React.FC = () => {
               title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
             />
             <button
-              className="border gap-1 flex items-center border-black rounded-xl px-2 py-1 dark:border-white text-center cursor-pointer hover:bg-[#ffff00] hover:text-black transition duration-100 ease-in-out text-sm md:text-lg whitespace-nowrap"
+              className="border gap-1 flex items-center border-black rounded-xl px-2 py-2 dark:border-white text-center cursor-pointer hover:bg-[#ffff00] hover:text-black transition duration-100 ease-in-out text-sm md:text-lg whitespace-nowrap hover:border-transparent"
               onClick={() => router.push("/login")}
             >
               Iniciar sesión

@@ -9,6 +9,7 @@ import Lecture, {lectureProp} from "@/components/cohorte/Lecture";
 import ChatGrupal from "@/components/cohorte/ChatGrupal";
 import {useSearchParams} from "next/navigation";
 import AvisoPage from "./AvisoPage";
+import Clases from "./Clases";
 
 const CP = () => {
   // 🔹 Mock de publicaciones
@@ -239,7 +240,7 @@ const CP = () => {
             {/* Tabs */}
             <div className="flex  justify-end w-full mt-[8%]">
               <div className="flex w-full px-1 justify-evenly dark:text-white text-xs md:text-md text-black pb-2 lg:text-xl md:text-lg xl:text-lg">
-                {["avisos", "Lecturas", "material extra", "chat grupal"].map((tab) => (
+                {["avisos", "Lecturas", "Clases", "material extra", "chat grupal"].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -263,20 +264,8 @@ const CP = () => {
         {activeTab === "avisos" && <AvisoPage />}
         {activeTab === "material extra" && <FilePage />}
         {activeTab === "chat grupal" && <ChatGrupal />}
-        {activeTab === "Lecturas" &&
-          /*  <iframe
-            // 1. Reemplazamos 'class' por 'className'
-            className="lecture-content-scorm_iframe__Ipive lecture-content-scorm_iframeMobile__OdAJZ"
-            title="Lecture scorm"
-            id="main-iframe"
-            src="https://capsulasv2.soyhenry.com/scorm/80ef7124-8e97-47cb-97be-4f0164b7da73/scormcontent/iframe.html?v=1762562645147" // Usamos la constante para la URL
-            width="100%"
-            height="600px" // Añadimos una altura para que el iframe se muestre
-            allow="autoplay; fullscreen; picture-in-picture"
-            // 2. Reemplazamos 'frameborder' por 'frameBorder' (opcional, 0 lo oculta)
-            frameBorder={0}
-          />*/
-          mockLectures.map((post, index) => <Lecture key={index} {...post} />)}
+        {activeTab === "Lecturas" && mockLectures.map((post, index) => <Lecture key={index} {...post} />)}
+        {activeTab === "Clases" && <Clases />}
       </div>
     </div>
   );

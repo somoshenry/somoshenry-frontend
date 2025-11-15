@@ -6,6 +6,9 @@ import {PostType} from "../interfaces/interfaces.post/post";
 import {useAlert} from "./AlertContext";
 import {useAuth} from "../hook/useAuth";
 
+// 🔥 Importamos beneficios del plan
+import { usePlanBenefits } from "../hook/usePlanBenefits";
+
 interface PostContextType {
   posts: PostType[];
   loading: boolean;
@@ -25,15 +28,31 @@ export function PostProvider({children}: {children: ReactNode}) {
   const [loading, setLoading] = useState(false);
   const {showAlert} = useAlert();
   const {user} = useAuth();
+  const { maxMonthlyPosts } = usePlanBenefits();  // 🔥 usamos limites del plan
   const hasMountedRef = useRef(false);
 
-  // ✅ Verifica si hay token válido
+  // 🔥 Calcular posteos del mes actual
+  const getMonthlyPostsCount = () => {
+    const now = new Date();
+    return posts.filter((p) => {
+      if (!p.createdAt) return false;
+      const date = new Date(p.createdAt);
+      return (
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+      );
+    }).length;
+  };
+
+  // ============================================
+  // ==================== FETCH ==================
+  // ============================================
+
   const hasValidToken = (): boolean => {
     const token = tokenStore.getAccess();
     return !!token && token !== "undefined" && token !== "null";
   };
 
-  // ✅ Normaliza post con manejo seguro
   const normalizePost = async (p: PostType) => {
     try {
       const commentsResponse = await api.get(`/post/${p.id}/comments`);
@@ -85,9 +104,7 @@ export function PostProvider({children}: {children: ReactNode}) {
     }
   };
 
-  // ✅ Obtiene y normaliza los posts (con control de token)
   const fetchPosts = useCallback(async () => {
-    // No intentar cargar posts si no hay token
     const token = tokenStore.getAccess();
     if (!token) {
       console.log("No hay token, saltando carga de posts");
@@ -102,7 +119,6 @@ export function PostProvider({children}: {children: ReactNode}) {
       setPosts(postsWithComments);
     } catch (err) {
       console.error("Error al cargar posts:", err);
-      // Solo mostrar alerta si no es un error 401 (no autenticado)
       if ((err as any)?.response?.status !== 401) {
         showAlert("Error al cargar publicaciones ❌", "error");
       }
@@ -112,9 +128,7 @@ export function PostProvider({children}: {children: ReactNode}) {
     }
   }, [showAlert, user?.id]);
 
-  // ✅ Refresco silencioso con protección
   const refreshPostsSilently = useCallback(async () => {
-    // No intentar refrescar si no hay token
     const token = tokenStore.getAccess();
     if (!token) return;
 
@@ -124,18 +138,31 @@ export function PostProvider({children}: {children: ReactNode}) {
       const normalized = await Promise.all((postsArray || []).map(normalizePost));
       setPosts(normalized);
     } catch (err) {
-      // silencioso - no mostrar error si es 401
       if ((err as any)?.response?.status !== 401) {
         console.warn("Error refrescando publicaciones (silencioso):", err);
       }
     }
   }, [user?.id]);
 
-  // ✅ Crear post (verifica token)
+  // ============================================
+  // =============== ADD POST ====================
+  // ============================================
+
   const addPost = async (content: string, media?: File | null) => {
     const token = tokenStore.getAccess();
     if (!token) {
       showAlert("Debes iniciar sesión para crear publicaciones.", "info");
+      return;
+    }
+
+    // 🔥 Límite mensual según plan
+    const monthlyCount = getMonthlyPostsCount();
+    if (monthlyCount >= maxMonthlyPosts) {
+      const plan = user?.subscription ?? "BRONCE";
+      showAlert(
+        `Tu plan ${plan} permite ${maxMonthlyPosts} posteos por mes. Ya llegaste al límite.`,
+        "info"
+      );
       return;
     }
 
@@ -153,15 +180,13 @@ export function PostProvider({children}: {children: ReactNode}) {
       const payload: any = {content: contentToSend};
       if (maybeType) payload.type = maybeType;
 
-      // 1. LLAMADA API para crear el post base
       const {data: apiResponse} = await api.post("/posts", payload);
       const postData = apiResponse?.data || apiResponse;
       const postId = postData?.id;
 
-      // 2. CONSTRUIR newPost (con texto asegurado)
       let newPost = {
         ...postData,
-        content: postData.content || content, // Garantiza que el texto del formulario se use
+        content: postData.content || content,
         comments: Array.isArray(postData?.comments) ? postData.comments : [],
         likes: typeof postData?.likes === "number" ? postData.likes : 0,
         mediaUrl: postData?.mediaURL ?? postData?.mediaUrl ?? null,
@@ -169,7 +194,6 @@ export function PostProvider({children}: {children: ReactNode}) {
         mediaType: postData?.mediaType ?? null,
       };
 
-      // ❗ 3. LÓGICA DE SUBIDA DE ARCHIVO
       if (media && postId) {
         try {
           const form = new FormData();
@@ -183,7 +207,6 @@ export function PostProvider({children}: {children: ReactNode}) {
           if (updated.type === "VIDEO") mediaType = "video";
           else if (updated.type === "IMAGE") mediaType = "image";
 
-          // Actualizar newPost con las URL y el TIPO devuelto por el servidor
           newPost = {
             ...newPost,
             type: updated.type || newPost.type,
@@ -198,7 +221,6 @@ export function PostProvider({children}: {children: ReactNode}) {
         }
       }
 
-      // 4. Actualizar el estado
       setPosts((prev) => [newPost, ...prev]);
       showAlert("Publicación creada correctamente ✅", "success");
     } catch (err) {
@@ -207,7 +229,10 @@ export function PostProvider({children}: {children: ReactNode}) {
     }
   };
 
-  // ✅ Like post (solo con token)
+  // ============================================
+  // ============ RESTO DE FUNCIONES =============
+  // ============================================
+
   const likePost = async (id: string) => {
     const token = tokenStore.getAccess();
     if (!token) {
@@ -284,7 +309,6 @@ export function PostProvider({children}: {children: ReactNode}) {
     }
   };
 
-  //  Reportar post
   const reportPost = async (postId: string, reason: string, description?: string) => {
     try {
       await api.post("/reports", {

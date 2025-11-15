@@ -8,24 +8,26 @@ import ReportedPosts from './ReportedPosts';
 import ReportedComments from './ReportedComments';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
-import { Shield, AlertTriangle } from 'lucide-react';
+import CohorteManagement from './CohorteManagement';
+import MetricsDashboard from './MetricsDashboard';
+import { Shield, AlertTriangle, Users, TrendingUp, FileText, UserCog } from 'lucide-react';
+
+type AdminTab = 'reportes' | 'usuarios' | 'auditoria' | 'cohortes' | 'metricas';
 
 export default function AdminContent() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [showContent, setShowContent] = useState(false);
+  const [activeTab, setActiveTab] = useState<AdminTab>('reportes');
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
         // No hay usuario, redirigir a login
         router.push('/login');
-      } else if (user.role !== 'ADMIN') {
-        // Usuario no es admin, mostrar mensaje de acceso denegado
-        setShowContent(false);
+      } else if (user.role === 'ADMIN') {
+        // Usuario es admin, continuar
       } else {
-        // Usuario es admin, mostrar contenido
-        setShowContent(true);
+        // Usuario no es admin, se mostrará mensaje
       }
     }
   }, [user, loading, router]);
@@ -83,25 +85,76 @@ export default function AdminContent() {
           </div>
         </div>
 
-        {/* Estadísticas generales */}
-        <StatsOverview />
-
-        {/* Grid de secciones principales */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Posts reportados */}
-          <ReportedPosts />
-
-          {/* Comentarios reportados */}
-          <ReportedComments />
+        {/* Tabs de navegación */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+          <div className="flex gap-2 p-2 overflow-x-auto">
+            <button onClick={() => setActiveTab('reportes')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === 'reportes' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+              <AlertTriangle size={20} />
+              Reportes
+            </button>
+            <button onClick={() => setActiveTab('usuarios')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === 'usuarios' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+              <UserCog size={20} />
+              Usuarios
+            </button>
+            <button onClick={() => setActiveTab('auditoria')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === 'auditoria' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+              <FileText size={20} />
+              Auditoría
+            </button>
+            <button onClick={() => setActiveTab('cohortes')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === 'cohortes' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+              <Users size={20} />
+              Gestión de Cohortes
+            </button>
+            <button onClick={() => setActiveTab('metricas')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === 'metricas' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+              <TrendingUp size={20} />
+              Métricas
+            </button>
+          </div>
         </div>
 
-        {/* Gestión de usuarios */}
-        <UserManagement />
+        {/* Contenido según la pestaña activa */}
+        {activeTab === 'reportes' && (
+          <>
+            {/* Estadísticas generales */}
+            <StatsOverview />
 
-        {/* Registro de Auditoría - TEMPORALMENTE DESHABILITADO hasta que se corrija el backend */}
-        {/* El archivo admin-audit.module.ts.ts tiene extensión incorrecta (.ts.ts) y el import también está mal */}
-        {/* Para habilitar: corregir en backend el nombre de archivo y el import en admin-dashboard.module.ts */}
-        {/* <AuditLog /> */}
+            {/* Grid de secciones principales */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {/* Posts reportados */}
+              <ReportedPosts />
+
+              {/* Comentarios reportados */}
+              <ReportedComments />
+            </div>
+          </>
+        )}
+
+        {activeTab === 'usuarios' && (
+          <>
+            {/* Gestión de usuarios */}
+            <UserManagement />
+          </>
+        )}
+
+        {activeTab === 'auditoria' && (
+          <>
+            {/* Registro de Auditoría */}
+            <AuditLog />
+          </>
+        )}
+
+        {activeTab === 'cohortes' && (
+          <>
+            {/* Gestión de Cohortes */}
+            <CohorteManagement />
+          </>
+        )}
+
+        {activeTab === 'metricas' && (
+          <>
+            {/* Dashboard de Métricas */}
+            <MetricsDashboard />
+          </>
+        )}
       </div>
     </div>
   );

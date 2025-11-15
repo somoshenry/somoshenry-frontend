@@ -14,6 +14,11 @@ export interface CommentType {
 
   // Opcional: contador de likes en cada comentario
   likeCount: number; // El backend usa 'likeCount'
+  likedByMe?: boolean; // Si el usuario actual dio like
+
+  // Para comentarios anidados
+  parentId?: string | null; // ID del comentario padre
+  replies?: CommentType[]; // Respuestas anidadas
 }
 
 // 🔹 Post o Publicación

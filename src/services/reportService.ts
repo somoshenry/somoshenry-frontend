@@ -26,6 +26,18 @@ export async function reportComment(commentId: string, reason: ReportReason, des
 }
 
 /**
+ * Crea un reporte de usuario
+ */
+export async function reportUser(userId: string, reason: ReportReason, description?: string): Promise<Report> {
+  const { data } = await api.post<{ message: string; report: Report }>('/reports', {
+    reportedUserId: userId,
+    reason,
+    description,
+  });
+  return data.report;
+}
+
+/**
  * Obtiene los motivos de reporte disponibles
  */
 export function getReportReasons(): Array<{ value: ReportReason; label: string; description: string }> {

@@ -271,8 +271,6 @@ export default function ChatPage() {
 
   // Manejar grupo recién creado
   const handleGroupCreated = async (group: any) => {
-    console.log('✅ Grupo creado exitosamente:', group);
-
     try {
       const groupConv = convertGroupToConversation(group);
       setConversations((prev) => [groupConv, ...prev]);

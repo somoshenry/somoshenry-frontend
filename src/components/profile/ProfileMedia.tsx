@@ -16,11 +16,9 @@ export default function ProfileMedia() {
         setLoading(true);
         // Primero obtenemos el perfil del usuario para tener su ID
         const user = await getUserProfile();
-        console.log('Usuario actual:', user);
 
         // Luego obtenemos solo sus posts con multimedia
         const userMedia = await getUserMediaPosts(user.id);
-        console.log('Posts con media encontrados:', userMedia);
 
         setMediaPosts(userMedia);
       } catch (err) {

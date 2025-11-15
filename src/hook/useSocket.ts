@@ -8,6 +8,7 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 interface UseSocketProps {
   token: string | null;
   enabled?: boolean;
+  onNotification?: (notification: any) => void;
 }
 
 interface TypingData {
@@ -16,7 +17,7 @@ interface TypingData {
   isTyping: boolean;
 }
 
-export function useSocket({ token, enabled = true }: UseSocketProps) {
+export function useSocket({ token, enabled = true, onNotification }: UseSocketProps) {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -68,12 +69,20 @@ export function useSocket({ token, enabled = true }: UseSocketProps) {
       setOnlineUsers(users);
     });
 
+    // Notificaciones en tiempo real
+    if (onNotification) {
+      socket.on('notification', (notification: any) => {
+        console.log('🔔 Notificación recibida:', notification);
+        onNotification(notification);
+      });
+    }
+
     // Cleanup
     return () => {
       console.log('🧹 Limpiando socket...');
       socket.disconnect();
     };
-  }, [token, enabled]);
+  }, [token, enabled, onNotification]);
 
   // Unirse a una conversación
   const joinConversation = useCallback((conversationId: string) => {

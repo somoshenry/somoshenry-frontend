@@ -219,7 +219,6 @@ export interface CohorteAnnouncement {
   id: string;
   title: string;
   content: string;
-  linkConectate?: string;
   pinned: boolean;
   author: {
     id: string;
@@ -239,7 +238,6 @@ export interface CohorteAnnouncement {
 export interface CreateAnnouncementDto {
   title: string;
   content: string;
-  linkConectate?: string;
 }
 
 /**

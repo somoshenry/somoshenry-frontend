@@ -20,7 +20,6 @@ const CP = () => {
       fecha: '16:45 · 2 Nov',
       titulo: 'Recordatorio: ¡Semana de Proyectos Finales!',
       mensaje: 'Estimados alumnos, les recuerdo que esta semana es crucial para sus proyectos.',
-      linkConectate: 'https://plataforma.uni.edu/proyectos',
     },
     {
       nombre: 'Lic. Raúl Martínez',

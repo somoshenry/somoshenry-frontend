@@ -128,12 +128,6 @@ const ProfesorCard: React.FC<CardMensajeProps> = ({ nombre, rol, fecha, titulo, 
             </button>
           )}
         </div>
-
-        {linkConectate && (
-          <Link href={linkConectate} target="_blank" rel="noopener noreferrer" className="bg-[#ffff00] dark:bg-gray-800 hover:scale-105 duration-150 ease-in dark:text-white text-black px-5 py-1 rounded-md font-medium ">
-            Conéctate
-          </Link>
-        )}
       </div>
     </div>
   );

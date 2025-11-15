@@ -273,7 +273,7 @@ export default function CohorteView({ cohorteId }: CohorteViewProps) {
 
         {activeTab === 'material' && <FilePage />}
 
-        {activeTab === 'chat' && <ChatGrupal cohorteId={cohorteId} cohorteName={cohorte.name} />}
+        {activeTab === 'chat' && <ChatGrupal groupId={cohorteId} groupName={cohorte.name} />}
       </div>
     </div>
   );

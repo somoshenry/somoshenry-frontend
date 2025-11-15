@@ -63,12 +63,30 @@ export default function ChatGrupal({ groupId, groupName = 'Chat Grupal' }: ChatG
   useEffect(() => {
     if (!groupId) return;
 
-    const unsubscribe = onMessageReceived((message) => {
+    const unsubscribe = onMessageReceived((message: any) => {
       setMessages((prev) => {
         // Evitar duplicados
         const exists = prev.some((m) => m.id === message.id);
         if (exists) return prev;
-        return [...prev, message as GroupMessage];
+        // Adaptar el mensaje recibido al formato GroupMessage
+        const groupMessage: GroupMessage = {
+          id: message.id,
+          group: { id: groupId || '' },
+          sender: message.sender || {
+            id: message.senderId || user?.id || '',
+            name: message.senderName || user?.name || 'Usuario',
+            email: user?.email || '',
+            profilePicture: message.senderAvatar || user?.profilePicture,
+          },
+          type: message.type || MessageType.TEXT,
+          content: message.content,
+          mediaUrl: message.mediaUrl || null,
+          isRead: message.isRead || false,
+          readAt: message.readAt || null,
+          createdAt: message.createdAt || new Date().toISOString(),
+          updatedAt: message.updatedAt || new Date().toISOString(),
+        };
+        return [...prev, groupMessage];
       });
     });
 

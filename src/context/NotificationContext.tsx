@@ -70,6 +70,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       commentContent: notification.commentContent,
       createdAt: notification.createdAt || new Date().toISOString(),
       read: false,
+      isRead: false,
       systemType: notification.systemType,
       systemTitle: notification.systemTitle,
       systemMessage: notification.systemMessage,
@@ -131,19 +132,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // Normaliza un like-array con estructura opcional de usuario
   const toLikeNotification = (like: any, post: any): Notification => ({
     id: `post-like-${like.id}`,
-    type: 'like',
+    type: 'LIKE_POST',
     postId: post.id,
     postContent: post.content || '(sin contenido)',
     authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
     authorAvatar: like.user?.profilePicture,
     createdAt: like.createdAt || new Date().toISOString(),
     read: false,
+    isRead: false,
   });
 
   // Normaliza un like en comentario
   const toCommentLikeNotification = (like: any, post: any, comment: any): Notification => ({
     id: `comment-like-${like.id}`,
-    type: 'comment-like',
+    type: 'LIKE_COMMENT',
     postId: post.id,
     postContent: post.content || '(sin contenido)',
     authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
@@ -151,6 +153,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     commentContent: comment.content,
     createdAt: like.createdAt || new Date().toISOString(),
     read: false,
+    isRead: false,
   });
 
   // Función para obtener notificaciones desde el backend

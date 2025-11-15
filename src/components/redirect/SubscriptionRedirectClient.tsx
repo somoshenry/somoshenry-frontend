@@ -48,11 +48,13 @@ export default function SubscriptionRedirectClient() {
       if (paymentId && currentStatus) {
         try {
           const response = await fetch('https://somoshenry-backend.onrender.com/mercadopago/webhook', {
+            
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
+            
             body: JSON.stringify({
               data: {
                 id: paymentId,
@@ -60,6 +62,7 @@ export default function SubscriptionRedirectClient() {
               type: 'payment',
               action: 'payment.updated',
             }),
+            
           });
 
           if (!response.ok) {

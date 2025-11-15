@@ -32,7 +32,7 @@ interface PricingCardProps {
 const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth(); // ←🔥 obtenemos el usuario logueado
+  const { user } = useAuth();
 
   const handleSubscribe = async () => {
     const token = tokenStore.getAccess();
@@ -42,6 +42,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
       return;
     }
 
+    // Plan gratuito → solo registro
     if (plan.id === "free") {
       router.push("/register");
       return;
@@ -51,7 +52,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
       setLoading(true);
 
       const clientEmail = user?.email || "test_user@test.com";
-      const userId = user?.id; // ←🔥 userId para enviar al backend
+      const userId = user?.id;
 
       const res = await fetch(
         "https://somoshenry-backend.onrender.com/mercadopago/create-preference",
@@ -62,7 +63,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            userId, // ←🔥 enviado al backend
+            userId, // 🔥 userId al backend
             clientEmail,
             products: [
               {
@@ -76,16 +77,36 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
       );
 
       const data = await res.json();
+      console.log("Respuesta MP:", data);
 
-      if (!data.success) {
+      if (!res.ok) {
         Swal.fire({
           title: "No se pudo crear la preferencia de pago.",
+          text: data?.message || "Intenta nuevamente más tarde.",
           icon: "error",
         });
         return;
       }
 
-      window.location.href = data.initPoint;
+      // Intentamos varias claves típicas donde puede venir el init_point
+      const initPoint =
+        data.initPoint ||
+        data.init_point ||
+        data?.preference?.init_point ||
+        data?.body?.init_point ||
+        data?.response?.init_point;
+
+      if (!initPoint || typeof initPoint !== "string") {
+        Swal.fire({
+          title: "No se recibió la URL de pago.",
+          text: "Revisa la consola para ver la respuesta del backend.",
+          icon: "error",
+        });
+        return;
+      }
+
+      // ✅ Ahora sí, solo si tenemos una URL válida:
+      window.location.href = initPoint;
     } catch (err) {
       console.error("Error al crear la preferencia de pago:", err);
       Swal.fire({
@@ -154,6 +175,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
         ))}
       </ul>
 
+      {/* 🔥 ESTE SÍ TIENE BOTÓN (solo en /planes) */}
       <button
         onClick={handleSubscribe}
         disabled={loading}

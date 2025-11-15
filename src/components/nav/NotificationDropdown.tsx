@@ -64,16 +64,19 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
                     <>
                       <p className="text-sm">
                         <span className="font-semibold">{notification.authorName}</span>
-                        {notification.type === 'like' && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu publicación</span>}
-                        {notification.type === 'comment' && <span className="text-gray-700 dark:text-gray-300"> comentó en tu publicación</span>}
-                        {notification.type === 'comment-like' && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu comentario</span>}
+                        {(notification.type === 'like' || notification.type === 'LIKE_POST') && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu publicación</span>}
+                        {(notification.type === 'comment' || notification.type === 'COMMENT_POST') && <span className="text-gray-700 dark:text-gray-300"> comentó en tu publicación</span>}
+                        {(notification.type === 'comment-like' || notification.type === 'LIKE_COMMENT') && <span className="text-gray-700 dark:text-gray-300"> le dio like a tu comentario</span>}
+                        {notification.type === 'REPLY_COMMENT' && <span className="text-gray-700 dark:text-gray-300"> respondió a tu comentario</span>}
+                        {notification.type === 'NEW_FOLLOWER' && <span className="text-gray-700 dark:text-gray-300"> comenzó a seguirte</span>}
+                        {notification.type === 'NEW_MESSAGE' && <span className="text-gray-700 dark:text-gray-300"> te envió un mensaje</span>}
                       </p>
 
                       {/* Preview del post */}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{notification.postContent}</p>
+                      {notification.postContent && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{notification.postContent}</p>}
 
                       {/* Si es comentario o like a comentario, mostrar el texto del comentario */}
-                      {(notification.type === 'comment' || notification.type === 'comment-like') && notification.commentContent && <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{notification.commentContent}"</p>}
+                      {(notification.type === 'comment' || notification.type === 'comment-like' || notification.type === 'COMMENT_POST' || notification.type === 'LIKE_COMMENT' || notification.type === 'REPLY_COMMENT') && notification.commentContent && <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{notification.commentContent}"</p>}
                     </>
                   )}
 

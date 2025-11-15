@@ -1,9 +1,10 @@
 "use client";
 
-import React, {useState} from "react";
-import {useRouter} from "next/navigation";
-import {tokenStore} from "@/services/tokenStore";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { tokenStore } from "@/services/tokenStore";
 import Swal from "sweetalert2";
+import { useAuth } from "@/hook/useAuth";
 
 export interface PricingFeature {
   text: string;
@@ -28,9 +29,10 @@ interface PricingCardProps {
   plan: PricingPlan;
 }
 
-const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
+const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth(); // ←🔥 obtenemos el usuario logueado
 
   const handleSubscribe = async () => {
     const token = tokenStore.getAccess();
@@ -40,7 +42,6 @@ const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
       return;
     }
 
-    // Evita redirección a MP para el plan gratuito
     if (plan.id === "free") {
       router.push("/register");
       return;
@@ -49,25 +50,30 @@ const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
     try {
       setLoading(true);
 
-      const clientEmail = "test_user_123456789@testuser.com";
+      const clientEmail = user?.email || "test_user@test.com";
+      const userId = user?.id; // ←🔥 userId para enviar al backend
 
-      const res = await fetch("https://somoshenry-backend.onrender.com/mercadopago/create-preference", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          clientEmail,
-          products: [
-            {
-              title: plan.name,
-              quantity: 1,
-              price: typeof plan.price === "number" ? plan.price : 0,
-            },
-          ],
-        }),
-      });
+      const res = await fetch(
+        "https://somoshenry-backend.onrender.com/mercadopago/create-preference",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId, // ←🔥 enviado al backend
+            clientEmail,
+            products: [
+              {
+                title: plan.name,
+                quantity: 1,
+                price: typeof plan.price === "number" ? plan.price : 0,
+              },
+            ],
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -76,6 +82,7 @@ const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
           title: "No se pudo crear la preferencia de pago.",
           icon: "error",
         });
+        return;
       }
 
       window.location.href = data.initPoint;
@@ -106,12 +113,16 @@ const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
         {plan.badge}
       </span>
 
-      <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">{plan.name}</h3>
+      <h3 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
+        {plan.name}
+      </h3>
 
       <div className="text-5xl font-bold mb-3 text-gray-900 dark:text-white">
         {typeof plan.price === "number" ? `$${plan.price}` : plan.price}
         {plan.currency && (
-          <span className="text-lg font-normal text-gray-600 dark:text-gray-400 ml-1">{plan.currency}</span>
+          <span className="text-lg font-normal text-gray-600 dark:text-gray-400 ml-1">
+            {plan.currency}
+          </span>
         )}
       </div>
 
@@ -123,12 +134,16 @@ const PricingCard: React.FC<PricingCardProps> = ({plan}) => {
           >
             <span
               className={`shrink-0 w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
-                feature.limited ? "bg-orange-100 dark:bg-orange-900" : "bg-green-100 dark:bg-green-900"
+                feature.limited
+                  ? "bg-orange-100 dark:bg-orange-900"
+                  : "bg-green-100 dark:bg-green-900"
               }`}
             >
               <span
                 className={`text-sm ${
-                  feature.limited ? "text-orange-500 dark:text-orange-400" : "text-green-500 dark:text-green-400"
+                  feature.limited
+                    ? "text-orange-500 dark:text-orange-400"
+                    : "text-green-500 dark:text-green-400"
                 }`}
               >
                 {feature.limited ? "⚠" : "✓"}

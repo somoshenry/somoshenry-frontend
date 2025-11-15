@@ -9,7 +9,7 @@ export interface UserResult {
   lastName?: string | null;
   email: string;
   profilePicture?: string | null;
-  role: "ADMIN" | "MEMBER" | "TEACHER" | "TA";
+  role: "ADMIN" | "MEMBER" | "TEACHER" | "TA" | "STUDENT";
 }
 
 interface GenericListProps {

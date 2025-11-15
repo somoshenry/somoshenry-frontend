@@ -1,7 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getUserById, User } from '@/services/userService';
 import { useAuth } from '@/hook/useAuth';
+import { followUser, unfollowUser, checkFollowStatus, getFollowStats, FollowStats } from '@/services/followService';
+import { MessageCircle, Flag, UserPlus, UserMinus } from 'lucide-react';
+import ReportUserModal from '@/components/common/ReportUserModal';
 
 interface UserProfileHeaderProps {
   userId: string;
@@ -11,7 +15,12 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const { user: currentUser } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -19,6 +28,20 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
         setLoading(true);
         const userData = await getUserById(userId);
         setUser(userData);
+
+        // Cargar estado de seguimiento y estadísticas
+        if (currentUser && currentUser.id !== userId) {
+          const [followingStatus, stats] = await Promise.all([
+            checkFollowStatus(currentUser.id, userId), // currentUserId, targetUserId
+            getFollowStats(userId),
+          ]);
+          setIsFollowing(followingStatus);
+          setFollowStats(stats);
+        } else if (currentUser?.id === userId) {
+          // Solo cargar stats si es el perfil propio
+          const stats = await getFollowStats(userId);
+          setFollowStats(stats);
+        }
       } catch (err) {
         console.error('Error al cargar el perfil:', err);
         setError('No se pudo cargar el perfil');
@@ -28,7 +51,7 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
     };
 
     fetchUserProfile();
-  }, [userId]);
+  }, [userId, currentUser]);
 
   if (loading) {
     return (
@@ -77,6 +100,43 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
   // Verificar si es el perfil del usuario actual
   const isOwnProfile = currentUser && currentUser.id === userId;
 
+  const handleFollowToggle = async () => {
+    if (!currentUser) {
+      alert('⚠️ Debes iniciar sesión para seguir usuarios');
+      return;
+    }
+
+    try {
+      setIsFollowLoading(true);
+      const result = isFollowing ? await unfollowUser(userId) : await followUser(userId);
+
+      if (result.success) {
+        setIsFollowing(!isFollowing);
+        // Actualizar contador local
+        setFollowStats((prev) => ({
+          ...prev,
+          followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
+        }));
+        alert(result.message);
+      } else {
+        alert(result.message);
+      }
+    } catch (err) {
+      console.error('Error al cambiar estado de seguimiento:', err);
+      alert('❌ Error al actualizar seguimiento');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  const handleMessage = () => {
+    if (!currentUser) {
+      alert('⚠️ Debes iniciar sesión para enviar mensajes');
+      return;
+    }
+    router.push('/chat');
+  };
+
   return (
     <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 border-b pb-4">
       {/* Cover Picture */}
@@ -109,6 +169,50 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
 
         {user.biography && <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mt-2">{user.biography}</p>}
 
+        {/* Follow Stats */}
+        <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <span className="font-semibold">
+            {followStats.followersCount} <span className="font-normal">Seguidores</span>
+          </span>
+          <span className="font-semibold">
+            {followStats.followingCount} <span className="font-normal">Siguiendo</span>
+          </span>
+        </div>
+
+        {/* Action Buttons (solo si no es tu propio perfil) */}
+        {!isOwnProfile && currentUser && (
+          <div className="flex gap-3 mt-3">
+            {/* Botón Follow/Unfollow */}
+            <button onClick={handleFollowToggle} disabled={isFollowLoading} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${isFollowing ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-[#FFFF00] text-black hover:bg-yellow-300'} disabled:opacity-50 disabled:cursor-not-allowed`}>
+              {isFollowLoading ? (
+                '...'
+              ) : isFollowing ? (
+                <>
+                  <UserMinus size={18} />
+                  Dejar de seguir
+                </>
+              ) : (
+                <>
+                  <UserPlus size={18} />
+                  Seguir
+                </>
+              )}
+            </button>
+
+            {/* Botón Mensaje */}
+            <button onClick={handleMessage} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition" title="Enviar mensaje">
+              <MessageCircle size={18} />
+              Mensaje
+            </button>
+
+            {/* Botón Reportar */}
+            <button onClick={() => setShowReportModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 transition" title="Reportar usuario">
+              <Flag size={18} />
+              Reportar
+            </button>
+          </div>
+        )}
+
         {/* Additional Info */}
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2 flex-wrap justify-center">
           {user.location && <span>📍 {user.location}</span>}
@@ -121,6 +225,9 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
           )}
         </div>
       </div>
+
+      {/* Modal de reporte */}
+      {showReportModal && user && <ReportUserModal userId={userId} userName={user.name || user.email || 'Usuario'} onClose={() => setShowReportModal(false)} onSuccess={() => setShowReportModal(false)} />}
     </div>
   );
 }

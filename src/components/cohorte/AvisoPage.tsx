@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 // Importaciones necesarias
 import {getUserProfile, User} from "@/services/userService";
-import ProfesorCard, {CardMensajeProps} from "./ProfesorCard";
+import ProfesorCard, {CardMensajeProps} from "./AvisoCard";
 import AvisoForm from "./AvisoForm"; // Asegúrate de que esta ruta sea correcta
 
 // Mock inicial de avisos (para que siempre haya contenido si no hay posts nuevos)

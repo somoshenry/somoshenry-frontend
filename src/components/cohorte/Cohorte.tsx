@@ -3,7 +3,7 @@
 import {useEffect, useRef, useState} from "react";
 import {api} from "@/services/api";
 import GenericList, {UserResult} from "@/components/ui/GenericList";
-import CardMensaje, {CardMensajeProps} from "@/components/cohorte/ProfesorCard";
+import CardMensaje, {CardMensajeProps} from "@/components/cohorte/AvisoCard";
 import FilePage from "@/components/cohorte/FilePage";
 import Lecture, {lectureProp} from "@/components/cohorte/Lecture";
 import ChatGrupal from "@/components/cohorte/ChatGrupal";
@@ -11,7 +11,7 @@ import {useSearchParams} from "next/navigation";
 import AvisoPage from "./AvisoPage";
 import Clases from "./Clases";
 
-const CP = () => {
+const Cohorte = () => {
   // 🔹 Mock de publicaciones
   const mockedPosts: CardMensajeProps[] = [
     {
@@ -271,4 +271,4 @@ const CP = () => {
   );
 };
 
-export default CP;
+export default Cohorte;

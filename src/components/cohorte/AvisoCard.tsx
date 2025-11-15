@@ -18,7 +18,7 @@ export interface CardMensajeProps {
 // pero para este ejemplo, lo inicializaremos en 0.
 const INITIAL_LIKES = 0;
 
-const ProfesorCard: React.FC<CardMensajeProps> = ({nombre, rol, fecha, titulo, picture, mensaje, linkConectate}) => {
+const AvisoCard: React.FC<CardMensajeProps> = ({nombre, rol, fecha, titulo, picture, mensaje, linkConectate}) => {
   const getInitial = (name: string) => name.trim().charAt(0).toUpperCase();
 
   const [imgLoadError, setImgLoadError] = useState(false);
@@ -127,4 +127,4 @@ const ProfesorCard: React.FC<CardMensajeProps> = ({nombre, rol, fecha, titulo, p
   );
 };
 
-export default ProfesorCard;
+export default AvisoCard;

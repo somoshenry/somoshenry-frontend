@@ -134,7 +134,7 @@ export const RegisterForm = () => {
       password: registerstate.password,
       name: registerstate.name,
       lastName: registerstate.lastName,
-      role: "TEACHER",
+      role: "MEMBER",
       status: "ACTIVE",
     };
 

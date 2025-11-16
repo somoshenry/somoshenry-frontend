@@ -15,6 +15,9 @@ interface VideoGridProps {
     username?: string | null;
     profilePicture?: string | null;
   };
+
+  localAudio: boolean; // ← agregar
+  localVideo: boolean; // ← agregar
 }
 
 export const VideoGrid: React.FC<VideoGridProps> = ({ localStream, remoteStreams, user }) => {

@@ -65,14 +65,12 @@ export function useSocket({ token, enabled = true, onNotification }: UseSocketPr
 
     // Usuarios en línea
     socket.on('onlineUsers', (users: string[]) => {
-      console.log('👥 Usuarios en línea actualizados:', users);
       setOnlineUsers(users);
     });
 
     // Notificaciones en tiempo real
     if (onNotification) {
       socket.on('notification', (notification: any) => {
-        console.log('🔔 Notificación recibida:', notification);
         onNotification(notification);
       });
     }

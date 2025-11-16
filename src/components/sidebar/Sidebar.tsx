@@ -3,7 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, LayoutDashboard, Settings, Workflow, ShieldUser, MessageCircle, BookOpenText } from 'lucide-react';
+import {
+  Home,
+  LayoutDashboard,
+  Settings,
+  Workflow,
+  ShieldUser,
+  MessageCircle,
+  BookOpenText,
+  Video, // ⭐ NUEVO ICONO
+} from 'lucide-react';
 import { useAuth } from '@/hook/useAuth';
 import { getMyCohortes } from '@/services/cohorteService';
 
@@ -55,10 +64,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     }
   };
 
+  // ⭐ ACÁ AGREGAMOS EL NUEVO BOTÓN ⭐
   const menuItems = [
     { name: 'Inicio', href: '/home', icon: <Home size={20} /> },
     { name: 'Mi Tablero', href: '/profile', icon: <LayoutDashboard size={20} /> },
     { name: 'Mensajes', href: '/chat', icon: <MessageCircle size={20} /> },
+
+    // ⭐ NUEVO ITEM DEL SIDEBAR: "Clases en Vivo"
+    { name: 'Clases en Vivo', href: '/live/create', icon: <Video size={20} /> },
+
     { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
     { name: 'Cohorte 68 (Mock)', href: '/cohorte-mock', icon: <BookOpenText size={20} /> },
 

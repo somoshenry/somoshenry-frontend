@@ -22,11 +22,6 @@ api.interceptors.request.use(
 
     // 📊 Logging en desarrollo (útil para debugging)
     if (IS_DEV) {
-      console.log('🚀 Request:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        hasAuth: !!token,
-      });
     }
 
     return config;
@@ -53,10 +48,6 @@ api.interceptors.response.use(
   (res) => {
     // ✅ Respuesta exitosa
     if (IS_DEV) {
-      console.log('✅ Response:', {
-        status: res.status,
-        url: res.config.url,
-      });
     }
     return res;
   },

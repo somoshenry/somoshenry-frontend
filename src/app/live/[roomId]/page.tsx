@@ -76,7 +76,7 @@ export default function LiveClassPage() {
 
         {/* CONTENEDOR FIJO */}
         <div className="flex-1 w-full rounded-xl bg-black/20 p-4 overflow-auto">
-          <VideoGrid localStream={localStream} remoteStreams={remoteStreams} user={user} />
+          <VideoGrid localStream={localStream} remoteStreams={remoteStreams} user={user} localAudio={mediaState.audio} localVideo={mediaState.video} />
         </div>
 
         {/* Controls */}

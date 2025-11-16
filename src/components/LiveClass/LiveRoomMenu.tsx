@@ -1,4 +1,5 @@
 'use client';
+// que estoy haciendo como qu esto no funciona?
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';

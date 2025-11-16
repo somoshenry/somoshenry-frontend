@@ -19,10 +19,11 @@ export interface Room {
   description?: string;
   createdBy: string;
   maxParticipants: number;
-  participantsCount: number;
+  participantsCount?: number;
+  currentParticipants?: number;
   participants?: Participant[];
   createdAt: string;
-  isFull: boolean;
+  isFull?: boolean;
 }
 
 export interface WebRTCSignal {

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useWebRTC } from '@/hook/useWebRTC';
 import { VideoGrid } from '@/components/LiveClass/VideoGrid';
 import { ParticipantsList } from '@/components/LiveClass/ParticipantsList';
+import { LiveChat } from '@/components/LiveClass/LiveChat';
 import { getUserProfile } from '@/services/userService';
 import { tokenStore } from '@/services/tokenStore';
 import { Loader2 } from 'lucide-react';
@@ -128,7 +129,7 @@ export default function LiveClassPage() {
 
         {/* Chat */}
         <div className="p-4 shrink-0">
-          <div className="bg-black/20 h-60 rounded-xl flex items-center justify-center text-gray-400 text-sm">Integra tu chat aquí</div>
+          <LiveChat roomId={roomId} token={token} userName={user?.username || user?.name || 'Usuario'} userAvatar={user?.avatar} />
         </div>
       </aside>
     </div>

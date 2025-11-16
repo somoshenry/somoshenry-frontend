@@ -10,6 +10,13 @@ import { LiveControls } from './LiveControls';
 import { ParticipantsList } from './ParticipantsList';
 import { ClassInfo } from './ClassInfo';
 
+interface UserData {
+  name?: string | null;
+  lastName?: string | null;
+  username?: string | null;
+  profilePicture?: string | null;
+}
+
 interface LiveClassRoomProps {
   roomId: string;
   token: string;
@@ -23,14 +30,20 @@ interface LiveClassRoomProps {
       avatar?: string;
     };
   };
+  user: UserData; // ← agregado correctamente
 }
 
-export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, classInfo }) => {
+export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
+  roomId,
+  token,
+  classInfo,
+  user, // ← recibido correctamente
+}) => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(true);
 
-  // PREVENIR JOINROOM REPETIDO
+  // Prevenir doble join
   const hasJoined = useRef(false);
 
   const { isConnected, isInRoom, localStream, remoteStreams, participants, mediaState, joinRoom, leaveRoom, toggleAudio, toggleVideo, toggleScreenShare } = useWebRTC({
@@ -45,7 +58,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
     },
   });
 
-  // ⭐ FIX PRINCIPAL: ejecutar joinRoom una sola vez
+  // Ejecutar joinRoom solo una vez
   useEffect(() => {
     if (!isConnected) return;
     if (hasJoined.current) return;
@@ -54,12 +67,10 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
     joinRoom();
   }, [isConnected, joinRoom]);
 
-  // Cleanup al desmontar
+  // Cleanup
   useEffect(() => {
     return () => {
-      if (isInRoom) {
-        leaveRoom();
-      }
+      if (isInRoom) leaveRoom();
     };
   }, [isInRoom, leaveRoom]);
 
@@ -68,7 +79,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
     router.push('/dashboard');
   };
 
-  // ========= UI =========
+  // ====== UI ======
 
   if (!isConnected) {
     return (

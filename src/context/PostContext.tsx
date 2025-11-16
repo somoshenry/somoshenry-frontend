@@ -329,7 +329,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     try {
       await api.delete(`/comment/${commentId}`);
 
-      const remove = (comments: any[]) =>
+      const remove = (comments: any[]): any[] =>
         comments
           .filter((c) => c.id !== commentId)
           .map((c) => ({

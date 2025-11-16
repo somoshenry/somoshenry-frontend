@@ -135,7 +135,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
           <div className="col-span-12 lg:col-span-8">
             <div className="bg-gray-900 rounded-lg overflow-hidden" style={{ minHeight: '600px' }}>
               {isInRoom ? (
-                <VideoGrid localStream={localStream} remoteStreams={remoteStreams} localAudio={mediaState.audio} localVideo={mediaState.video} />
+                <VideoGrid localStream={localStream} remoteStreams={remoteStreams} localAudio={mediaState.audio} localVideo={mediaState.video} user={user} />
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center text-white">

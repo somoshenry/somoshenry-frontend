@@ -1,44 +1,55 @@
 "use client";
 
 import {useState} from "react";
+import ClaseHang from "./ClaseHang"; // Contenido de la primera vista
+import ClassSub from "./ClassSub"; // Contenido de la segunda vista
 
 const Clases = () => {
-  const [activeButton, setActiveButton] = useState("");
+  const [activeButton, setActiveButton] = useState<"hang" | "sub">("hang");
 
-  const handleButtonClick = (buttonName: string) => {
+  const handleButtonClick = (buttonName: "hang" | "sub") => {
     setActiveButton(buttonName);
   };
 
   // Función para obtener las clases del TEXTO de cada botón
-  const getButtonTextClass = (buttonName: string) => {
-    const baseClasses = " cursor-pointer text-black text-sm w-[50%] text-center relative z-10";
+  const getButtonTextClass = (buttonName: "hang" | "sub") => {
+    // NOTA: W-[50%] es redundante si están envueltos en un div flex que cubre el 100%
+    const baseClasses = "text-sm w-1/2 text-center relative z-10 py-1 transition-colors duration-300";
     if (activeButton === buttonName) {
-      return "font-bold " + baseClasses;
+      return "font-bold text-black " + baseClasses;
     } else {
-      return baseClasses;
+      return "text-gray-600 " + baseClasses;
     }
   };
 
   return (
-    <div className="bg-white p-1.5 flex justify-between items-center w-[30%] gap-2 mx-auto rounded-full relative overflow-hidden">
-      {/* La pastilla deslizante */}
-      <div
-        className={`
-          absolute  left-0 py-1 h-full w-1/2 rounded-full bg-[#ffff00] 
-          transition-transform duration-300 ease-in
-          ${activeButton === "sub" ? "translate-x-full" : "translate-x-0"}
-          ${activeButton === "hang" ? "translate-x-0" : "translate-x-ful"}
-        `}
-      ></div>
+    <>
+      <div className="w-full md:w-[25%] text-center">
+        <div className="bg-white p-1.5 flex justify-between items-center w-full   rounded-full relative overflow-hidden">
+          <div
+            className={`absolute left-0 w-1/2 rounded-full h-[80%] bg-[#ffff00] transition-transform duration-300 ease-in ${
+              activeButton === "sub" ? "translate-x-[97%] bg-green-400" : "translate-x-1 bg-sky-400"
+            }`}
+          ></div>
+          {/* 1.2. Botones (Deben ser hermanos del slider) */}
+          <button className={getButtonTextClass("hang")} onClick={() => handleButtonClick("hang")}>
+            Hang zone
+          </button>
 
-      <button className={getButtonTextClass("hang")} onClick={() => handleButtonClick("hang")}>
-        Hang zone
-      </button>
+          <button className={getButtonTextClass("sub")} onClick={() => handleButtonClick("sub")}>
+            Sub
+          </button>
+        </div>
+        {/* ---------------------------------------------------- */}
 
-      <button className={getButtonTextClass("sub")} onClick={() => handleButtonClick("sub")}>
-        Sub
-      </button>
-    </div>
+        {/* --- 2. CONTENIDO CONDICIONAL (LAS "PÁGINAS") --- */}
+      </div>
+      <div className="mt-6 w-full">
+        {/* Aquí usamos el estado para renderizar la vista correcta */}
+        {activeButton === "hang" && <ClaseHang theme={"hang"} />}
+        {activeButton === "sub" && <ClassSub theme={"sub"} />}
+      </div>
+    </>
   );
 };
 

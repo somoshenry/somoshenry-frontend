@@ -10,7 +10,7 @@ export const ImputGeneric = ({id, label, labelRightContent, rightContent, ...pro
         {labelRightContent}
       </div>
 
-      <div className="relative w-full text-gray-700 bg-gray-100 rounded-lg transition duration-300">
+      <div className="relative w-full text-black bg-gray-100 rounded-lg transition duration-300">
         <input
           id={id}
           {...props}

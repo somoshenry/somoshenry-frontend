@@ -21,6 +21,9 @@ export default function CreateLiveClassPage() {
 
       const room = await webrtcService.createRoom(name, description);
 
+      // ✨ NUEVO: Guardar la sala en sessionStorage
+      sessionStorage.setItem('currentRoom', JSON.stringify(room));
+
       router.push(`/live/${room.id}`);
     } catch (error: any) {
       console.error(error);
@@ -40,7 +43,7 @@ export default function CreateLiveClassPage() {
       <label className="block mb-2 font-semibold text-black">Descripción</label>
       <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full p-3 border rounded mb-6 text-black" placeholder="Ej: Llamada usando WebRTC" />
 
-      <button onClick={handleCreate} disabled={loading} className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded">
+      <button onClick={handleCreate} disabled={loading} className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded disabled:bg-gray-400">
         {loading ? 'Creando...' : 'Crear clase'}
       </button>
     </div>

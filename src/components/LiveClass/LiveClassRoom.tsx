@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWebRTC } from '@/hook/useWebRTC';
 import { VideoGrid } from './VideoGrid';
@@ -30,26 +30,29 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(true);
 
+  // PREVENIR JOINROOM REPETIDO
+  const hasJoined = useRef(false);
+
   const { isConnected, isInRoom, localStream, remoteStreams, participants, mediaState, joinRoom, leaveRoom, toggleAudio, toggleVideo, toggleScreenShare } = useWebRTC({
     roomId,
     token,
     onError: (err) => setError(err),
     onUserJoined: (userId) => {
       console.log('Usuario se unió:', userId);
-      // Puedes mostrar una notificación aquí
     },
     onUserLeft: (userId) => {
       console.log('Usuario se fue:', userId);
-      // Puedes mostrar una notificación aquí
     },
   });
 
-  // Auto-join cuando se conecta
+  // ⭐ FIX PRINCIPAL: ejecutar joinRoom una sola vez
   useEffect(() => {
-    if (isConnected && !isInRoom) {
-      joinRoom();
-    }
-  }, [isConnected, isInRoom, joinRoom]);
+    if (!isConnected) return;
+    if (hasJoined.current) return;
+
+    hasJoined.current = true;
+    joinRoom();
+  }, [isConnected, joinRoom]);
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -62,8 +65,10 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
 
   const handleLeave = () => {
     leaveRoom();
-    router.push('/dashboard'); // Ajusta según tu ruta
+    router.push('/dashboard');
   };
+
+  // ========= UI =========
 
   if (!isConnected) {
     return (
@@ -103,6 +108,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
+
             <div>
               <h1 className="text-xl font-bold text-gray-900">Clase en Vivo</h1>
               <p className="text-sm text-gray-600">SomosHenry</p>
@@ -113,6 +119,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
             <button onClick={() => setShowChat(!showChat)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
               {showChat ? 'Ocultar Chat' : 'Mostrar Chat'}
             </button>
+
             <div className="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg">
               <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
               <span className="text-sm font-semibold text-red-600">EN VIVO</span>
@@ -121,10 +128,10 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="max-w-[2000px] mx-auto p-6">
         <div className="grid grid-cols-12 gap-6">
-          {/* Video Area */}
+          {/* Video */}
           <div className="col-span-12 lg:col-span-8">
             <div className="bg-gray-900 rounded-lg overflow-hidden" style={{ minHeight: '600px' }}>
               {isInRoom ? (
@@ -139,19 +146,15 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, cla
               )}
             </div>
 
-            {/* Controls */}
             {isInRoom && <LiveControls mediaState={mediaState} onToggleAudio={toggleAudio} onToggleVideo={toggleVideo} onToggleScreen={toggleScreenShare} onLeave={handleLeave} />}
           </div>
 
           {/* Sidebar */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
-            {/* Class Info */}
             <ClassInfo className={classInfo.name} description={classInfo.description} time={classInfo.time} instructor={classInfo.instructor} />
 
-            {/* Participants */}
             <ParticipantsList participants={participants} />
 
-            {/* Chat (placeholder - usa tu componente de chat existente) */}
             {showChat && (
               <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Chat en vivo</h3>

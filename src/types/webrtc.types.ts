@@ -54,6 +54,10 @@ export interface RemoteStream {
   audio: boolean;
   video: boolean;
   screen: boolean;
+  name?: string;
+  lastName?: string;
+  username?: string;
+  avatar?: string | null;
 }
 
 export interface WebRTCConfig {

@@ -53,6 +53,12 @@ export const LiveChat: React.FC<LiveChatProps> = ({ roomId, token, userName, use
       setIsConnected(false);
     });
 
+    // Recibir mensajes anteriores
+    socket.on('previousMessages', (msgs: ChatMessage[]) => {
+      setMessages(msgs);
+    });
+
+    // Recibir nuevos mensajes
     socket.on('chatMessage', (data) => {
       const newMessage: ChatMessage = {
         id: data.id || Date.now().toString(),

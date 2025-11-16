@@ -18,7 +18,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 
-  // 🔥 CAMPOS NECESARIOS PARA PLANES
-  subscription?: SubscriptionPlan;            // BRONCE | PLATA | ORO
-  subscriptionExpiresAt?: string | null;      // Fecha de renovación
+  //  CAMPOS NECESARIOS PARA PLANES
+  subscription?: SubscriptionPlan; // BRONCE | PLATA | ORO
+  subscriptionExpiresAt?: string | null; // Fecha de renovación
 }

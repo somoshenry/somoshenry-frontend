@@ -7,8 +7,10 @@ export interface Participant {
   video: boolean;
   screen: boolean;
   joinedAt?: Date;
-  name?: string;
-  avatar?: string;
+  name?: string | null;
+  lastName?: string | null;
+  username?: string | null;
+  avatar?: string | null;
 }
 
 export interface Room {

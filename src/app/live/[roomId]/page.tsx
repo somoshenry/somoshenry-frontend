@@ -6,6 +6,7 @@ import { useWebRTC } from '@/hook/useWebRTC';
 import { VideoGrid } from '@/components/LiveClass/VideoGrid';
 import { ParticipantsList } from '@/components/LiveClass/ParticipantsList';
 import { getUserProfile } from '@/services/userService';
+import { tokenStore } from '@/services/tokenStore';
 import { Loader2 } from 'lucide-react';
 
 export default function LiveClassPage() {
@@ -14,7 +15,7 @@ export default function LiveClassPage() {
   const [user, setUser] = useState<any>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+  const token = typeof window !== 'undefined' ? tokenStore.getAccess() || '' : '';
 
   const { isConnected, isInRoom, localStream, remoteStreams, participants, joinRoom, leaveRoom, toggleAudio, toggleVideo, toggleScreenShare, mediaState } = useWebRTC({
     roomId,
@@ -35,11 +36,12 @@ export default function LiveClassPage() {
     loadUser();
   }, []);
 
+  // 🔥 FIX: ahora React evalúa correctamente si debe ejecutar joinRoom()
   useEffect(() => {
     if (isConnected && !isInRoom) {
       joinRoom();
     }
-  }, [isConnected]);
+  }, [isConnected, isInRoom]);
 
   if (loadingUser) {
     return (
@@ -57,8 +59,8 @@ export default function LiveClassPage() {
     <div
       className="flex bg-[#0d0f16] text-white overflow-hidden"
       style={{
-        height: 'calc(100vh - 64px)', // Altura real = altura total - navbar
-        marginLeft: '240px', // Ancho del sidebar
+        height: 'calc(100vh - 64px)',
+        marginLeft: '240px',
       }}
     >
       {/* ======================= */}
@@ -71,7 +73,7 @@ export default function LiveClassPage() {
           <span className="px-3 py-1 bg-red-600 rounded-full text-xs font-bold">EN VIVO</span>
         </div>
 
-        {/* CONTENEDOR FIJO CORRECTO (EL ARREGLO REAL) */}
+        {/* CONTENEDOR FIJO */}
         <div className="flex-1 w-full rounded-xl bg-black/20 p-4 overflow-auto">
           <VideoGrid localStream={localStream} remoteStreams={remoteStreams} user={user} />
         </div>

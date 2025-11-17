@@ -1,4 +1,4 @@
-import CP from '@/components/cohorte/CP';
+import CP from '@/components/cohorte/Cohorte';
 import { Suspense } from 'react';
 
 export default function CohorteMockPage() {

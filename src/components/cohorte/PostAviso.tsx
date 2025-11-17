@@ -10,6 +10,7 @@ import React, {useState} from "react";
 interface PostFormCardData {
   titulo: string;
   mensaje: string;
+  linkConectate?: string;
 }
 
 interface PostFormCardProps {
@@ -20,6 +21,7 @@ interface PostFormCardProps {
 const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [linkConectate, setLinkConectate] = useState(""); // Campo opcional
 
   const handlePost = () => {
     // Validación básica
@@ -32,11 +34,14 @@ const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
     onPost({
       titulo: title.trim(),
       mensaje: message.trim(),
+      // Incluimos el link solo si el usuario escribió algo
+      linkConectate: linkConectate.trim() || undefined,
     });
 
     // Limpiar el formulario después de postear
     setTitle("");
     setMessage("");
+    setLinkConectate("");
   };
 
   return (
@@ -58,7 +63,16 @@ const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         rows={4}
-        className="w-full mb-4 p-3 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
+        className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white text-sm resize-none"
+      />
+
+      {/* Input Opcional para el Link (corresponde a linkConectate en tu tarjeta) */}
+      <input
+        type="url"
+        placeholder="Enlace de conexión opcional (ej: Zoom, Meet)"
+        value={linkConectate}
+        onChange={(e) => setLinkConectate(e.target.value)}
+        className="w-full mb-4 p-3 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white text-sm"
       />
 
       {/* Botón de Postear */}

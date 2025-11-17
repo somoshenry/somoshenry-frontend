@@ -47,8 +47,8 @@ export default function SubscriptionRedirectClient() {
       const paymentId = searchParams.get('payment_id');
       const token = localStorage.getItem('access_token');
 
-      // si el pago fue aprobado, refrescar el usuario
       if (currentStatus === 'approved' || currentStatus === 'success') {
+        console.log('💳 SubscriptionRedirectClient - Pago aprobado, llamando refreshUser()');
         refreshUser(); // actualiza plan + fecha de vencimiento
       }
 

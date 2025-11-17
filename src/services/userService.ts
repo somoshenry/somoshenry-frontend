@@ -47,8 +47,16 @@ export interface UserProfileResponse {
 export async function getUserProfile(): Promise<User> {
   const { data } = await api.get<UserProfileResponse>('/users/me');
   const user = data.user;
+
+  console.log('📡 getUserProfile - Respuesta del backend:', {
+    subscriptionPlan: user.subscriptionPlan,
+    subscriptionExpiresAt: user.subscriptionExpiresAt,
+    subscription: user.subscription,
+  });
+
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
   if (user.subscriptionPlan) {
+    console.log('✅ Mapeando subscriptionPlan a subscription:', user.subscriptionPlan);
     user.subscription = user.subscriptionPlan;
   }
   return user;

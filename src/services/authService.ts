@@ -57,8 +57,15 @@ export async function me() {
   const userResponse = data as { user: User; message?: string };
   const user = userResponse.user;
 
+  console.log('🔐 authService.me() - Datos recibidos:', {
+    subscriptionPlan: user?.subscriptionPlan,
+    subscriptionExpiresAt: user?.subscriptionExpiresAt,
+    subscription: user?.subscription,
+  });
+
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
   if (user && user.subscriptionPlan) {
+    console.log('✅ authService.me() - Mapeando:', user.subscriptionPlan);
     user.subscription = user.subscriptionPlan;
   }
 

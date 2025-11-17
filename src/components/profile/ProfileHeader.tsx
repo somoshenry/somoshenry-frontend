@@ -22,15 +22,22 @@ export default function ProfileHeader() {
 
   // Si es el perfil del usuario actual, usar el user del contexto (siempre actualizado)
   // Si no, usar el user cargado desde la API
-  const displayUser = currentUser?.id === user?.id ? currentUser : user;
-  const isOwnProfile = currentUser?.id === displayUser?.id;
+  const isOwnProfile = currentUser?.id === user?.id;
+  const displayUser = isOwnProfile ? currentUser : user;
+
+  console.log('🎨 ProfileHeader render:', {
+    isOwnProfile,
+    userIdFromState: user?.id,
+    currentUserId: currentUser?.id,
+    displayUserSubscription: displayUser?.subscription,
+  });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const userData = await getUserProfile();
-        console.log('UserData desde API: ', userData);
+        console.log('UserData desde API:', userData);
         setUser(userData);
 
         if (userData?.id) {
@@ -52,22 +59,6 @@ export default function ProfileHeader() {
 
     fetchUserProfile();
   }, [currentUser?.id]);
-
-  // Sincronizar con los cambios del AuthContext (cuando se actualiza la suscripción)
-  useEffect(() => {
-    if (user && currentUser?.id === user.id && currentUser?.subscription) {
-      console.log('Actualizando usuario con nueva suscripción:', currentUser.subscription);
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              subscription: currentUser.subscription,
-              subscriptionExpiresAt: currentUser.subscriptionExpiresAt,
-            }
-          : null
-      );
-    }
-  }, [currentUser?.subscription, currentUser?.subscriptionExpiresAt, user, currentUser?.id]);
 
   const handleUpdateProfile = (updatedUser: User) => {
     setUser(updatedUser);

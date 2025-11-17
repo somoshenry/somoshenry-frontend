@@ -20,14 +20,17 @@ export default function ProfileHeader() {
   const [followLoading, setFollowLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  const isOwnProfile = currentUser?.id === user?.id;
+  // Si es el perfil del usuario actual, usar el user del contexto (siempre actualizado)
+  // Si no, usar el user cargado desde la API
+  const displayUser = currentUser?.id === user?.id ? currentUser : user;
+  const isOwnProfile = currentUser?.id === displayUser?.id;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const userData = await getUserProfile();
-        console.log('UserData: ', userData);
+        console.log('UserData desde API: ', userData);
         setUser(userData);
 
         if (userData?.id) {
@@ -49,6 +52,22 @@ export default function ProfileHeader() {
 
     fetchUserProfile();
   }, [currentUser?.id]);
+
+  // Sincronizar con los cambios del AuthContext (cuando se actualiza la suscripción)
+  useEffect(() => {
+    if (user && currentUser?.id === user.id && currentUser?.subscription) {
+      console.log('Actualizando usuario con nueva suscripción:', currentUser.subscription);
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              subscription: currentUser.subscription,
+              subscriptionExpiresAt: currentUser.subscriptionExpiresAt,
+            }
+          : null
+      );
+    }
+  }, [currentUser?.subscription, currentUser?.subscriptionExpiresAt, user, currentUser?.id]);
 
   const handleUpdateProfile = (updatedUser: User) => {
     setUser(updatedUser);
@@ -209,9 +228,9 @@ export default function ProfileHeader() {
           {/* BADGE DEL PLAN - SOLO MI PERFIL */}
           {isOwnProfile &&
             (() => {
-              // Usar user.subscription (devuelto por el backend)
-              const plan = user.subscription;
-              const expiresAt = user.subscriptionExpiresAt;
+              // Usar displayUser (que es currentUser si es perfil propio, siempre actualizado)
+              const plan = displayUser?.subscription;
+              const expiresAt = displayUser?.subscriptionExpiresAt;
 
               return (
                 <div className="mt-2 text-center">

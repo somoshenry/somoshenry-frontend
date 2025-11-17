@@ -1,6 +1,16 @@
 import { SubscriptionPlan } from '@/interfaces/context/auth';
 import { api } from './api';
 
+export interface Subscription {
+  id: string;
+  plan: SubscriptionPlan; // BRONCE | PLATA | ORO
+  status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  startDate: string;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -16,8 +26,7 @@ export interface User {
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
   createdAt: string;
   updatedAt: string;
-  subscription?: SubscriptionPlan; // BRONCE | PLATA | ORO
-  subscriptionExpiresAt?: string | null; // Fecha de renovación
+  suscriptions?: Subscription[];
 }
 
 export interface UserProfileResponse {

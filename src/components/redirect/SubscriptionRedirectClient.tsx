@@ -1,7 +1,9 @@
 'use client';
+
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/hook/useAuth';
 
 interface StatusInfo {
   title: string;
@@ -14,57 +16,64 @@ export default function SubscriptionRedirectClient() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Detecta el estado del pago desde la URL y sessionStorage
-  const paymentStatus = useMemo(() => {
+  // Para refrescar el usuario cuando el pago se apueba
+  const { refreshUser } = useAuth();
+
+  const [localStatus, setLocalStatus] = useState<string | null>(() => {
     const urlStatus = searchParams.get('collection_status') || searchParams.get('status');
     if (urlStatus) {
-      // Si hay estado en la URL, guardarlo en sessionStorage
-      sessionStorage.setItem('lastPaymentStatus', urlStatus);
+      try {
+        sessionStorage.setItem('lastPaymentStatus', urlStatus);
+      } catch {}
       return urlStatus;
     }
-    // Si no hay estado en la URL, intentar recuperarlo de sessionStorage
-    return sessionStorage.getItem('lastPaymentStatus') || 'unknown';
-  }, [searchParams]);
+    const stored = typeof window !== 'undefined' ? sessionStorage.getItem('lastPaymentStatus') : null;
+    return stored || null;
+  });
 
-  // Derivamos el estado que usará la UI
-  const status = paymentStatus === 'unknown' ? 'checking' : paymentStatus;
+  const status = localStatus === null || localStatus === 'unknown' ? 'checking' : localStatus;
 
   useEffect(() => {
     const validatePayment = async () => {
-      // Primero guardamos el estado actual si existe en la URL
       const currentStatus = searchParams.get('collection_status') || searchParams.get('status');
+
       if (currentStatus) {
-        sessionStorage.setItem('lastPaymentStatus', currentStatus);
+        try {
+          sessionStorage.setItem('lastPaymentStatus', currentStatus);
+        } catch {}
+        setLocalStatus(currentStatus);
       }
 
       const paymentId = searchParams.get('payment_id');
       const token = localStorage.getItem('access_token');
 
-      // Solo procedemos si tenemos un paymentId y un estado válido
+      // si el pago fue aprobado, refrescar el usuario
+      if (currentStatus === 'approved' || currentStatus === 'success') {
+        refreshUser(); // actualiza plan + fecha de vencimiento
+      }
+
       if (paymentId && currentStatus) {
         try {
-          const response = await fetch('https://somoshenry-backend.onrender.com/mercadopago/webhook', {
+          await fetch('https://somoshenry-backend.onrender.com/mercadopago/webhook', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              data: {
-                id: paymentId,
-              },
+              data: { id: paymentId },
               type: 'payment',
               action: 'payment.updated',
             }),
           });
 
-          if (!response.ok) {
-            console.error('Error validating payment:', await response.text());
-          }
-
-          // Siempre limpiamos la URL después de guardar el estado
+          // limpia la URL
           if (searchParams.toString()) {
-            router.replace('/redirect', { scroll: false });
+            try {
+              router.replace(pathname, { scroll: false });
+            } catch {
+              router.replace('/redirect', { scroll: false });
+            }
           }
         } catch (error) {
           console.error('Error sending payment validation:', error);
@@ -73,7 +82,7 @@ export default function SubscriptionRedirectClient() {
     };
 
     validatePayment();
-  }, [searchParams, router]);
+  }, [searchParams, router, pathname, refreshUser]);
 
   const getStatusMessage = (): StatusInfo => {
     switch (status) {
@@ -118,10 +127,8 @@ export default function SubscriptionRedirectClient() {
       >
         <h1 className="text-2xl font-bold mb-4">{info.title}</h1>
         <p className="mb-6">{info.message}</p>
-        <button
-          onClick={() => (window.location.href = '/home')}
-          className="mt-4 bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition"
-        >
+
+        <button onClick={() => router.push('/home')} className="mt-4 bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition">
           Volver al inicio
         </button>
       </motion.div>

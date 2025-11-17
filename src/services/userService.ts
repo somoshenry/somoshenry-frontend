@@ -55,13 +55,13 @@ export async function getUserProfile(): Promise<User> {
   });
 
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  if (user.subscriptionPlan) {
+  // Solo mapear si es string y subscription no existe
+  if (user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
     console.log('✅ Mapeando subscriptionPlan a subscription:', user.subscriptionPlan);
-    user.subscription = user.subscriptionPlan;
+    user.subscription = user.subscriptionPlan as any;
   }
   return user;
 }
-
 /**
  * Obtiene el perfil de un usuario por ID
  */
@@ -69,8 +69,8 @@ export async function getUserById(userId: string): Promise<User> {
   const { data } = await api.get<UserProfileResponse>(`/users/${userId}`);
   const user = data.user;
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  if (user.subscriptionPlan) {
-    user.subscription = user.subscriptionPlan;
+  if (user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
+    user.subscription = user.subscriptionPlan as any;
   }
   return user;
 }
@@ -91,8 +91,8 @@ export async function updateUserProfile(updates: {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
   const user = data.user;
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  if (user.subscriptionPlan) {
-    user.subscription = user.subscriptionPlan;
+  if (user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
+    user.subscription = user.subscriptionPlan as any;
   }
   return user;
 }

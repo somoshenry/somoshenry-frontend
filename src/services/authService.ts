@@ -64,9 +64,10 @@ export async function me() {
   });
 
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  if (user && user.subscriptionPlan) {
+  // Si subscriptionPlan es un string, usarlo como subscription
+  if (user && user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
     console.log('✅ authService.me() - Mapeando:', user.subscriptionPlan);
-    user.subscription = user.subscriptionPlan;
+    user.subscription = user.subscriptionPlan as any;
   }
 
   return { user };

@@ -11,7 +11,7 @@ import {useSearchParams} from "next/navigation";
 import AvisoPage from "./AvisoPage";
 import Clases from "./Clases";
 
-const Cohorte = () => {
+export const Cohorte = () => {
   // 🔹 Mock de publicaciones
   const mockedPosts: CardMensajeProps[] = [
     {

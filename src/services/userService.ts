@@ -1,4 +1,15 @@
+import { SubscriptionPlan } from '@/interfaces/context/auth';
 import { api } from './api';
+
+export interface Subscription {
+  id: string;
+  plan: SubscriptionPlan; // BRONCE | PLATA | ORO
+  status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  startDate: string;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface User {
   id: string;
@@ -15,6 +26,7 @@ export interface User {
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
   createdAt: string;
   updatedAt: string;
+  suscriptions?: Subscription[];
 }
 
 export interface UserProfileResponse {
@@ -41,7 +53,16 @@ export async function getUserById(userId: string): Promise<User> {
 /**
  * Actualiza el perfil del usuario autenticado
  */
-export async function updateUserProfile(updates: { name?: string; lastName?: string; biography?: string; location?: string; website?: string; profilePicture?: string; coverPicture?: string; username?: string }): Promise<User> {
+export async function updateUserProfile(updates: {
+  name?: string;
+  lastName?: string;
+  biography?: string;
+  location?: string;
+  website?: string;
+  profilePicture?: string;
+  coverPicture?: string;
+  username?: string;
+}): Promise<User> {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
   return data.user;
 }

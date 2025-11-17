@@ -8,14 +8,14 @@ import { useAuth } from '@/hook/useAuth';
 import { useChat } from '@/context/ChatContext';
 import { useSocket } from '@/hook/useSocket';
 import { tokenStore } from '@/services/tokenStore';
-import { useChatConversations } from '@/hooks/chat/useChatConversations';
-import { useChatMessages } from '@/hooks/chat/useChatMessages';
-import { useChatCache } from '@/hooks/chat/useChatCache';
+import { useChatConversations } from '@/hook/chat/useChatConversations';
+import { useChatMessages } from '@/hook/chat/useChatMessages';
+import { useChatCache } from '@/hook/chat/useChatCache';
 import { convertMessage, convertGroupToConversation } from '@/utils/chat/conversationHelpers';
 import { Message as BackendMessage, MessageType, getDisplayName } from '@/services/chatService';
 import type { Message, Conversation } from '@/interfaces/chat';
 
-// Tipo para evento de grupo creado
+// Tipo para evento de grupo creado 
 type GroupCreatedEvent = {
   group: any; // Puede ser tipado mejor si tienes la interfaz
 };
@@ -271,8 +271,6 @@ export default function ChatPage() {
 
   // Manejar grupo recién creado
   const handleGroupCreated = async (group: any) => {
-    console.log('✅ Grupo creado exitosamente:', group);
-
     try {
       const groupConv = convertGroupToConversation(group);
       setConversations((prev) => [groupConv, ...prev]);

@@ -8,6 +8,7 @@ import { reportUser } from '@/services/reportService';
 import { openConversation } from '@/services/chatService';
 import { useAuth } from '@/hook/useAuth';
 import ProfileEditModal from './ProfileEditModal';
+import FollowListModal from './FollowListModal';
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function ProfileHeader() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
 
   // Determinar si es el perfil propio
   const isOwnProfile = currentUser?.id === user?.id;
@@ -197,12 +200,24 @@ export default function ProfileHeader() {
 
         {/* Follow Stats */}
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
-          <span className="font-semibold">
+          <button
+            onClick={() => {
+              setFollowModalTab('followers');
+              setShowFollowModal(true);
+            }}
+            className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             {followStats.followersCount} <span className="font-normal">Seguidores</span>
-          </span>
-          <span className="font-semibold">
+          </button>
+          <button
+            onClick={() => {
+              setFollowModalTab('following');
+              setShowFollowModal(true);
+            }}
+            className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             {followStats.followingCount} <span className="font-normal">Siguiendo</span>
-          </span>
+          </button>
         </div>
 
         {/* Botones de acción (solo si NO es el perfil propio) */}
@@ -265,6 +280,9 @@ export default function ProfileHeader() {
 
       {/* Modal de reporte */}
       {showReportModal && <ReportUserModal userName={user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || 'Usuario'} onClose={() => setShowReportModal(false)} onSubmit={handleReportUser} />}
+
+      {/* Modal de seguidores */}
+      {showFollowModal && user && <FollowListModal userId={user.id} initialTab={followModalTab} onClose={() => setShowFollowModal(false)} />}
     </div>
   );
 }

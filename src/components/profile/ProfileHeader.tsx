@@ -155,10 +155,7 @@ export default function ProfileHeader() {
         }}
       >
         {isOwnProfile && (
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-          >
+          <button onClick={() => setIsEditModalOpen(true)} className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity">
             ✏️ Editar portada
           </button>
         )}
@@ -167,20 +164,10 @@ export default function ProfileHeader() {
       <div className="w-11/12 -mt-10 flex flex-col text-black items-center">
         {/* AVATAR */}
         <div className="relative group">
-          {user.profilePicture ? (
-            <img src={user.profilePicture} className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 object-cover" />
-          ) : (
-            <div className="bg-[#FFFF00] w-20 h-20 rounded-full flex items-center justify-center text-lg font-bold border-4 border-white dark:border-gray-900">
-              {getInitials()}
-            </div>
-          )}
+          {user.profilePicture ? <img src={user.profilePicture} className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 object-cover" /> : <div className="bg-[#FFFF00] w-20 h-20 rounded-full flex items-center justify-center text-lg font-bold border-4 border-white dark:border-gray-900">{getInitials()}</div>}
 
           {isOwnProfile && (
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="absolute bottom-0 right-0 bg-yellow-400 hover:bg-yellow-500 text-black p-1.5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Editar foto"
-            >
+            <button onClick={() => setIsEditModalOpen(true)} className="absolute bottom-0 right-0 bg-yellow-400 hover:bg-yellow-500 text-black p-1.5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Editar foto">
               ✏️
             </button>
           )}
@@ -192,15 +179,10 @@ export default function ProfileHeader() {
         <div className="flex flex-col items-center mt-2">
           {/* Nombre */}
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold dark:text-white">
-              {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || 'Usuario'}
-            </h1>
+            <h1 className="text-xl font-semibold dark:text-white">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || 'Usuario'}</h1>
 
             {isOwnProfile && (
-              <button
-                onClick={() => setIsEditModalOpen(true)}
-                className="text-black hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400"
-              >
+              <button onClick={() => setIsEditModalOpen(true)} className="text-black hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400">
                 ✏️
               </button>
             )}
@@ -212,25 +194,11 @@ export default function ProfileHeader() {
           {/* BADGE DEL PLAN - SOLO MI PERFIL */}
           {isOwnProfile && (
             <div className="mt-2 text-center">
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold border ${
-                  user.subscription === 'ORO'
-                    ? 'bg-yellow-100 text-yellow-700 border-yellow-400'
-                    : user.subscription === 'PLATA'
-                    ? 'bg-gray-200 text-gray-700 border-gray-400'
-                    : user.subscription === 'BRONCE'
-                    ? 'bg-orange-100 text-orange-700 border-orange-400'
-                    : 'bg-gray-100 text-gray-600 border-gray-300'
-                }`}
-              >
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${user.subscription === 'ORO' ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : user.subscription === 'PLATA' ? 'bg-gray-200 text-gray-700 border-gray-400' : user.subscription === 'BRONCE' ? 'bg-orange-100 text-orange-700 border-orange-400' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>
                 {user.subscription ? `Plan ${user.subscription}` : 'Sin suscripción'}
               </span>
 
-              {user.subscriptionExpiresAt && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Vence el: {new Date(user.subscriptionExpiresAt).toLocaleDateString('es-AR')}
-                </p>
-              )}
+              {user.subscriptionExpiresAt && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Vence el: {new Date(user.subscriptionExpiresAt).toLocaleDateString('es-AR')}</p>}
             </div>
           )}
 
@@ -264,15 +232,7 @@ export default function ProfileHeader() {
         {!isOwnProfile && currentUser && (
           <div className="flex gap-2 mt-3">
             {/* FOLLOW */}
-            <button
-              onClick={handleFollowToggle}
-              disabled={followLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                isFollowing
-                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  : 'bg-yellow-400 hover:bg-yellow-500 text-black'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
+            <button onClick={handleFollowToggle} disabled={followLoading} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${isFollowing ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-yellow-400 hover:bg-yellow-500 text-black'} disabled:opacity-50 disabled:cursor-not-allowed`}>
               {followLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
               ) : isFollowing ? (
@@ -287,18 +247,12 @@ export default function ProfileHeader() {
             </button>
 
             {/* CHAT */}
-            <button
-              onClick={handleOpenChat}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-blue-500 hover:bg-blue-600 text-white"
-            >
+            <button onClick={handleOpenChat} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-blue-500 hover:bg-blue-600 text-white">
               <MessageCircle size={18} /> Mensaje
             </button>
 
             {/* REPORTAR */}
-            <button
-              onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white"
-            >
+            <button onClick={() => setShowReportModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white">
               <Flag size={18} /> Reportar
             </button>
           </div>
@@ -320,13 +274,7 @@ export default function ProfileHeader() {
       {/* MODALES */}
       <ProfileEditModal user={user} isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onUpdate={handleUpdateProfile} />
 
-      {showReportModal && (
-        <ReportUserModal
-          userName={user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email}
-          onClose={() => setShowReportModal(false)}
-          onSubmit={handleReportUser}
-        />
-      )}
+      {showReportModal && <ReportUserModal userName={user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email} onClose={() => setShowReportModal(false)} onSubmit={handleReportUser} />}
 
       {/* Modal de seguidores */}
       {showFollowModal && user && <FollowListModal userId={user.id} initialTab={followModalTab} onClose={() => setShowFollowModal(false)} />}
@@ -337,15 +285,7 @@ export default function ProfileHeader() {
 /* ======================= */
 /*  MODAL DE REPORTE       */
 /* ======================= */
-function ReportUserModal({
-  userName,
-  onClose,
-  onSubmit,
-}: {
-  userName: string;
-  onClose: () => void;
-  onSubmit: (reason: string, description: string) => void;
-}) {
+function ReportUserModal({ userName, onClose, onSubmit }: { userName: string; onClose: () => void; onSubmit: (reason: string, description: string) => void }) {
   const [reason, setReason] = useState('SPAM');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -377,11 +317,7 @@ function ReportUserModal({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Motivo del reporte</label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-            >
+            <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
               {reasons.map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}
@@ -392,12 +328,7 @@ function ReportUserModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 resize-none"
-            />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 resize-none" />
           </div>
         </div>
 
@@ -405,11 +336,7 @@ function ReportUserModal({
           <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
             Cancelar
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !description.trim()}
-            className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50"
-          >
+          <button onClick={handleSubmit} disabled={submitting || !description.trim()} className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50">
             {submitting ? 'Enviando...' : 'Enviar Reporte'}
           </button>
         </div>

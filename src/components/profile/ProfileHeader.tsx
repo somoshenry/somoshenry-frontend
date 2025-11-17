@@ -25,19 +25,12 @@ export default function ProfileHeader() {
   const isOwnProfile = currentUser?.id === user?.id;
   const displayUser = isOwnProfile ? currentUser : user;
 
-  console.log('🎨 ProfileHeader render:', {
-    isOwnProfile,
-    userIdFromState: user?.id,
-    currentUserId: currentUser?.id,
-    displayUserSubscription: displayUser?.subscription,
-  });
-
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const userData = await getUserProfile();
-        console.log('UserData desde API:', userData);
+        console.log('Userdata desde la Api:', userData.subscription);
         setUser(userData);
 
         if (userData?.id) {
@@ -219,8 +212,7 @@ export default function ProfileHeader() {
           {/* BADGE DEL PLAN - SOLO MI PERFIL */}
           {isOwnProfile &&
             (() => {
-              // Usar displayUser (que es currentUser si es perfil propio, siempre actualizado)
-              const plan = displayUser?.subscription;
+              const plan = displayUser?.subscriptionPlan;
               const expiresAt = displayUser?.subscriptionExpiresAt;
 
               return (

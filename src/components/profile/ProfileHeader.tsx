@@ -192,35 +192,20 @@ export default function ProfileHeader() {
           <p className="text-black dark:text-gray-400">@{user.email?.split('@')[0]}</p>
 
           {/* BADGE DEL PLAN - SOLO MI PERFIL */}
-          {isOwnProfile && (() => {
-            const lastSubscription = user.suscriptions?.[user.suscriptions.length - 1];
-            const plan = lastSubscription?.plan;
-            const expiresAt = lastSubscription?.endDate;
-            
-            return (
-              <div className="mt-2 text-center">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold border ${
-                    plan === 'ORO'
-                      ? 'bg-yellow-100 text-yellow-700 border-yellow-400'
-                      : plan === 'PLATA'
-                      ? 'bg-gray-200 text-gray-700 border-gray-400'
-                      : plan === 'BRONCE'
-                      ? 'bg-orange-100 text-orange-700 border-orange-400'
-                      : 'bg-gray-100 text-gray-600 border-gray-300'
-                  }`}
-                >
-                  {plan ? `Plan ${plan}` : 'Sin suscripción'}
-                </span>
+          {isOwnProfile &&
+            (() => {
+              const lastSubscription = user.suscriptions?.[user.suscriptions.length - 1];
+              const plan = lastSubscription?.plan;
+              const expiresAt = lastSubscription?.endDate;
 
-                {expiresAt && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Vence el: {new Date(expiresAt).toLocaleDateString('es-AR')}
-                  </p>
-                )}
-              </div>
-            );
-          })()}
+              return (
+                <div className="mt-2 text-center">
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${plan === 'ORO' ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : plan === 'PLATA' ? 'bg-gray-200 text-gray-700 border-gray-400' : plan === 'BRONCE' ? 'bg-orange-100 text-orange-700 border-orange-400' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>{plan ? `Plan ${plan}` : 'Sin suscripción'}</span>
+
+                  {expiresAt && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Vence el: {new Date(expiresAt).toLocaleDateString('es-AR')}</p>}
+                </div>
+              );
+            })()}
 
           {/* BIO */}
           {user.biography && <p className="text-sm text-black dark:text-gray-400 text-center max-w-md mt-2">{user.biography}</p>}

@@ -76,7 +76,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
 
   const handleLeave = () => {
     leaveRoom();
-    router.push('/dashboard');
+    router.push('/live/create');
   };
 
   // ====== UI ======
@@ -95,14 +95,34 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg max-w-lg w-full">
           <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2 text-center">Error de Conexión</h2>
-          <p className="text-gray-600 text-center mb-6">{error}</p>
-          <button onClick={() => window.location.reload()} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-            Reintentar
-          </button>
+          <h2 className="text-xl font-bold text-gray-900 mb-3 text-center">Error de Conexión</h2>
+          <p className="text-gray-600 text-center mb-6 whitespace-pre-line">{error}</p>
+
+          <div className="space-y-3">
+            <button onClick={() => globalThis.location.reload()} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+              Reintentar
+            </button>
+
+            <button onClick={() => router.push('/live/create')} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors">
+              Volver a Salas
+            </button>
+          </div>
+
+          {error.includes('cámara') && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>💡 Consejo:</strong> Si la cámara está en uso:
+              </p>
+              <ul className="mt-2 text-xs text-yellow-700 list-disc list-inside space-y-1">
+                <li>Cierra otras pestañas que usen la cámara</li>
+                <li>Cierra aplicaciones como Zoom, Meet, OBS</li>
+                <li>Recarga la página después de cerrarlas</li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -111,40 +131,41 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-[2000px] mx-auto">
-          <div className="flex items-center gap-4">
-            <button onClick={handleLeave} className="text-gray-600 hover:text-gray-900 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={handleLeave} className="text-gray-600 hover:text-gray-900 transition-colors p-2">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
 
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Clase en Vivo</h1>
-              <p className="text-sm text-gray-600">SomosHenry</p>
+              <h1 className="text-base sm:text-xl font-bold text-gray-900">Clase en Vivo</h1>
+              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">SomosHenry</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button onClick={() => setShowChat(!showChat)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-              {showChat ? 'Ocultar Chat' : 'Mostrar Chat'}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button onClick={() => setShowChat(!showChat)} className="px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              <span className="hidden sm:inline">{showChat ? 'Ocultar Chat' : 'Mostrar Chat'}</span>
+              <span className="sm:hidden">💬</span>
             </button>
 
-            <div className="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg">
+            <div className="flex items-center gap-2 px-2 sm:px-4 py-1 sm:py-2 bg-red-50 rounded-lg">
               <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-              <span className="text-sm font-semibold text-red-600">EN VIVO</span>
+              <span className="text-xs sm:text-sm font-semibold text-red-600">EN VIVO</span>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <div className="max-w-[2000px] mx-auto p-6">
-        <div className="grid grid-cols-12 gap-6">
+      <div className="max-w-[2000px] mx-auto p-3 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Video */}
-          <div className="col-span-12 lg:col-span-8">
-            <div className="bg-gray-900 rounded-lg overflow-hidden" style={{ minHeight: '600px' }}>
+          <div className="lg:col-span-8">
+            <div className="bg-gray-900 rounded-lg overflow-hidden" style={{ minHeight: '400px', height: 'calc(100vh - 200px)' }}>
               {isInRoom ? (
                 <VideoGrid localStream={localStream} remoteStreams={remoteStreams} localAudio={mediaState.audio} localVideo={mediaState.video} user={user} />
               ) : (
@@ -161,7 +182,7 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
           </div>
 
           {/* Sidebar */}
-          <div className="col-span-12 lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-4 sm:space-y-6">
             <ClassInfo className={classInfo.name} description={classInfo.description} time={classInfo.time} instructor={classInfo.instructor} />
 
             <ParticipantsList participants={participants} />

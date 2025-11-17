@@ -25,12 +25,46 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, muted = false,
     if (!videoRef.current) return;
 
     if (stream) {
-      // importante para forzar re-render de pista
+      // Importante para forzar re-render de pista
       videoRef.current.srcObject = null;
-      videoRef.current.srcObject = stream;
+
+      // Pequeño delay para asegurar que se refresca
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 10);
     } else {
       videoRef.current.srcObject = null;
     }
+  }, [stream]);
+
+  // Forzar actualización cuando cambian los tracks del stream
+  useEffect(() => {
+    if (!stream || !videoRef.current) return;
+
+    const handleTrackUpdate = () => {
+      if (videoRef.current) {
+        // Forzar actualización
+        const currentSrc = videoRef.current.srcObject;
+        videoRef.current.srcObject = null;
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = currentSrc;
+          }
+        }, 10);
+      }
+    };
+
+    stream.getTracks().forEach((track) => {
+      track.addEventListener('ended', handleTrackUpdate);
+    });
+
+    return () => {
+      stream.getTracks().forEach((track) => {
+        track.removeEventListener('ended', handleTrackUpdate);
+      });
+    };
   }, [stream]);
 
   return (

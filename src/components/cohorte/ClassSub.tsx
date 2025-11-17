@@ -103,7 +103,7 @@ const ClassSub: React.FC<ClaseHangProps> = ({theme}) => {
     ? {loggedName: user.name || "Desconocido", loggedRol: user.role || "Desconocido"}
     : null;
   const handleDataUpdate = (data: cardDataProps & UserInfo) => {
-    const now = new Date(); // Formato de fecha de publicación: "16 nov. 2025"
+    const now = new Date();
     const datePublishedString = now
       .toLocaleDateString("es-ES", {
         day: "2-digit",

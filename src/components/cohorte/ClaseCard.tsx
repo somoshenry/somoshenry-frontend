@@ -40,9 +40,7 @@ const ClaseCard: React.FC<CardMensajeProps> = ({
   const labelText = isHang ? "Hang On" : "Sub";
 
   const labelColor = isHang ? "bg-sky-400 text-black" : "bg-green-500 text-white";
-  // Puedes cambiar la hora y fechaClass si no vienen en el mock
   const timeDisplay = isHang ? time : "10:30 Hrs";
-  const dateDisplay = isHang ? datePublished : "domingo, 25 de dic";
 
   const getInitial = (name: string) => name.trim().charAt(0).toUpperCase();
   const [imgLoadError, setImgLoadError] = useState(false);
@@ -52,9 +50,7 @@ const ClaseCard: React.FC<CardMensajeProps> = ({
     <div className="relative flex flex-col w-full mb-5 rounded-xl border border-gray-300 bg-white dark:bg-gray-200 shadow-sm p-4 overflow-hidden">
       <div className={`absolute left-0 top-0 h-full w-2 ${lineaColorClass} rounded-l-xl`}></div>
 
-      {/* 🚀 ENCABEZADO */}
       <div className="flex justify-between items-start">
-        {/* 👈 BLOQUE IZQUIERDO: Imagen y Nombre/Rol */}
         <div className="flex items-start gap-3">
           {shouldShowInitials ? (
             <div

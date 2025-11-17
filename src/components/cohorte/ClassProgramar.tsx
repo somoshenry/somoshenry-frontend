@@ -67,7 +67,7 @@ const ClassProgramar: React.FC<ClassProgramarProps> = ({onDataUpdate, sectionThe
   return (
     <div
       className="p-4 bg-gray-200 rounded-xl
-     shadow-2xl/10 h-fit shadow-black w-[300px] mt-3.5"
+    shadow-2xl/10 h-fit shadow-black w-[300px] mt-3.5"
     >
       <h2 className="text-black font-bold dark:font-bold">Agendar clase</h2>
       <ImputGeneric
@@ -96,8 +96,8 @@ const ClassProgramar: React.FC<ClassProgramarProps> = ({onDataUpdate, sectionThe
         label="Título de la Clase"
         type="text"
         value={datetime.title}
-        name="title" // <-- IMPORTANTE: Coincide con el nombre del estado
-        onChange={handleChange} // <-- Usa el manejador unificado
+        name="title"
+        onChange={handleChange}
       />
 
       <label htmlFor={id} className="font-text text-black text-lg">
@@ -108,7 +108,7 @@ const ClassProgramar: React.FC<ClassProgramarProps> = ({onDataUpdate, sectionThe
         name="description"
         value={datetime.description}
         onChange={handleChange}
-        rows={3} // Número inicial de filas visibles
+        rows={3}
         placeholder="Escribe la descripción de la clase aquí..."
         className={`
             ${baseClasses} 

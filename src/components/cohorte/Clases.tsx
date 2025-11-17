@@ -11,9 +11,7 @@ const Clases = () => {
     setActiveButton(buttonName);
   };
 
-  // Función para obtener las clases del TEXTO de cada botón
   const getButtonTextClass = (buttonName: "hang" | "sub") => {
-    // NOTA: W-[50%] es redundante si están envueltos en un div flex que cubre el 100%
     const baseClasses = "text-sm w-1/2 text-center relative z-10 py-1 transition-colors duration-300";
     if (activeButton === buttonName) {
       return "font-bold text-black " + baseClasses;
@@ -40,12 +38,8 @@ const Clases = () => {
             Sub
           </button>
         </div>
-        {/* ---------------------------------------------------- */}
-
-        {/* --- 2. CONTENIDO CONDICIONAL (LAS "PÁGINAS") --- */}
       </div>
       <div className="mt-6 w-full">
-        {/* Aquí usamos el estado para renderizar la vista correcta */}
         {activeButton === "hang" && <ClaseHang theme={"hang"} />}
         {activeButton === "sub" && <ClassSub theme={"sub"} />}
       </div>

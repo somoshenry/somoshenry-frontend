@@ -102,7 +102,7 @@ const ClaseHang: React.FC<ClaseHangProps> = ({theme}) => {
       return formatted;
     } catch (e) {
       console.error("Error al formatear fecha completa:", e);
-      return isoDate; // Devolver el formato original si falla
+      return isoDate;
     }
   };
 

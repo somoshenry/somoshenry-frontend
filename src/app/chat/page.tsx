@@ -15,7 +15,7 @@ import { convertMessage, convertGroupToConversation } from '@/utils/chat/convers
 import { Message as BackendMessage, MessageType, getDisplayName } from '@/services/chatService';
 import type { Message, Conversation } from '@/interfaces/chat';
 
-// Tipo para evento de grupo creado
+// Tipo para evento de grupo creado 
 type GroupCreatedEvent = {
   group: any; // Puede ser tipado mejor si tienes la interfaz
 };

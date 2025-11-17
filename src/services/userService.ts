@@ -26,6 +26,13 @@ export interface User {
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
   createdAt: string;
   updatedAt: string;
+
+  // SUSCRIPCIÓN - Lo que el backend devuelve
+  subscriptionPlan?: SubscriptionPlan; // 'BRONCE' | 'PLATA' | 'ORO' (del backend)
+  subscription?: SubscriptionPlan; // Alias para compatibilidad con componentes
+  subscriptionExpiresAt?: string | null; // Fecha de vencimiento
+
+  // LEGADO - Por compatibilidad con componentes antiguos
   suscriptions?: Subscription[];
 }
 
@@ -39,7 +46,12 @@ export interface UserProfileResponse {
  */
 export async function getUserProfile(): Promise<User> {
   const { data } = await api.get<UserProfileResponse>('/users/me');
-  return data.user;
+  const user = data.user;
+  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
+  if (user.subscriptionPlan) {
+    user.subscription = user.subscriptionPlan;
+  }
+  return user;
 }
 
 /**
@@ -47,7 +59,12 @@ export async function getUserProfile(): Promise<User> {
  */
 export async function getUserById(userId: string): Promise<User> {
   const { data } = await api.get<UserProfileResponse>(`/users/${userId}`);
-  return data.user;
+  const user = data.user;
+  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
+  if (user.subscriptionPlan) {
+    user.subscription = user.subscriptionPlan;
+  }
+  return user;
 }
 
 /**
@@ -64,5 +81,10 @@ export async function updateUserProfile(updates: {
   username?: string;
 }): Promise<User> {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
-  return data.user;
+  const user = data.user;
+  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
+  if (user.subscriptionPlan) {
+    user.subscription = user.subscriptionPlan;
+  }
+  return user;
 }

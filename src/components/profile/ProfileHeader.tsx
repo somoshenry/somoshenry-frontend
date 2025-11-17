@@ -27,6 +27,7 @@ export default function ProfileHeader() {
       try {
         setLoading(true);
         const userData = await getUserProfile();
+        console.log('UserData: ', userData);
         setUser(userData);
 
         if (userData?.id) {

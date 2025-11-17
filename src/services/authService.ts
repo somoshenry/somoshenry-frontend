@@ -53,16 +53,16 @@ export async function login(username: string, password: string) {
 // Endpoint /users/me para obtener datos del usuario autenticado
 export async function me() {
   // Requiere Authorization Bearer token
-  const data = await api.get('/users/me');
-  const response = data as any; // Podría venir en data.data o directamente
-  const user = response.data?.user || response.user;
+  const { data } = await api.get('/users/me');
+  const userResponse = data as { user: User; message?: string };
+  const user = userResponse.user;
 
   // Mapear subscriptionPlan (del backend) a subscription (para componentes)
   if (user && user.subscriptionPlan) {
     user.subscription = user.subscriptionPlan;
   }
 
-  return { user: user as User };
+  return { user };
 }
 
 export async function logout() {

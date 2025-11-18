@@ -145,6 +145,14 @@ export default function PlanesPage() {
       const clientEmail = user?.email || 'test_user@test.com';
       const userId = user?.id;
 
+      const planNameMap: Record<string, string> = {
+        free: 'BRONCE',
+        level1: 'PLATA',
+        level2: 'ORO',
+      };
+
+      const planName = planNameMap[plan.id] || plan.name;
+
       const res = await fetch('https://somoshenry-backend.onrender.com/mercadopago/create-preference', {
         method: 'POST',
         headers: {
@@ -156,7 +164,7 @@ export default function PlanesPage() {
           clientEmail,
           products: [
             {
-              title: plan.name,
+              title: planName,
               quantity: 1,
               price: typeof plan.price === 'number' ? plan.price : 0,
             },

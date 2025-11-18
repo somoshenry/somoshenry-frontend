@@ -18,7 +18,11 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 
-  //  CAMPOS NECESARIOS PARA PLANES
-  subscription?: SubscriptionPlan; // BRONCE | PLATA | ORO
-  subscriptionExpiresAt?: string | null; // Fecha de renovación
+  // CAMPOS DE SUSCRIPCIÓN - Lo que el backend devuelve
+  subscriptionPlan?: SubscriptionPlan; // 'BRONCE' | 'PLATA' | 'ORO' (del backend)
+  subscription?: SubscriptionPlan; // Alias para compatibilidad con componentes
+  subscriptionExpiresAt?: string | null; // Fecha de vencimiento
+
+  // CAMPO LEGADO (por compatibilidad con componentes viejos)
+  suscriptions?: any[];
 }

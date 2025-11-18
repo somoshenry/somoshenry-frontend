@@ -24,14 +24,17 @@ export default function ProfileHeader() {
   const [showFollowModal, setShowFollowModal] = useState(false);
   const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
 
+  // Si es el perfil del usuario actual, usar el user del contexto (siempre actualizado)
+  // Si no, usar el user cargado desde la API
   const isOwnProfile = currentUser?.id === user?.id;
+  const displayUser = isOwnProfile ? currentUser : user;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const userData = await getUserProfile();
-        console.log('UserData: ', userData);
+        console.log('Userdata desde la Api:', userData.subscription);
         setUser(userData);
 
         if (userData?.id) {
@@ -195,15 +198,28 @@ export default function ProfileHeader() {
           {/* BADGE DEL PLAN - SOLO MI PERFIL */}
           {isOwnProfile &&
             (() => {
-              const lastSubscription = user.suscriptions?.[user.suscriptions.length - 1];
-              const plan = lastSubscription?.plan;
-              const expiresAt = lastSubscription?.endDate;
+              const plan = displayUser?.subscriptionPlan;
+              const expiresAt = displayUser?.subscriptionExpiresAt;
 
               return (
                 <div className="mt-2 text-center">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${plan === 'ORO' ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : plan === 'PLATA' ? 'bg-gray-200 text-gray-700 border-gray-400' : plan === 'BRONCE' ? 'bg-orange-100 text-orange-700 border-orange-400' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>{plan ? `Plan ${plan}` : 'Sin suscripción'}</span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-semibold border ${
+                      plan === 'ORO'
+                        ? 'bg-yellow-100 text-yellow-700 border-yellow-400'
+                        : plan === 'PLATA'
+                        ? 'bg-gray-200 text-gray-700 border-gray-400'
+                        : plan === 'BRONCE'
+                        ? 'bg-orange-100 text-orange-700 border-orange-400'
+                        : 'bg-gray-100 text-gray-600 border-gray-300'
+                    }`}
+                  >
+                    {plan ? `Plan ${plan}` : 'Sin suscripción'}
+                  </span>
 
-                  {expiresAt && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Vence el: {new Date(expiresAt).toLocaleDateString('es-AR')}</p>}
+                  {expiresAt && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Vence el: {new Date(expiresAt).toLocaleDateString('es-AR')}</p>
+                  )}
                 </div>
               );
             })()}

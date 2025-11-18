@@ -11,11 +11,12 @@ interface VideoPlayerProps {
   isLocal?: boolean;
   audio?: boolean;
   video?: boolean;
+  screen?: boolean;
   className?: string;
   avatar?: string | null;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, muted = false, username = 'Usuario', isLocal = false, audio = true, video = true, className = '', avatar = null }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, muted = false, username = 'Usuario', isLocal = false, audio = true, video = true, screen = false, className = '', avatar = null }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // ============================================================
@@ -25,12 +26,46 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, muted = false,
     if (!videoRef.current) return;
 
     if (stream) {
-      // importante para forzar re-render de pista
+      // Importante para forzar re-render de pista
       videoRef.current.srcObject = null;
-      videoRef.current.srcObject = stream;
+
+      // Pequeño delay para asegurar que se refresca
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 10);
     } else {
       videoRef.current.srcObject = null;
     }
+  }, [stream]);
+
+  // Forzar actualización cuando cambian los tracks del stream
+  useEffect(() => {
+    if (!stream || !videoRef.current) return;
+
+    const handleTrackUpdate = () => {
+      if (videoRef.current) {
+        // Forzar actualización
+        const currentSrc = videoRef.current.srcObject;
+        videoRef.current.srcObject = null;
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = currentSrc;
+          }
+        }, 10);
+      }
+    };
+
+    stream.getTracks().forEach((track) => {
+      track.addEventListener('ended', handleTrackUpdate);
+    });
+
+    return () => {
+      stream.getTracks().forEach((track) => {
+        track.removeEventListener('ended', handleTrackUpdate);
+      });
+    };
   }, [stream]);
 
   return (
@@ -64,13 +99,24 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, muted = false,
       </div>
 
       {/* ========================== */}
-      {/* LIVE BADGE */}
+      {/* LIVE BADGE o SCREEN SHARING BADGE */}
       {/* ========================== */}
       {isLocal && (
-        <div className="absolute top-3 left-3 bg-red-600 px-3 py-1 rounded-full flex items-center gap-2 shadow-lg">
-          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-          <span className="text-white text-xs font-bold">EN VIVO</span>
-        </div>
+        <>
+          {screen ? (
+            <div className="absolute top-3 left-3 bg-blue-600 px-3 py-1 rounded-full flex items-center gap-2 shadow-lg">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v6h10V5H5zm-2 9a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="text-white text-xs font-bold">COMPARTIENDO PANTALLA</span>
+            </div>
+          ) : (
+            <div className="absolute top-3 left-3 bg-red-600 px-3 py-1 rounded-full flex items-center gap-2 shadow-lg">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+              <span className="text-white text-xs font-bold">EN VIVO</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

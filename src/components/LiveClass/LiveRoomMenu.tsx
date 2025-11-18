@@ -68,43 +68,39 @@ export const LiveRoomMenu = () => {
   }
 
   return (
-    <div
-      className="bg-[#0d0f16] text-white overflow-hidden"
-      style={{
-        height: 'calc(100vh - 64px)',
-        marginLeft: '240px',
-      }}
-    >
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Clases en Vivo</h1>
-          <p className="text-gray-400">Únete a una sala de videollamada o crea una nueva</p>
+    <div className="fixed top-16 left-0 md:left-64 right-0 bottom-0 bg-[#0d0f16] text-white overflow-y-auto">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        {/* Header centrado */}
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">Videollamadas en Vivo</h1>
+          <p className="text-gray-400 text-lg">Únete a una sala existente o crea una nueva para comenzar</p>
         </div>
 
-        {/* Botón para crear */}
+        {/* Botón para crear - centrado */}
         {!showCreateForm && (
-          <button onClick={() => setShowCreateForm(true)} className="mb-8 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg flex items-center gap-2 transition">
-            <Plus size={20} />
-            Crear nueva sala
-          </button>
+          <div className="flex justify-center mb-12">
+            <button onClick={() => setShowCreateForm(true)} className="px-8 py-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg flex items-center gap-3 transition-all hover:scale-105 shadow-lg">
+              <Plus size={24} />
+              Crear nueva sala
+            </button>
+          </div>
         )}
 
         {/* Formulario de creación */}
         {showCreateForm && (
-          <div className="mb-8 p-6 bg-[#141722] rounded-lg border border-gray-700">
-            <h2 className="text-2xl font-bold mb-4">Crear nueva sala</h2>
-            <div className="space-y-4">
+          <div className="max-w-2xl mx-auto mb-12 p-8 bg-[#141722] rounded-xl border border-gray-700 shadow-2xl">
+            <h2 className="text-2xl font-bold mb-6 text-center">Crear nueva sala</h2>
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold mb-2">Nombre de la sala</label>
-                <input type="text" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} placeholder="Ej: Clase de WebRTC" className="w-full px-4 py-2 bg-black/30 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-yellow-400 focus:outline-none" />
+                <input type="text" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} placeholder="Ej: Clase de WebRTC" className="w-full px-4 py-3 bg-black/30 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-yellow-400 focus:outline-none transition" />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2">Descripción (opcional)</label>
-                <textarea value={newRoomDescription} onChange={(e) => setNewRoomDescription(e.target.value)} placeholder="Ej: Clase de WebRTC y Socket.io" rows={3} className="w-full px-4 py-2 bg-black/30 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-yellow-400 focus:outline-none" />
+                <textarea value={newRoomDescription} onChange={(e) => setNewRoomDescription(e.target.value)} placeholder="Ej: Clase de WebRTC y Socket.io" rows={3} className="w-full px-4 py-3 bg-black/30 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-yellow-400 focus:outline-none transition resize-none" />
               </div>
-              <div className="flex gap-4">
-                <button onClick={handleCreateRoom} disabled={creatingRoom} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg disabled:bg-gray-600 transition">
+              <div className="flex gap-4 pt-2">
+                <button onClick={handleCreateRoom} disabled={creatingRoom} className="flex-1 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed transition-all hover:scale-105">
                   {creatingRoom ? 'Creando...' : 'Crear sala'}
                 </button>
                 <button
@@ -113,7 +109,7 @@ export const LiveRoomMenu = () => {
                     setNewRoomName('');
                     setNewRoomDescription('');
                   }}
-                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-lg transition"
+                  className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-lg transition-all hover:scale-105"
                 >
                   Cancelar
                 </button>
@@ -124,27 +120,33 @@ export const LiveRoomMenu = () => {
 
         {/* Lista de salas */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Salas disponibles</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Salas disponibles</h2>
 
           {rooms.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">No hay salas disponibles en este momento</p>
-              <p className="text-gray-500 mt-2">Crea una nueva para empezar</p>
+            <div className="text-center py-16">
+              <div className="inline-block p-6 bg-[#141722] rounded-lg border border-gray-700">
+                <p className="text-gray-400 text-xl mb-2">No hay salas disponibles en este momento</p>
+                <p className="text-gray-500">Crea una nueva para empezar</p>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {rooms.map((room) => (
-                <div key={room.id} className="p-6 bg-[#141722] rounded-lg border border-gray-700 hover:border-yellow-400 transition">
-                  <h3 className="text-xl font-bold mb-2">{room.name}</h3>
-                  {room.description && <p className="text-gray-400 mb-4 line-clamp-2">{room.description}</p>}
+                <div key={room.id} className="p-6 bg-[#141722] rounded-xl border border-gray-700 hover:border-yellow-400 transition-all hover:shadow-xl hover:shadow-yellow-500/10 hover:-translate-y-1">
+                  <h3 className="text-xl font-bold mb-2 text-white">{room.name}</h3>
+                  {room.description && <p className="text-gray-400 mb-4 line-clamp-2 min-h-[3rem]">{room.description}</p>}
 
-                  <div className="mb-4 flex gap-4 text-sm text-gray-400">
-                    <span>👥 {room.currentParticipants || 0} participantes</span>
-                    <span>📊 Máx: {room.maxParticipants || 10}</span>
+                  <div className="mb-6 flex gap-4 text-sm text-gray-400 py-3 border-t border-b border-gray-700">
+                    <span className="flex items-center gap-1">
+                      👥 <span className="font-semibold text-white">{room.currentParticipants || 0}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      📊 Máx: <span className="font-semibold text-white">{room.maxParticipants || 10}</span>
+                    </span>
                   </div>
 
-                  <button onClick={() => handleJoinRoom(room.id)} className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg flex items-center justify-center gap-2 transition">
-                    <LogIn size={18} />
+                  <button onClick={() => handleJoinRoom(room.id)} className="w-full px-4 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg">
+                    <LogIn size={20} />
                     Unirse
                   </button>
                 </div>

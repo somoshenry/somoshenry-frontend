@@ -88,14 +88,8 @@ export default function AuditLog() {
     return 'Admin desconocido';
   };
 
-  const formatDetails = (details?: string | null): string => {
-    if (!details) return 'N/A';
-    try {
-      const parsed = JSON.parse(details);
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return details;
-    }
+  const getAdminEmail = (log: AuditLogType): string => {
+    return log.admin?.email || 'N/A';
   };
 
   return (
@@ -184,7 +178,6 @@ export default function AuditLog() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Administrador</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acción</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Objetivo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Detalles</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -205,7 +198,10 @@ export default function AuditLog() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <User size={16} className="text-gray-400" />
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">{getAdminName(log)}</span>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{getAdminName(log)}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{getAdminEmail(log)}</span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -216,12 +212,6 @@ export default function AuditLog() {
                           <div className="font-medium">{log.targetType}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">{log.targetId.substring(0, 8)}...</div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <details className="text-sm text-gray-600 dark:text-gray-400">
-                          <summary className="cursor-pointer hover:text-blue-500">Ver detalles</summary>
-                          <pre className="mt-2 p-2 bg-gray-100 dark:bg-gray-900 rounded text-xs overflow-x-auto max-w-md">{formatDetails(log.details)}</pre>
-                        </details>
                       </td>
                     </tr>
                   ))}

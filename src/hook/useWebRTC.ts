@@ -28,6 +28,7 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const participantsRef = useRef<Participant[]>([]);
+  const originalCameraTrackRef = useRef<MediaStreamTrack | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -43,20 +44,27 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   };
 
   // ============================================================
-  // 🧊 1) CARGAR ICE SERVERS DESDE EL BACKEND
+  // 🧊 1) CARGAR ICE SERVERS DESDE EL BACKEND (OPCIONAL)
   // ============================================================
   useEffect(() => {
     const loadIceServers = async () => {
       try {
         const res = await fetch(`${API_URL}/webrtc/ice-servers`);
+
+        if (!res.ok) {
+          console.warn(`⚠️ ICE servers endpoint retornó ${res.status}. Usando servidores STUN públicos.`);
+          return;
+        }
+
         const data = await res.json();
 
         if (data?.iceServers) {
           iceServersRef.current = data.iceServers;
-          console.log('ICE servers loaded:', data.iceServers);
+          console.log('✅ ICE servers cargados desde backend:', data.iceServers);
         }
-      } catch {
-        console.warn('No se pudieron cargar ICE Servers, usando fallback');
+      } catch (err) {
+        console.warn('⚠️ No se pudieron cargar ICE Servers del backend. Usando STUN públicos de Google.');
+        console.log('💡 Esto es normal si el endpoint /webrtc/ice-servers no está configurado.');
       }
     };
 
@@ -68,9 +76,13 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   // ============================================================
   useEffect(() => {
     const initLocalMedia = async () => {
-      if (localStreamRef.current) return;
+      if (localStreamRef.current) {
+        console.log('✅ Stream local ya existe, reutilizando...');
+        return;
+      }
 
       try {
+        console.log('🎥 Solicitando acceso a cámara y micrófono...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: { echoCancellation: true, noiseSuppression: true },
@@ -78,14 +90,41 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
 
         localStreamRef.current = stream;
         setLocalStream(stream);
-        console.log('✅ Cámara local inicializada');
-      } catch (error) {
-        console.error('❌ Error al acceder a cámara:', error);
-        onError?.('No se pudo acceder a la cámara/micrófono');
+        console.log('✅ Cámara y micrófono inicializados correctamente');
+      } catch (error: any) {
+        console.error('❌ Error al acceder a cámara/micrófono:', error);
+
+        let errorMessage = 'No se pudo acceder a la cámara/micrófono';
+
+        if (error.name === 'NotReadableError') {
+          errorMessage = '⚠️ La cámara/micrófono ya está siendo usada por otra aplicación o pestaña. Por favor ciérrala e intenta de nuevo.';
+        } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          errorMessage = '⚠️ Permiso denegado. Por favor permite el acceso a la cámara y micrófono en tu navegador.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = '⚠️ No se encontró cámara o micrófono conectado a tu dispositivo.';
+        } else if (error.name === 'OverconstrainedError') {
+          errorMessage = '⚠️ Tu cámara no cumple con los requisitos solicitados. Intentando con configuración básica...';
+
+          // Reintentar con configuración más simple
+          try {
+            const basicStream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: true,
+            });
+            localStreamRef.current = basicStream;
+            setLocalStream(basicStream);
+            console.log('✅ Cámara inicializada con configuración básica');
+            return;
+          } catch (retryError) {
+            console.error('❌ Reintento fallido:', retryError);
+          }
+        }
+
+        onError?.(errorMessage);
       }
     };
 
-    if (typeof window !== 'undefined') initLocalMedia();
+    if (typeof globalThis.window !== 'undefined') initLocalMedia();
   }, [onError]);
 
   // ============================================================
@@ -482,22 +521,56 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   // 🚪 LEAVE ROOM
   // ============================================================
   const leaveRoom = useCallback(() => {
-    if (!socketRef.current) return;
+    console.log('🚪 Ejecutando leaveRoom...');
 
-    socketRef.current.emit('leaveRoom', { roomId });
+    try {
+      // Emitir evento de salida al servidor (sin esperar respuesta)
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('leaveRoom', { roomId });
+        console.log('✅ Evento leaveRoom emitido');
+      }
 
-    peerConnectionsRef.current.forEach((pc) => pc.close());
-    peerConnectionsRef.current.clear();
+      // Cerrar todas las conexiones peer
+      peerConnectionsRef.current.forEach((pc, userId) => {
+        try {
+          console.log(`Cerrando conexión con ${userId}`);
+          pc.close();
+        } catch (err) {
+          console.warn(`Error cerrando conexión con ${userId}:`, err);
+        }
+      });
+      peerConnectionsRef.current.clear();
 
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      // Detener todos los tracks del stream local
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => {
+          try {
+            console.log(`Deteniendo track: ${track.kind}`);
+            track.stop();
+          } catch (err) {
+            console.warn(`Error deteniendo track ${track.kind}:`, err);
+          }
+        });
+        localStreamRef.current = null;
+      }
+
+      // Limpiar estados
+      setLocalStream(null);
+      setIsInRoom(false);
+      setParticipants([]);
+      setRemoteStreams([]);
+
+      console.log('✅ leaveRoom completado');
+    } catch (error) {
+      console.error('❌ Error en leaveRoom:', error);
+      // Limpiar de todas formas
+      peerConnectionsRef.current.clear();
       localStreamRef.current = null;
+      setLocalStream(null);
+      setIsInRoom(false);
+      setParticipants([]);
+      setRemoteStreams([]);
     }
-
-    setLocalStream(null);
-    setIsInRoom(false);
-    setParticipants([]);
-    setRemoteStreams([]);
   }, [roomId]);
 
   // ============================================================
@@ -543,20 +616,121 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   // ============================================================
   // 🖥️ SCREEN SHARE
   // ============================================================
-  const toggleScreenShare = useCallback(() => {
-    if (!socketRef.current) return;
+  const toggleScreenShare = useCallback(async () => {
+    if (!socketRef.current || !localStreamRef.current) return;
 
     const enabled = !mediaState.screen;
 
-    setMediaState((prev) => ({ ...prev, screen: enabled }));
+    if (enabled) {
+      // Iniciar compartir pantalla
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            cursor: 'always',
+            displaySurface: 'monitor',
+          } as any,
+          audio: false,
+        });
 
-    if (isInRoom) {
-      socketRef.current.emit('toggleScreenShare', {
-        roomId,
-        enabled,
-      });
+        const screenTrack = screenStream.getVideoTracks()[0];
+
+        // Guardar el track de cámara original ANTES de reemplazarlo
+        const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+        if (oldVideoTrack && !originalCameraTrackRef.current) {
+          originalCameraTrackRef.current = oldVideoTrack;
+        }
+
+        // Reemplazar el track de video en todas las peer connections
+        peerConnectionsRef.current.forEach((pc) => {
+          const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(screenTrack);
+          }
+        });
+
+        // Reemplazar el track local
+        localStreamRef.current.removeTrack(oldVideoTrack);
+        localStreamRef.current.addTrack(screenTrack);
+
+        // Actualizar estado - MANTENER video: true para que se muestre
+        setMediaState((prev) => ({ ...prev, screen: true, video: true }));
+        setLocalStream(localStreamRef.current);
+
+        // Detectar cuando el usuario detiene la compartición desde el navegador
+        screenTrack.onended = async () => {
+          await stopScreenShare();
+        };
+
+        // Notificar al servidor
+        if (isInRoom) {
+          socketRef.current.emit('toggleScreenShare', {
+            roomId,
+            enabled: true,
+          });
+        }
+      } catch (error) {
+        console.error('Error al compartir pantalla:', error);
+      }
+    } else {
+      await stopScreenShare();
     }
   }, [mediaState.screen, isInRoom, roomId]);
+
+  // Helper para detener compartir pantalla
+  const stopScreenShare = useCallback(async () => {
+    if (!localStreamRef.current || !socketRef.current) return;
+
+    try {
+      let cameraTrack: MediaStreamTrack;
+
+      // Intentar usar el track de cámara original guardado
+      if (originalCameraTrackRef.current && originalCameraTrackRef.current.readyState === 'live') {
+        cameraTrack = originalCameraTrackRef.current;
+        console.log('✅ Restaurando track de cámara original');
+      } else {
+        // Si no existe o está detenido, solicitar nuevo stream de cámara
+        console.log('⚠️ Track original no disponible, solicitando nuevo stream de cámara');
+        const cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false, // No reemplazamos audio
+        });
+        cameraTrack = cameraStream.getVideoTracks()[0];
+        originalCameraTrackRef.current = cameraTrack;
+      }
+
+      // Reemplazar el track en todas las peer connections
+      peerConnectionsRef.current.forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+        if (sender) {
+          sender.replaceTrack(cameraTrack);
+        }
+      });
+
+      // Detener el track de pantalla actual
+      const screenTrack = localStreamRef.current.getVideoTracks()[0];
+      if (screenTrack) {
+        screenTrack.stop();
+        localStreamRef.current.removeTrack(screenTrack);
+      }
+
+      // Agregar el track de cámara
+      localStreamRef.current.addTrack(cameraTrack);
+
+      // Actualizar estado
+      setMediaState((prev) => ({ ...prev, screen: false, video: true }));
+      setLocalStream(localStreamRef.current);
+
+      // Notificar al servidor
+      if (isInRoom) {
+        socketRef.current.emit('toggleScreenShare', {
+          roomId,
+          enabled: false,
+        });
+      }
+    } catch (error) {
+      console.error('Error al detener compartir pantalla:', error);
+    }
+  }, [isInRoom, roomId]);
 
   // ============================================================
   // RETURN API

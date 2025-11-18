@@ -28,6 +28,7 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const participantsRef = useRef<Participant[]>([]);
+  const originalCameraTrackRef = useRef<MediaStreamTrack | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -520,22 +521,56 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
   // 🚪 LEAVE ROOM
   // ============================================================
   const leaveRoom = useCallback(() => {
-    if (!socketRef.current) return;
+    console.log('🚪 Ejecutando leaveRoom...');
 
-    socketRef.current.emit('leaveRoom', { roomId });
+    try {
+      // Emitir evento de salida al servidor (sin esperar respuesta)
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('leaveRoom', { roomId });
+        console.log('✅ Evento leaveRoom emitido');
+      }
 
-    peerConnectionsRef.current.forEach((pc) => pc.close());
-    peerConnectionsRef.current.clear();
+      // Cerrar todas las conexiones peer
+      peerConnectionsRef.current.forEach((pc, userId) => {
+        try {
+          console.log(`Cerrando conexión con ${userId}`);
+          pc.close();
+        } catch (err) {
+          console.warn(`Error cerrando conexión con ${userId}:`, err);
+        }
+      });
+      peerConnectionsRef.current.clear();
 
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      // Detener todos los tracks del stream local
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => {
+          try {
+            console.log(`Deteniendo track: ${track.kind}`);
+            track.stop();
+          } catch (err) {
+            console.warn(`Error deteniendo track ${track.kind}:`, err);
+          }
+        });
+        localStreamRef.current = null;
+      }
+
+      // Limpiar estados
+      setLocalStream(null);
+      setIsInRoom(false);
+      setParticipants([]);
+      setRemoteStreams([]);
+
+      console.log('✅ leaveRoom completado');
+    } catch (error) {
+      console.error('❌ Error en leaveRoom:', error);
+      // Limpiar de todas formas
+      peerConnectionsRef.current.clear();
       localStreamRef.current = null;
+      setLocalStream(null);
+      setIsInRoom(false);
+      setParticipants([]);
+      setRemoteStreams([]);
     }
-
-    setLocalStream(null);
-    setIsInRoom(false);
-    setParticipants([]);
-    setRemoteStreams([]);
   }, [roomId]);
 
   // ============================================================
@@ -599,6 +634,12 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
 
         const screenTrack = screenStream.getVideoTracks()[0];
 
+        // Guardar el track de cámara original ANTES de reemplazarlo
+        const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+        if (oldVideoTrack && !originalCameraTrackRef.current) {
+          originalCameraTrackRef.current = oldVideoTrack;
+        }
+
         // Reemplazar el track de video en todas las peer connections
         peerConnectionsRef.current.forEach((pc) => {
           const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
@@ -608,15 +649,11 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
         });
 
         // Reemplazar el track local
-        const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
         localStreamRef.current.removeTrack(oldVideoTrack);
         localStreamRef.current.addTrack(screenTrack);
 
-        // Guardar referencia al track de cámara original
-        oldVideoTrack.stop();
-
-        // Actualizar estado
-        setMediaState((prev) => ({ ...prev, screen: true, video: false }));
+        // Actualizar estado - MANTENER video: true para que se muestre
+        setMediaState((prev) => ({ ...prev, screen: true, video: true }));
         setLocalStream(localStreamRef.current);
 
         // Detectar cuando el usuario detiene la compartición desde el navegador
@@ -644,13 +681,22 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
     if (!localStreamRef.current || !socketRef.current) return;
 
     try {
-      // Obtener nuevo stream de cámara
-      const cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false, // No reemplazamos audio
-      });
+      let cameraTrack: MediaStreamTrack;
 
-      const cameraTrack = cameraStream.getVideoTracks()[0];
+      // Intentar usar el track de cámara original guardado
+      if (originalCameraTrackRef.current && originalCameraTrackRef.current.readyState === 'live') {
+        cameraTrack = originalCameraTrackRef.current;
+        console.log('✅ Restaurando track de cámara original');
+      } else {
+        // Si no existe o está detenido, solicitar nuevo stream de cámara
+        console.log('⚠️ Track original no disponible, solicitando nuevo stream de cámara');
+        const cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false, // No reemplazamos audio
+        });
+        cameraTrack = cameraStream.getVideoTracks()[0];
+        originalCameraTrackRef.current = cameraTrack;
+      }
 
       // Reemplazar el track en todas las peer connections
       peerConnectionsRef.current.forEach((pc) => {
@@ -667,7 +713,7 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
         localStreamRef.current.removeTrack(screenTrack);
       }
 
-      // Agregar el nuevo track de cámara
+      // Agregar el track de cámara
       localStreamRef.current.addTrack(cameraTrack);
 
       // Actualizar estado

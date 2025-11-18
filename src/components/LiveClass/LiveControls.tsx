@@ -2,6 +2,7 @@
 
 'use client';
 
+import Link from 'next/link';
 import { UserMediaState } from '@/types/webrtc.types';
 
 interface LiveControlsProps {
@@ -9,10 +10,10 @@ interface LiveControlsProps {
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onToggleScreen: () => void;
-  onLeave: () => void;
+  // Ya no necesitamos onLeave
 }
 
-export const LiveControls: React.FC<LiveControlsProps> = ({ mediaState, onToggleAudio, onToggleVideo, onToggleScreen, onLeave }) => {
+export const LiveControls: React.FC<LiveControlsProps> = ({ mediaState, onToggleAudio, onToggleVideo, onToggleScreen }) => {
   return (
     <div className="flex items-center justify-center gap-3 sm:gap-4 py-4 sm:py-6 bg-white border-t border-gray-200 px-4">
       {/* Botón Audio */}
@@ -52,16 +53,6 @@ export const LiveControls: React.FC<LiveControlsProps> = ({ mediaState, onToggle
             <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm1 4h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1zm4 5a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
           </svg>
         )}
-      </button>
-
-      {/* Separador */}
-      <div className="w-px h-8 bg-gray-300 hidden sm:block"></div>
-
-      {/* Botón Salir */}
-      <button onClick={onLeave} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all shadow-md hover:shadow-lg" title="Salir de la llamada">
-        <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-        </svg>
       </button>
 
       {/* Texto de ayuda en móviles */}

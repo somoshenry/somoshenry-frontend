@@ -7,8 +7,6 @@ import { useRouter } from 'next/navigation';
 import { useWebRTC } from '@/hook/useWebRTC';
 import { VideoGrid } from './VideoGrid';
 import { LiveControls } from './LiveControls';
-import { ParticipantsList } from './ParticipantsList';
-import { ClassInfo } from './ClassInfo';
 
 interface UserData {
   name?: string | null;
@@ -20,33 +18,17 @@ interface UserData {
 interface LiveClassRoomProps {
   roomId: string;
   token: string;
-  classInfo: {
-    name: string;
-    description: string;
-    time: string;
-    instructor?: {
-      name: string;
-      title: string;
-      avatar?: string;
-    };
-  };
-  user: UserData; // ← agregado correctamente
+  user: UserData;
 }
 
-export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
-  roomId,
-  token,
-  classInfo,
-  user, // ← recibido correctamente
-}) => {
+export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, user }) => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [showChat, setShowChat] = useState(true);
 
   // Prevenir doble join
   const hasJoined = useRef(false);
 
-  const { isConnected, isInRoom, localStream, remoteStreams, participants, mediaState, joinRoom, leaveRoom, toggleAudio, toggleVideo, toggleScreenShare } = useWebRTC({
+  const { isConnected, isInRoom, localStream, remoteStreams, mediaState, joinRoom, leaveRoom, toggleAudio, toggleVideo, toggleScreenShare } = useWebRTC({
     roomId,
     token,
     onError: (err) => setError(err),
@@ -67,17 +49,23 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
     joinRoom();
   }, [isConnected, joinRoom]);
 
-  // Cleanup
+  // Cleanup al desmontar el componente
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isInRoom) {
+        leaveRoom();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
-      if (isInRoom) leaveRoom();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (isInRoom) {
+        leaveRoom();
+      }
     };
   }, [isInRoom, leaveRoom]);
-
-  const handleLeave = () => {
-    leaveRoom();
-    router.push('/live/create');
-  };
 
   // ====== UI ======
 
@@ -147,11 +135,6 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={() => setShowChat(!showChat)} className="px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-              <span className="hidden sm:inline">{showChat ? 'Ocultar Chat' : 'Mostrar Chat'}</span>
-              <span className="sm:hidden">💬</span>
-            </button>
-
             <div className="flex items-center gap-2 px-2 sm:px-4 py-1 sm:py-2 bg-red-50 rounded-lg">
               <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
               <span className="text-xs sm:text-sm font-semibold text-red-600">EN VIVO</span>
@@ -163,11 +146,11 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
       {/* Main */}
       <div className="max-w-[2000px] mx-auto p-3 sm:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          {/* Video */}
-          <div className="lg:col-span-8">
+          {/* Video - Ocupa toda la pantalla cuando hay screen sharing */}
+          <div className="lg:col-span-12">
             <div className="bg-gray-900 rounded-lg overflow-hidden" style={{ minHeight: '400px', height: 'calc(100vh - 200px)' }}>
               {isInRoom ? (
-                <VideoGrid localStream={localStream} remoteStreams={remoteStreams} localAudio={mediaState.audio} localVideo={mediaState.video} user={user} />
+                <VideoGrid localStream={localStream} remoteStreams={remoteStreams} localAudio={mediaState.audio} localVideo={mediaState.video} localScreen={mediaState.screen} user={user} />
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center text-white">
@@ -178,24 +161,12 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({
               )}
             </div>
 
-            {isInRoom && <LiveControls mediaState={mediaState} onToggleAudio={toggleAudio} onToggleVideo={toggleVideo} onToggleScreen={toggleScreenShare} onLeave={handleLeave} />}
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-4 sm:space-y-6">
-            <ClassInfo className={classInfo.name} description={classInfo.description} time={classInfo.time} instructor={classInfo.instructor} />
-
-            <ParticipantsList participants={participants} />
-
-            {showChat && (
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Chat en vivo</h3>
-                <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center text-gray-500 text-sm">Integra aquí tu componente de chat existente</div>
-              </div>
-            )}
+            {isInRoom && <LiveControls mediaState={mediaState} onToggleAudio={toggleAudio} onToggleVideo={toggleVideo} onToggleScreen={toggleScreenShare} />}
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de salida */}
     </div>
   );
 };

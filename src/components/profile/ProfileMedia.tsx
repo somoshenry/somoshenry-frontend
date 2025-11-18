@@ -1,8 +1,8 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { getUserMediaPosts, Post } from '@/services/postService';
-import { getUserProfile } from '@/services/userService';
-import VideoPlayer from '@/components/home/VideoPlayer';
+"use client";
+import {useEffect, useState} from "react";
+import {getUserMediaPosts, Post} from "@/services/postService";
+import {getUserProfile} from "@/services/userService";
+import VideoPlayer from "@/components/home/VideoPlayer";
 
 export default function ProfileMedia() {
   const [mediaPosts, setMediaPosts] = useState<Post[]>([]);
@@ -22,8 +22,8 @@ export default function ProfileMedia() {
 
         setMediaPosts(userMedia);
       } catch (err) {
-        console.error('Error al cargar multimedia:', err);
-        setError('No se pudo cargar la multimedia');
+        console.error("Error al cargar multimedia:", err);
+        setError("No se pudo cargar la multimedia");
       } finally {
         setLoading(false);
       }
@@ -43,13 +43,15 @@ export default function ProfileMedia() {
   }
 
   if (error) {
-    return <div className="p-4 border rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">{error}</div>;
+    return (
+      <div className="p-4 border rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">{error}</div>
+    );
   }
 
   if (mediaPosts.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        <p className="text-lg">No has subido ningún archivo multimedia aún</p>
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-gray-200  dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <p className="text-lg font-semibold">No has subido ningún archivo multimedia aún</p>
         <p className="text-sm mt-2">Comparte tus fotos y videos con la comunidad</p>
       </div>
     );
@@ -62,13 +64,24 @@ export default function ProfileMedia() {
           const mediaUrl = post.mediaURL || (post as any).mediaUrl;
 
           // Detectar si es video basándose en el tipo o en la extensión del archivo
-          const isVideo = post.type === 'VIDEO' || (post as any).mediaType === 'video' || mediaUrl?.match(/\.(mp4|webm|ogg|mov|avi|wmv|mkv|m4v)$/i);
+          const isVideo =
+            post.type === "VIDEO" ||
+            (post as any).mediaType === "video" ||
+            mediaUrl?.match(/\.(mp4|webm|ogg|mov|avi|wmv|mkv|m4v)$/i);
 
           return (
             <div key={post.id} className="relative group cursor-pointer" onClick={() => setSelectedMedia(post)}>
               {isVideo ? (
                 <div className="relative">
-                  <VideoPlayer src={mediaUrl || ''} className="rounded-lg w-full h-48" objectFit="cover" muted={true} autoPlay={false} loop={false} controlsVisible={false} />
+                  <VideoPlayer
+                    src={mediaUrl || ""}
+                    className="rounded-lg w-full h-48"
+                    objectFit="cover"
+                    muted={true}
+                    autoPlay={false}
+                    loop={false}
+                    controlsVisible={false}
+                  />
                   {/* Icono de play */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="bg-black bg-opacity-60 rounded-full p-4 group-hover:bg-opacity-80 transition-all">
@@ -79,7 +92,11 @@ export default function ProfileMedia() {
                   </div>
                 </div>
               ) : (
-                <img src={mediaUrl || ''} alt="media" className="rounded-lg w-full h-48 object-cover transition-opacity hover:opacity-90" />
+                <img
+                  src={mediaUrl || ""}
+                  alt="media"
+                  className="rounded-lg w-full h-48 object-cover transition-opacity hover:opacity-90"
+                />
               )}
             </div>
           );
@@ -88,15 +105,33 @@ export default function ProfileMedia() {
 
       {/* Modal para mostrar media en tamaño completo */}
       {selectedMedia && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4" onClick={() => setSelectedMedia(null)}>
-          <button onClick={() => setSelectedMedia(null)} className="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-10">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedMedia(null)}
+        >
+          <button
+            onClick={() => setSelectedMedia(null)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-10"
+          >
             ×
           </button>
           <div className="max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
-            {selectedMedia.type === 'VIDEO' || (selectedMedia as any).mediaType === 'video' || (selectedMedia.mediaURL || (selectedMedia as any).mediaUrl)?.match(/\.(mp4|webm|ogg|mov|avi|wmv|mkv|m4v)$/i) ? (
-              <VideoPlayer src={selectedMedia.mediaURL || (selectedMedia as any).mediaUrl || ''} className="w-full rounded-xl" autoPlay={true} />
+            {selectedMedia.type === "VIDEO" ||
+            (selectedMedia as any).mediaType === "video" ||
+            (selectedMedia.mediaURL || (selectedMedia as any).mediaUrl)?.match(
+              /\.(mp4|webm|ogg|mov|avi|wmv|mkv|m4v)$/i
+            ) ? (
+              <VideoPlayer
+                src={selectedMedia.mediaURL || (selectedMedia as any).mediaUrl || ""}
+                className="w-full rounded-xl"
+                autoPlay={true}
+              />
             ) : (
-              <img src={selectedMedia.mediaURL || (selectedMedia as any).mediaUrl || ''} alt="media" className="w-full h-auto rounded-xl" />
+              <img
+                src={selectedMedia.mediaURL || (selectedMedia as any).mediaUrl || ""}
+                alt="media"
+                className="w-full h-auto rounded-xl"
+              />
             )}
           </div>
         </div>

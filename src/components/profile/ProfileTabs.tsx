@@ -13,8 +13,10 @@ export default function ProfileTabs() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`font-semibold capitalize cursor-pointer ${
-              activeTab === tab ? "text-yellow-500 border-b-2 border-yellow-400" : "text-black dark:text-gray-300"
+            className={` capitalize cursor-pointer ${
+              activeTab === tab
+                ? "font-semibold capitalize text-black rounded-xl  px-2 py-1 shadow-md dark:shadow-[#ffff00]/50 shadow-black/50 cursor-pointer dark:text-black  text-md  bg-[#ffff00] transition duration-300 "
+                : "text-black font-light dark:text-white"
             }`}
           >
             {tab === "posts" ? "Publicaciones" : "Multimedia"}

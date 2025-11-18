@@ -246,7 +246,7 @@ export default function ProfilePosts() {
 
   if (posts.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-gray-200  dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         <p className="text-lg font-semibold">No has realizado ninguna publicación aún</p>
         <p className="text-sm mt-2">¡Comparte tu primer post!</p>
       </div>

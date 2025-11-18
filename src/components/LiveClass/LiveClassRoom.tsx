@@ -122,12 +122,6 @@ export const LiveClassRoom: React.FC<LiveClassRoomProps> = ({ roomId, token, use
       <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-[2000px] mx-auto">
           <div className="flex items-center gap-2 sm:gap-4">
-            <button onClick={handleLeave} className="text-gray-600 hover:text-gray-900 transition-colors p-2">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
             <div>
               <h1 className="text-base sm:text-xl font-bold text-gray-900">Clase en Vivo</h1>
               <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">SomosHenry</p>

@@ -120,7 +120,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({ roomId, token, userName, use
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
                   <span className="font-semibold text-sm">{msg.userName}</span>
-                  <span className="text-xs text-gray-500">{msg.timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-xs text-gray-500">{typeof msg.timestamp === 'number' ? new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <p className="text-sm text-gray-200 break-words">{msg.message}</p>
               </div>

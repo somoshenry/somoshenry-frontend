@@ -6,6 +6,7 @@ import { useAuth } from '@/hook/useAuth';
 import StatsOverview from './StatsOverview';
 import ReportedPosts from './ReportedPosts';
 import ReportedComments from './ReportedComments';
+import ReportedUsers from './ReportedUsers';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import CohorteManagement from './CohorteManagement';
@@ -124,6 +125,11 @@ export default function AdminContent() {
 
               {/* Comentarios reportados */}
               <ReportedComments />
+            </div>
+
+            {/* Usuarios reportados - ancho completo */}
+            <div className="mt-6">
+              <ReportedUsers />
             </div>
           </>
         )}

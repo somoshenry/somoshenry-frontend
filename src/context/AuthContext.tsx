@@ -53,10 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // para refrescar user después del pago
   const refreshUser = async () => {
     try {
+      console.log('🔄 AuthContext.refreshUser() - Llamando me()...');
       const { user } = await meSvc();
+      console.log('🔄 AuthContext.refreshUser() - Usuario obtenido:', {
+        subscription: user?.subscription,
+        subscriptionPlan: user?.subscriptionPlan,
+        subscriptionExpiresAt: user?.subscriptionExpiresAt,
+      });
       setUser(user);
     } catch (error) {
-      console.error('Error al refrescar user:', error);
+      console.error('❌ Error al refrescar user:', error);
     }
   };
 

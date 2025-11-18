@@ -6,6 +6,7 @@ import { useAuth } from '@/hook/useAuth';
 import { followUser, unfollowUser, checkFollowStatus, getFollowStats, FollowStats } from '@/services/followService';
 import { MessageCircle, Flag, UserPlus, UserMinus } from 'lucide-react';
 import ReportUserModal from '@/components/common/ReportUserModal';
+import FollowListModal from './FollowListModal';
 
 interface UserProfileHeaderProps {
   userId: string;
@@ -19,6 +20,8 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
   const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
   const { user: currentUser } = useAuth();
   const router = useRouter();
 
@@ -171,12 +174,24 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
 
         {/* Follow Stats */}
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
-          <span className="font-semibold">
+          <button
+            onClick={() => {
+              setFollowModalTab('followers');
+              setShowFollowModal(true);
+            }}
+            className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             {followStats.followersCount} <span className="font-normal">Seguidores</span>
-          </span>
-          <span className="font-semibold">
+          </button>
+          <button
+            onClick={() => {
+              setFollowModalTab('following');
+              setShowFollowModal(true);
+            }}
+            className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             {followStats.followingCount} <span className="font-normal">Siguiendo</span>
-          </span>
+          </button>
         </div>
 
         {/* Action Buttons (solo si no es tu propio perfil) */}
@@ -228,6 +243,9 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
 
       {/* Modal de reporte */}
       {showReportModal && user && <ReportUserModal userId={userId} userName={user.name || user.email || 'Usuario'} onClose={() => setShowReportModal(false)} onSuccess={() => setShowReportModal(false)} />}
+
+      {/* Modal de seguidores */}
+      {showFollowModal && user && <FollowListModal userId={userId} initialTab={followModalTab} onClose={() => setShowFollowModal(false)} />}
     </div>
   );
 }

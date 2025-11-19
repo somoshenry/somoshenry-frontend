@@ -79,7 +79,7 @@ export default function LiveClassPage() {
       {/* ======================= */}
       <div className="w-full h-full relative">
         {/* Header compacto - Estilo Zoom/Meet */}
-        <div className="absolute top-0 left-0 right-0 z-20 px-6 py-3 bg-gradient-to-b from-black/80 to-transparent">
+        <div className="absolute top-0 left-0 right-0 z-20 px-6 py-3 bg-linear-to-b from-black/80 to-transparent">
           <div className="flex items-center justify-end">
             <div className="flex items-center gap-3">
               <span className="px-2.5 py-1 bg-red-600 rounded text-xs font-semibold flex items-center gap-1.5">

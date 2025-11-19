@@ -131,7 +131,7 @@ const ClassSub: React.FC<ClaseHangProps> = ({theme}) => {
         <div className="pt-1">
           <h2 className="mb-2 font font-extrabold">Mis clases</h2>
           <p className="font-medium">Accede a todas tus sesiones y clases programadas</p>
-        </div>{" "}
+        </div>
       </div>
       <div className=" md:flex md:flex-row flex flex-col items-center md:items-start">
         {isUploader && currentUserInfo && (

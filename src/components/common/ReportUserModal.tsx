@@ -62,7 +62,7 @@ export default function ReportUserModal({userId, userName, onClose, onSuccess}: 
         {/* Botón cerrar */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+          className="absolute top-4 right-4 text-black cursor-pointer bg-red-500 p-1 hover:text-white rounded-xl dark:hover:text-gray-200 transition"
           title="Cerrar"
         >
           <X size={24} />
@@ -117,14 +117,14 @@ export default function ReportUserModal({userId, userName, onClose, onSuccess}: 
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+              className="px-4 py-2 text-sm text-gray-700 cursor-pointer dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
               disabled={isSubmitting}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg cursor-pointer hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting || !reason}
             >
               {isSubmitting ? "Reportando..." : "Reportar"}

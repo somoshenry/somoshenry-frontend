@@ -81,7 +81,7 @@ export const LiveRoomMenu = () => {
           <div className="flex justify-center mb-12">
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-8 py-4 bg-[#ffff00]  text-black font-bold rounded-lg flex items-center gap-3 transition-all hover:scale-105 shadow-lg"
+              className="px-8 py-4 bg-[#ffff00]  text-black font-bold rounded-lg flex items-center gap-3 transition-all hover:scale-105 shadow-lg cursor-pointer"
             >
               <Plus size={24} />
               Crear nueva sala

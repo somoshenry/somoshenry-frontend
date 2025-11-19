@@ -221,9 +221,9 @@ export default function SearchModal({isOpen, onClose, initialQuery = ""}: Search
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header con input de búsqueda */}
-        <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 flex items-center bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl px-5 py-3 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-shadow">
+        <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50 ">
+          <div className="flex items-center gap-3 mb-4 ">
+            <div className="flex-1 flex items-center bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl px-5 py-3 border border-gray-200/50 dark:border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <svg className="w-5 h-5 text-[#ffff00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -238,7 +238,7 @@ export default function SearchModal({isOpen, onClose, initialQuery = ""}: Search
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar usuarios o publicaciones..."
-                className="flex-1 ml-3 bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-medium"
+                className="flex-1 ml-3 bg-transparent focus:outline-none  text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-medium"
               />
               {query && (
                 <button
@@ -265,9 +265,9 @@ export default function SearchModal({isOpen, onClose, initialQuery = ""}: Search
           <div className="flex gap-6">
             <button
               onClick={() => setActiveTab("users")}
-              className={`pb-3 px-2 border-b-3 transition-all font-semibold ${
+              className={` transition-all font-semibold hover:scale-105 cursor-pointer ${
                 activeTab === "users"
-                  ? "border-[#ffff00] text-[#ffff00] scale-105"
+                  ? "capitalize  font-semibold text-black rounded-xl  px-2 shadow-black/50  dark:text-black  text-md  bg-[#ffff00] transition duration-300 "
                   : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600"
               }`}
             >
@@ -285,13 +285,13 @@ export default function SearchModal({isOpen, onClose, initialQuery = ""}: Search
             </button>
             <button
               onClick={() => setActiveTab("posts")}
-              className={`pb-3 px-2 border-b-3 transition-all font-semibold ${
+              className={`transition-all font-semibold hover:scale-105 cursor-pointer ${
                 activeTab === "posts"
-                  ? "border-[#ffff00] text-[#ffff00] scale-105"
+                  ? "capitalize  font-semibold text-black rounded-xl  px-2 shadow-black/50  dark:text-black  text-md  bg-[#ffff00] transition duration-300 "
                   : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600"
               }`}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 hover:scale-105">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"

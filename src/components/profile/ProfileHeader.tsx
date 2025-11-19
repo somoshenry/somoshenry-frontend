@@ -282,7 +282,7 @@ export default function ProfileHeader() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 isFollowing
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  : "bg-[#ffff00] hover:bg-yellow-500 text-black"
+                  : "bg-[#ffff00] hover:scale-105 cursor-pointer text-black"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {followLoading ? (

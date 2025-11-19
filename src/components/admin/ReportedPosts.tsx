@@ -1,10 +1,18 @@
-'use client';
-import { AlertTriangle, Eye, Ban, CheckCircle, User, Calendar, MessageCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { getPendingReports, moderatePost, updateReportStatus, ReportStatus, Report, deletePost, getPostById } from '@/services/adminService';
-import { useAuth } from '@/hook/useAuth';
-import { notifyPostDeleted, notifyReportersThankYou } from '@/services/notificationService';
-import Swal from 'sweetalert2';
+"use client";
+import {AlertTriangle, Eye, Ban, CheckCircle, User, Calendar, MessageCircle} from "lucide-react";
+import {useEffect, useState} from "react";
+import {
+  getPendingReports,
+  moderatePost,
+  updateReportStatus,
+  ReportStatus,
+  Report,
+  deletePost,
+  getPostById,
+} from "@/services/adminService";
+import {useAuth} from "@/hook/useAuth";
+import {notifyPostDeleted, notifyReportersThankYou} from "@/services/notificationService";
+import Swal from "sweetalert2";
 
 interface ReportedPost {
   post: {
@@ -38,7 +46,7 @@ interface ReportedPost {
 }
 
 export default function ReportedPosts() {
-  const { user: currentUser } = useAuth();
+  const {user: currentUser} = useAuth();
   const [reportedPosts, setReportedPosts] = useState<ReportedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,7 +107,7 @@ export default function ReportedPosts() {
       setReportedPosts(paginatedPosts);
       setTotal(postsArray.length);
     } catch (error) {
-      console.error('Error al cargar posts reportados:', error);
+      console.error("Error al cargar posts reportados:", error);
       setReportedPosts([]);
       setTotal(0);
     } finally {
@@ -126,7 +134,10 @@ export default function ReportedPosts() {
         selectedPost?.reports.forEach((report) => {
           reasonCounts[report.reason] = (reasonCounts[report.reason] || 0) + 1;
         });
-        const mostCommonReason = Object.keys(reasonCounts).reduce((a, b) => (reasonCounts[a] > reasonCounts[b] ? a : b), 'OTHER');
+        const mostCommonReason = Object.keys(reasonCounts).reduce(
+          (a, b) => (reasonCounts[a] > reasonCounts[b] ? a : b),
+          "OTHER"
+        );
 
         // Obtener información del post antes de eliminarlo (para conseguir el userId)
         const fullPost = await getPostById(postId);
@@ -137,9 +148,10 @@ export default function ReportedPosts() {
         }
 
         // Agradecer a los reportadores
-        const reporterIds = selectedPost?.reports.map((r) => r.reporter.id).filter((id, index, self) => self.indexOf(id) === index) || [];
+        const reporterIds =
+          selectedPost?.reports.map((r) => r.reporter.id).filter((id, index, self) => self.indexOf(id) === index) || [];
         if (reporterIds.length > 0) {
-          notifyReportersThankYou(reporterIds, selectedPost?.post.content || '');
+          notifyReportersThankYou(reporterIds, selectedPost?.post.content || "");
         }
 
         // Marcar el post como inapropiado (ocultar sin eliminar)
@@ -151,36 +163,41 @@ export default function ReportedPosts() {
 
       setShowModal(false);
       fetchReportedPosts();
-      alert(`Post ${isInappropriate ? 'ocultado' : 'aprobado'} correctamente`);
+      alert(`Post ${isInappropriate ? "ocultado" : "aprobado"} correctamente`);
     } catch (error) {
-      console.error('Error al moderar post:', error);
-      Swal.fire('Error al procesar la acción');
+      console.error("Error al moderar post:", error);
+      Swal.fire("Error al procesar la acción");
     } finally {
       setActionLoading(false);
     }
   };
 
-  const getDisplayName = (user?: { name?: string | null; lastName?: string | null; username?: string | null; email?: string }) => {
-    if (!user) return 'Usuario desconocido';
+  const getDisplayName = (user?: {
+    name?: string | null;
+    lastName?: string | null;
+    username?: string | null;
+    email?: string;
+  }) => {
+    if (!user) return "Usuario desconocido";
     if (user.name && user.lastName) return `${user.name} ${user.lastName}`;
     if (user.name) return user.name;
     if (user.username) return user.username;
-    if (user.email) return user.email.split('@')[0];
-    return 'Usuario desconocido';
+    if (user.email) return user.email.split("@")[0];
+    return "Usuario desconocido";
   };
 
   const truncateContent = (content: string, maxLength: number = 150) => {
     if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
+    return content.substring(0, maxLength) + "...";
   };
 
   const getReasonLabel = (reason: string) => {
     const labels: Record<string, string> = {
-      SPAM: 'Spam',
-      HARASSMENT: 'Acoso',
-      INAPPROPRIATE: 'Contenido inapropiado',
-      MISINFORMATION: 'Desinformación',
-      OTHER: 'Otro',
+      SPAM: "Spam",
+      HARASSMENT: "Acoso",
+      INAPPROPRIATE: "Contenido inapropiado",
+      MISINFORMATION: "Desinformación",
+      OTHER: "Otro",
     };
     return labels[reason] || reason;
   };
@@ -193,9 +210,13 @@ export default function ReportedPosts() {
         <div className="flex items-center gap-2">
           <AlertTriangle className="text-orange-500" size={24} />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Posts Reportados</h2>
-          <span className="ml-auto bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-3 py-1 rounded-full text-sm font-semibold">{total} reportados</span>
+          <span className="ml-auto bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-3 py-1 rounded-full text-sm font-semibold">
+            {total} reportados
+          </span>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Revisa y modera los posts que han sido reportados por la comunidad</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          Revisa y modera los posts que han sido reportados por la comunidad
+        </p>
       </div>
 
       {loading ? (
@@ -209,7 +230,9 @@ export default function ReportedPosts() {
               </div>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">¡Todo en orden!</h3>
-            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">No hay posts reportados pendientes de revisión en este momento.</p>
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+              No hay posts reportados pendientes de revisión en este momento.
+            </p>
           </div>
         </div>
       ) : (
@@ -217,7 +240,9 @@ export default function ReportedPosts() {
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {reportedPosts.map((item) => {
               // Obtener la fecha del reporte más reciente
-              const latestReport = item.reports.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+              const latestReport = item.reports.sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              )[0];
               const reportDate = new Date(latestReport.createdAt);
 
               return (
@@ -226,34 +251,47 @@ export default function ReportedPosts() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <User size={16} className="text-gray-500" />
-                        <span className="font-semibold text-gray-900 dark:text-white">{getDisplayName(item.post.user)}</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {getDisplayName(item.post.user)}
+                        </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          • Post:{' '}
-                          {new Date(item.post.createdAt).toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
+                          • Post:{" "}
+                          {new Date(item.post.createdAt).toLocaleDateString("es-ES", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
                           })}
                         </span>
                         <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                          • Reportado: {reportDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })} {reportDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                          • Reportado:{" "}
+                          {reportDate.toLocaleDateString("es-ES", {day: "2-digit", month: "2-digit", year: "numeric"})}{" "}
+                          {reportDate.toLocaleTimeString("es-ES", {hour: "2-digit", minute: "2-digit"})}
                         </span>
                         <span className="ml-auto bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded-full text-xs font-bold">
-                          {item.reportCount} {item.reportCount === 1 ? 'reporte' : 'reportes'}
+                          {item.reportCount} {item.reportCount === 1 ? "reporte" : "reportes"}
                         </span>
                       </div>
 
-                      {item.post.title && <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{item.post.title}</h3>}
+                      {item.post.title && (
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{item.post.title}</h3>
+                      )}
 
                       <p className="text-gray-700 dark:text-gray-300 mb-3">{truncateContent(item.post.content)}</p>
 
                       <div className="flex flex-wrap gap-2 mb-3">
                         {item.reports.slice(0, 3).map((report) => (
-                          <span key={report.id} className="px-2 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 rounded-md text-xs font-medium">
+                          <span
+                            key={report.id}
+                            className="px-2 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 rounded-md text-xs font-medium"
+                          >
                             {getReasonLabel(report.reason)}
                           </span>
                         ))}
-                        {item.reports.length > 3 && <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md text-xs">+{item.reports.length - 3} más</span>}
+                        {item.reports.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md text-xs">
+                            +{item.reports.length - 3} más
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -273,7 +311,7 @@ export default function ReportedPosts() {
                         }
                         setShowModal(true);
                       }}
-                      className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors"
+                      className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors cursor-pointer"
                     >
                       <Eye size={16} />
                       Revisar detalles
@@ -287,13 +325,21 @@ export default function ReportedPosts() {
           {/* Paginación */}
           {totalPages > 1 && (
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-center gap-2">
-              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md disabled:opacity-50">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md disabled:opacity-50"
+              >
                 Anterior
               </button>
               <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
                 Página {currentPage} de {totalPages}
               </span>
-              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md disabled:opacity-50">
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md disabled:opacity-50"
+              >
                 Siguiente
               </button>
             </div>
@@ -314,22 +360,37 @@ export default function ReportedPosts() {
               <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-3">
                   <User size={20} className="text-gray-500" />
-                  <span className="font-semibold text-gray-900 dark:text-white">{getDisplayName(selectedPost.post.user)}</span>
-                  {selectedPost.post.user?.email && <span className="text-sm text-gray-500">({selectedPost.post.user.email})</span>}
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {getDisplayName(selectedPost.post.user)}
+                  </span>
+                  {selectedPost.post.user?.email && (
+                    <span className="text-sm text-gray-500">({selectedPost.post.user.email})</span>
+                  )}
                 </div>
 
-                {selectedPost.post.title && <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{selectedPost.post.title}</h4>}
+                {selectedPost.post.title && (
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{selectedPost.post.title}</h4>
+                )}
 
                 <p className="text-gray-700 dark:text-gray-300 mb-3">{selectedPost.post.content}</p>
 
                 {selectedPost.post.mediaURL && (
                   <div className="mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
                     {selectedPost.post.mediaURL.match(/\.(mp4|webm|ogg)$/i) ? (
-                      <video src={selectedPost.post.mediaURL} controls className="w-full h-auto max-h-96" preload="metadata">
+                      <video
+                        src={selectedPost.post.mediaURL}
+                        controls
+                        className="w-full h-auto max-h-96"
+                        preload="metadata"
+                      >
                         Tu navegador no soporta la reproducción de video.
                       </video>
                     ) : (
-                      <img src={selectedPost.post.mediaURL} alt="Post multimedia" className="w-full h-auto max-h-96 object-contain" />
+                      <img
+                        src={selectedPost.post.mediaURL}
+                        alt="Post multimedia"
+                        className="w-full h-auto max-h-96 object-contain"
+                      />
                     )}
                   </div>
                 )}
@@ -338,10 +399,10 @@ export default function ReportedPosts() {
                   <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">{selectedPost.post.type}</span>
                   <span className="flex items-center gap-1">
                     <Calendar size={14} />
-                    {new Date(selectedPost.post.createdAt).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                    {new Date(selectedPost.post.createdAt).toLocaleDateString("es-ES", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
                   </span>
                 </div>
@@ -359,12 +420,20 @@ export default function ReportedPosts() {
                     <div key={report.id} className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <span className="font-medium text-gray-900 dark:text-white">{getDisplayName(report.reporter)}</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">{new Date(report.createdAt).toLocaleDateString('es-ES')}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {getDisplayName(report.reporter)}
+                          </span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                            {new Date(report.createdAt).toLocaleDateString("es-ES")}
+                          </span>
                         </div>
-                        <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 rounded-md text-xs font-medium">{getReasonLabel(report.reason)}</span>
+                        <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 rounded-md text-xs font-medium">
+                          {getReasonLabel(report.reason)}
+                        </span>
                       </div>
-                      {report.description && <p className="text-sm text-gray-700 dark:text-gray-300">{report.description}</p>}
+                      {report.description && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{report.description}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -372,17 +441,29 @@ export default function ReportedPosts() {
 
               {/* Acciones */}
               <div className="flex gap-3">
-                <button onClick={() => handleModeratePost(selectedPost.post.id, true)} disabled={actionLoading} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transition-colors disabled:opacity-50">
+                <button
+                  onClick={() => handleModeratePost(selectedPost.post.id, true)}
+                  disabled={actionLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:scale-105 text-white rounded-md font-medium cursor-pointer disabled:opacity-50"
+                >
                   <Ban size={18} />
-                  {actionLoading ? 'Procesando...' : 'Marcar como Inapropiado'}
+                  {actionLoading ? "Procesando..." : "Marcar como Inapropiado"}
                 </button>
 
-                <button onClick={() => handleModeratePost(selectedPost.post.id, false)} disabled={actionLoading} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium transition-colors disabled:opacity-50">
+                <button
+                  onClick={() => handleModeratePost(selectedPost.post.id, false)}
+                  disabled={actionLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:scale-105 text-white rounded-md font-medium cursor-pointer  disabled:opacity-50"
+                >
                   <CheckCircle size={18} />
-                  {actionLoading ? 'Procesando...' : 'Rechazar Reportes'}
+                  {actionLoading ? "Procesando..." : "Rechazar Reporte"}
                 </button>
 
-                <button onClick={() => setShowModal(false)} disabled={actionLoading} className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50">
+                <button
+                  onClick={() => setShowModal(false)}
+                  disabled={actionLoading}
+                  className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                >
                   Cancelar
                 </button>
               </div>

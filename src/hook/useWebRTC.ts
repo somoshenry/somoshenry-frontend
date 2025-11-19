@@ -146,6 +146,13 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
       setIsInRoom(false);
     });
 
+    // Manejar error codes del backend
+    socket.on('error', (error: any) => {
+      console.error('❌ Error del servidor:', error);
+      const message = error?.message || 'Error desconocido';
+      onError?.(message);
+    });
+
     // ============================================================
     // 🟢 JOINED ROOM
     // ============================================================
@@ -213,8 +220,20 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
           console.log(`❇️ ICE connection state con ${p.userId}:`, pc.iceConnectionState);
         };
 
-        // NO generar offer aquí - esperamos que ellos envíen offer
-        // YO generaré offer cuando reciba un 'userJoined' para ellos
+        // ✅ GENERAR OFFER para cada participante existente
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+
+          console.log(`📤 Enviando OFFER a ${p.userId} desde joinedRoom`);
+          socket.emit('offer', {
+            roomId,
+            targetUserId: p.userId,
+            sdp: offer,
+          });
+        } catch (err) {
+          console.error(`Error creando offer para ${p.userId} en joinedRoom:`, err);
+        }
       }
     });
 
@@ -295,8 +314,9 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
     // 📥 OFFER
     // ============================================================
     socket.on('offer', async (data) => {
-      console.log('📥 OFFER recibido de', data.fromUserId);
-      let pc = peerConnectionsRef.current.get(data.fromUserId);
+      try {
+        console.log('📥 OFFER recibido de', data.fromUserId);
+        let pc = peerConnectionsRef.current.get(data.fromUserId);
 
       if (!pc) {
         console.log(`   → Creando nueva RTCPeerConnection para ${data.fromUserId}`);
@@ -379,13 +399,17 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
         sdp: answer,
       });
       console.log(`   → Answer enviado a ${data.fromUserId}`);
+      } catch (error) {
+        console.error('Error en handler offer:', error);
+      }
     });
 
     // ============================================================
     // 📥 ANSWER
     // ============================================================
     socket.on('answer', async (data) => {
-      console.log('📥 ANSWER recibido de', data.fromUserId);
+      try {
+        console.log('📥 ANSWER recibido de', data.fromUserId);
       const pc = peerConnectionsRef.current.get(data.fromUserId);
       if (pc) {
         // IMPORTANTE: Asegurar que ontrack esté configurado ANTES de setRemoteDescription
@@ -418,15 +442,22 @@ export const useWebRTC = ({ roomId, token, onError, onUserJoined, onUserLeft }: 
 
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
       }
+      } catch (error) {
+        console.error('Error en handler answer:', error);
+      }
     });
 
     // ============================================================
     // 🧊 ICE CANDIDATE
     // ============================================================
     socket.on('iceCandidate', async (data) => {
-      const pc = peerConnectionsRef.current.get(data.fromUserId);
-      if (pc) {
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      try {
+        const pc = peerConnectionsRef.current.get(data.fromUserId);
+        if (pc && data.candidate) {
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      } catch (error) {
+        console.error('Error agregando ICE candidate:', error);
       }
     });
 

@@ -15,7 +15,7 @@ export default function GroupInfoModal({isOpen, onClose, groupName, groupImage, 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#ffff00] to-yellow-500 p-6 text-white">
+        <div className="bg-linear-to-r from-[#ffff00] to-yellow-500 p-6 text-white">
           <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -62,7 +62,7 @@ export default function GroupInfoModal({isOpen, onClose, groupName, groupImage, 
                 {member.avatar ? (
                   <img src={member.avatar} alt={member.name} className="w-12 h-12 rounded-full object-cover" />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#ffff00] to-yellow-500 flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#ffff00] to-yellow-500 flex items-center justify-center text-white font-bold text-lg">
                     {member.name?.charAt(0).toUpperCase()}
                   </div>
                 )}

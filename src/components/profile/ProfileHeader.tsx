@@ -93,6 +93,7 @@ export default function ProfileHeader() {
       router.push(`/chat?conversationId=${conversation.id}`);
     } catch (error) {
       console.error("Error al abrir chat:", error);
+<<<<<<< HEAD
       //alert("Error al abrir el chat.");
       Swal.fire({
         title: 'Error',
@@ -100,6 +101,9 @@ export default function ProfileHeader() {
         icon: 'error',
         confirmButtonText: 'Aceptar',
       });
+=======
+      Swal.fire("Error al abrir el chat.");
+>>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
     }
   };
 
@@ -109,10 +113,10 @@ export default function ProfileHeader() {
     try {
       await reportUser(user.id, reason as any, description);
       setShowReportModal(false);
-      alert("Reporte enviado exitosamente.");
+      Swal.fire("Reporte enviado exitosamente.");
     } catch (error) {
       console.error("Error al reportar usuario:", error);
-      alert("Error al enviar el reporte.");
+      Swal.fire("Error al enviar el reporte.");
     }
   };
 
@@ -289,7 +293,7 @@ export default function ProfileHeader() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 isFollowing
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  : "bg-[#ffff00] hover:bg-yellow-500 text-black"
+                  : "bg-[#ffff00] hover:scale-105 cursor-pointer text-black"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {followLoading ? (
@@ -375,7 +379,7 @@ function ReportUserModal({
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      alert("Por favor describe el motivo del reporte");
+      Swal.fire("Por favor describe el motivo del reporte");
       return;
     }
     setSubmitting(true);

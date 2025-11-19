@@ -185,7 +185,7 @@ export default function MetricsDashboard() {
         <div className="flex gap-2">
           <button
             onClick={() => setTimeRange("week")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               timeRange === "week"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -195,7 +195,7 @@ export default function MetricsDashboard() {
           </button>
           <button
             onClick={() => setTimeRange("month")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               timeRange === "month"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -205,7 +205,7 @@ export default function MetricsDashboard() {
           </button>
           <button
             onClick={() => setTimeRange("year")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               timeRange === "year"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -297,7 +297,7 @@ export default function MetricsDashboard() {
       </div>
 
       {/* Suscripciones - Próximamente */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-lg border-2 border-dashed border-blue-300 dark:border-gray-600 p-8 text-center">
+      <div className="bg-linear-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-lg border-2 border-dashed border-blue-300 dark:border-gray-600 p-8 text-center">
         <div className="flex justify-center mb-4">
           <div className="p-4 bg-blue-100 dark:bg-blue-900 rounded-full">
             <TrendingUp size={32} className="text-blue-600 dark:text-blue-400" />

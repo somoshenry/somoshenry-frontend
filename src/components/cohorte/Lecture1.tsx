@@ -38,7 +38,7 @@ export default function LecturePage() {
         initial={{opacity: 0, y: -40}}
         animate={{opacity: 1, y: 0}}
         transition={{ease: "easeOut", duration: 0.8}}
-        className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-10 shadow-md"
+        className="bg-linear-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-10 shadow-md"
       >
         <div className="max-w-5xl mx-auto px-4 text-center ">
           <h1 className="text-4xl font-extrabold tracking-tight">L01 | Introducción a la Programación</h1>
@@ -175,7 +175,7 @@ FIN`}
           whileInView={{opacity: 1, y: 0}}
           transition={{delay: 0.3, duration: 0.8, ease: "easeOut"}}
           viewport={{once: true}}
-          className="bg-gradient-to-r from-indigo-50 to-purple-50 border  dark:bg-gray-200 border-indigo-200 rounded-3xl p-8 shadow-sm"
+          className="bg-linear-to-r from-indigo-50 to-purple-50 border  dark:bg-gray-200 border-indigo-200 rounded-3xl p-8 shadow-sm"
         >
           <h2 className="text-3xl font-semibold text-sky-700 mb-4 flex items-center gap-2">
             <ListTodo /> Tarea: ¡Pon a prueba tu lógica!
@@ -235,7 +235,7 @@ FIN`}
         </motion.section>
         <button
           onClick={() => router.push("/cohorte?tab=Lecturas")}
-          className="flex items-center justify-center gap-2 mx-auto mt-10 px-6 py-3 bg-gradient-to-r from-[#ffff00] to-yellow-500 text-black font-semibold rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out"
+          className="flex items-center justify-center gap-2 mx-auto mt-10 px-6 py-3 bg-linear-to-r from-[#ffff00] to-yellow-500 text-black font-semibold rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out"
         >
           ← Volver a Lecturas
         </button>

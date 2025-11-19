@@ -18,7 +18,9 @@ export default function UserProfileTabs({userId}: UserProfileTabsProps) {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`font-semibold capitalize ${
-              activeTab === tab ? "text-yellow-500 border-b-2 border-[#ffff00]" : "text-gray-600 dark:text-gray-300"
+              activeTab === tab
+                ? " cursor-pointer font-semibold capitalize text-black rounded-xl  px-2 py-1 shadow-md dark:shadow-[#ffff00]/50 shadow-black/50  dark:text-black  text-md  bg-[#ffff00] transition duration-300 "
+                : "text-gray-600 dark:text-gray-300 cursor-pointer"
             }`}
           >
             {tab === "posts" ? "Publicaciones" : "Multimedia"}

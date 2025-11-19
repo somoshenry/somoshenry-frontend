@@ -106,6 +106,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
+<<<<<<< HEAD
       //alert("⚠️ Debes iniciar sesión para seguir usuarios");
       Swal.fire({
         title: 'Atención',
@@ -113,6 +114,9 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
         icon: 'warning',
         confirmButtonText: 'Aceptar',
       });
+=======
+      Swal.fire("⚠️ Debes iniciar sesión para seguir usuarios");
+>>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
       return;
     }
 
@@ -127,6 +131,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
           ...prev,
           followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
         }));
+<<<<<<< HEAD
         Swal.fire({
           title: 'Listo',
           text: result.message,
@@ -150,6 +155,15 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
         icon: 'error',
         confirmButtonText: 'Aceptar',
       });
+=======
+        Swal.fire(result.message);
+      } else {
+        Swal.fire(result.message);
+      }
+    } catch (err) {
+      console.error("Error al cambiar estado de seguimiento:", err);
+      Swal.fire("❌ Error al actualizar seguimiento");
+>>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
     } finally {
       setIsFollowLoading(false);
     }
@@ -157,6 +171,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleMessage = () => {
     if (!currentUser) {
+<<<<<<< HEAD
       //alert("⚠️ Debes iniciar sesión para enviar mensajes");
       Swal.fire({
         title: 'Atención',
@@ -164,6 +179,9 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
         icon: 'warning',
         confirmButtonText: 'Aceptar',
       });
+=======
+      Swal.fire("⚠️ Debes iniciar sesión para enviar mensajes");
+>>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
       return;
     }
     router.push("/chat");
@@ -248,10 +266,10 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
             <button
               onClick={handleFollowToggle}
               disabled={isFollowLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition cursor-pointer ${
                 isFollowing
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  : "bg-[#FFFF00] text-black hover:bg-yellow-300"
+                  : "bg-[#FFFF00] text-black hover:scale-105"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {isFollowLoading ? (
@@ -272,7 +290,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
             {/* Botón Mensaje */}
             <button
               onClick={handleMessage}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:scale-105 cursor-pointer"
               title="Enviar mensaje"
             >
               <MessageCircle size={18} />
@@ -282,7 +300,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
             {/* Botón Reportar */}
             <button
               onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:scale-105 cursor-pointer"
               title="Reportar usuario"
             >
               <Flag size={18} />

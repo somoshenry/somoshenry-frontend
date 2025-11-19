@@ -1,7 +1,8 @@
-"use client";
-import {useState} from "react";
-import {api} from "@/services/api";
-import {X} from "lucide-react";
+'use client';
+import { useState } from 'react';
+import { api } from '@/services/api';
+import { X } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface ReportUserModalProps {
   userId: string;
@@ -10,46 +11,58 @@ interface ReportUserModalProps {
   onSuccess?: () => void;
 }
 
-export default function ReportUserModal({userId, userName, onClose, onSuccess}: ReportUserModalProps) {
-  const [reason, setReason] = useState("");
-  const [description, setDescription] = useState("");
+export default function ReportUserModal({ userId, userName, onClose, onSuccess }: ReportUserModalProps) {
+  const [reason, setReason] = useState('');
+  const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reasons = [
-    {value: "SPAM", label: "🚫 Spam o contenido no deseado"},
-    {value: "HARASSMENT", label: "😡 Acoso o intimidación"},
-    {value: "HATE_SPEECH", label: "💢 Discurso de odio"},
-    {value: "INAPPROPRIATE", label: "⚠️ Contenido inapropiado"},
-    {value: "IMPERSONATION", label: "👤 Suplantación de identidad"},
-    {value: "OTHER", label: "📝 Otro motivo"},
+    { value: 'SPAM', label: '🚫 Spam o contenido no deseado' },
+    { value: 'HARASSMENT', label: '😡 Acoso o intimidación' },
+    { value: 'HATE_SPEECH', label: '💢 Discurso de odio' },
+    { value: 'INAPPROPRIATE', label: '⚠️ Contenido inapropiado' },
+    { value: 'IMPERSONATION', label: '👤 Suplantación de identidad' },
+    { value: 'OTHER', label: '📝 Otro motivo' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!reason) {
-      alert("Por favor selecciona un motivo de reporte");
+      alert('Por favor selecciona un motivo de reporte');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await api.post("/report/user", {
+      await api.post('/report/user', {
         userId,
         reason,
         description: description.trim() || undefined,
       });
 
-      alert("✅ Usuario reportado correctamente. Revisaremos tu reporte.");
+      //alert('✅ Usuario reportado correctamente. Revisaremos tu reporte.');
+      Swal.fire({
+        title: 'Exitoso',
+        text: 'El usuario ha sido reportado correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+      });
       onSuccess?.();
       onClose();
     } catch (error: any) {
-      console.error("Error al reportar usuario:", error);
+      console.error('Error al reportar usuario:', error);
 
       if (error?.response?.status === 404) {
-        alert("⚠️ Funcionalidad de reportes no disponible en el backend");
+        alert('⚠️ Funcionalidad de reportes no disponible en el backend');
       } else {
-        alert("❌ Error al reportar usuario. Intenta nuevamente.");
+        //alert('❌ Error al reportar usuario. Intenta nuevamente.');
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al reportar usuario. Intenta nuevamente.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -78,9 +91,7 @@ export default function ReportUserModal({userId, userName, onClose, onSuccess}: 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Motivo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Motivo del reporte *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Motivo del reporte *</label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -98,9 +109,7 @@ export default function ReportUserModal({userId, userName, onClose, onSuccess}: 
 
           {/* Descripción opcional */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Descripción adicional (opcional)
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción adicional (opcional)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -127,7 +136,7 @@ export default function ReportUserModal({userId, userName, onClose, onSuccess}: 
               className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting || !reason}
             >
-              {isSubmitting ? "Reportando..." : "Reportar"}
+              {isSubmitting ? 'Reportando...' : 'Reportar'}
             </button>
           </div>
         </form>

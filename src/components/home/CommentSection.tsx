@@ -4,6 +4,7 @@ import {CommentType} from "@/interfaces/interfaces.post/post";
 import {usePost} from "@/context/PostContext";
 import {useAuth} from "@/hook/useAuth";
 import Comment from "./Comment";
+import Swal from "sweetalert2";
 
 export default function CommentSection({comments, postId}: {comments?: CommentType[] | null; postId: string}) {
   const [comment, setComment] = useState("");
@@ -58,7 +59,13 @@ export default function CommentSection({comments, postId}: {comments?: CommentTy
     e.preventDefault();
 
     if (isSuspended) {
-      alert("Tu cuenta está suspendida. No puedes comentar 🚫");
+      //alert("Tu cuenta está suspendida. No puedes comentar 🚫");
+      Swal.fire({
+        title: 'Cuenta Suspendida',
+        text: 'Tu cuenta está suspendida. No puedes comentar.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
       return;
     }
 

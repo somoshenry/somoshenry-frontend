@@ -8,6 +8,7 @@ import Avatar from "@/components/ui/Avatar";
 import {useRouter} from "next/navigation";
 import {Flag, MessageCircle, Trash2} from "lucide-react";
 import ReportModal from "@/components/common/ReportModal";
+import Swal from "sweetalert2";
 
 // Helpers para avatar y nombre sin bloquear dominios
 function getAvatar(u: any): string {
@@ -47,7 +48,13 @@ export default function Comment({comment, postId, level = 0, maxLevel = 2}: Comm
   const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSuspended) {
-      alert("Tu cuenta está suspendida. No puedes comentar 🚫");
+      //alert("Tu cuenta está suspendida. No puedes comentar 🚫");
+      Swal.fire({
+        title: 'Cuenta Suspendida',
+        text: 'Tu cuenta está suspendida. No puedes comentar.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
       return;
     }
 

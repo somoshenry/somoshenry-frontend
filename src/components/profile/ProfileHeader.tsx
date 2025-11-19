@@ -9,6 +9,7 @@ import {openConversation} from "@/services/chatService";
 import {useAuth} from "@/hook/useAuth";
 import ProfileEditModal from "./ProfileEditModal";
 import FollowListModal from "./FollowListModal";
+import Swal from "sweetalert2";
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -92,7 +93,13 @@ export default function ProfileHeader() {
       router.push(`/chat?conversationId=${conversation.id}`);
     } catch (error) {
       console.error("Error al abrir chat:", error);
-      alert("Error al abrir el chat.");
+      //alert("Error al abrir el chat.");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al abrir el chat.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
     }
   };
 

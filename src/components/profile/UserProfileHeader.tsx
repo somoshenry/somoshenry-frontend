@@ -7,6 +7,7 @@ import {followUser, unfollowUser, checkFollowStatus, getFollowStats, FollowStats
 import {MessageCircle, Flag, UserPlus, UserMinus} from "lucide-react";
 import ReportUserModal from "@/components/common/ReportUserModal";
 import FollowListModal from "./FollowListModal";
+import Swal from "sweetalert2";
 
 interface UserProfileHeaderProps {
   userId: string;
@@ -105,7 +106,13 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
-      alert("⚠️ Debes iniciar sesión para seguir usuarios");
+      //alert("⚠️ Debes iniciar sesión para seguir usuarios");
+      Swal.fire({
+        title: 'Atención',
+        text: 'Debes iniciar sesión para seguir usuarios.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
       return;
     }
 
@@ -120,13 +127,29 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
           ...prev,
           followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
         }));
-        alert(result.message);
+        Swal.fire({
+          title: 'Listo',
+          text: result.message,
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+        });
       } else {
-        alert(result.message);
+        Swal.fire({
+          title: 'Atención',
+          text: result.message,
+          icon: 'warning',
+          confirmButtonText: 'Aceptar',
+        });
       }
     } catch (err) {
       console.error("Error al cambiar estado de seguimiento:", err);
-      alert("❌ Error al actualizar seguimiento");
+      //alert("❌ Error al actualizar seguimiento");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al actualizar seguimiento.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
     } finally {
       setIsFollowLoading(false);
     }
@@ -134,7 +157,13 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleMessage = () => {
     if (!currentUser) {
-      alert("⚠️ Debes iniciar sesión para enviar mensajes");
+      //alert("⚠️ Debes iniciar sesión para enviar mensajes");
+      Swal.fire({
+        title: 'Atención',
+        text: 'Debes iniciar sesión para enviar mensajes.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
       return;
     }
     router.push("/chat");

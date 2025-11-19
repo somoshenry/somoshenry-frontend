@@ -23,14 +23,14 @@ export interface FollowListsResponse {
 export const followUser = async (userId: string): Promise<{ success: boolean; message: string }> => {
   try {
     const { data } = await api.post(`/follows/${userId}`);
-    return { success: true, message: data?.message || 'Usuario seguido correctamente ✅' };
+    return { success: true, message: data?.message || 'Ahora sigues al usuario' };
   } catch (error: any) {
     // Si el backend no está disponible o no tiene la funcionalidad
     if (error?.response?.status === 404) {
       return { success: false, message: 'Funcionalidad de seguimiento no disponible en el backend' };
     }
     console.error('Error al seguir usuario:', error);
-    return { success: false, message: 'Error al seguir usuario ❌' };
+    return { success: false, message: 'Error al seguir usuario' };
   }
 };
 
@@ -40,13 +40,13 @@ export const followUser = async (userId: string): Promise<{ success: boolean; me
 export const unfollowUser = async (userId: string): Promise<{ success: boolean; message: string }> => {
   try {
     const { data } = await api.delete(`/follows/unfollow/${userId}`);
-    return { success: true, message: data?.message || 'Dejaste de seguir al usuario ✅' };
+    return { success: true, message: data?.message || 'Has dejado de seguir al usuario' };
   } catch (error: any) {
     if (error?.response?.status === 404) {
       return { success: false, message: 'Funcionalidad de seguimiento no disponible en el backend' };
     }
     console.error('Error al dejar de seguir usuario:', error);
-    return { success: false, message: 'Error al dejar de seguir usuario ❌' };
+    return { success: false, message: 'Error al dejar de seguir usuario' };
   }
 };
 

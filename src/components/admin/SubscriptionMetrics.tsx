@@ -20,10 +20,12 @@ export default function SubscriptionMetrics() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [statsData, planData, paymentsData, renewalsData, churnData, ltvData] = await Promise.all([getAdminDashboardStats(), getSubscriptionsByPlan(), getRecentPayments(1, 10), getUpcomingRenewals(7), getChurnRate(), getLTV()]);
+      const [statsData, planData, paymentsData, renewalsData, churnData, ltvData] = await Promise.all([getAdminDashboardStats(), getSubscriptionsByPlan(), getRecentPayments(1, 20), getUpcomingRenewals(7), getChurnRate(), getLTV()]);
 
       setStats(statsData);
-      setPlanDistribution(planData);
+      // Ordenar planes por cantidad (más contratado primero)
+      const sortedPlans = [...planData].sort((a, b) => b.count - a.count);
+      setPlanDistribution(sortedPlans);
       setRecentPayments(paymentsData.data);
       setUpcomingRenewals(renewalsData);
       setChurnRate(churnData);
@@ -181,48 +183,107 @@ export default function SubscriptionMetrics() {
         </div>
       </div>
 
-      {/* Recent Payments */}
+      {/* Plan Más Contratado */}
+      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg shadow-lg border-2 border-yellow-300 dark:border-yellow-700 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Award className="text-yellow-600 dark:text-yellow-400" size={32} />
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Plan Más Contratado</h3>
+        </div>
+        {planDistribution.length > 0 ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <span className={`inline-block px-6 py-3 rounded-full text-2xl font-bold ${getPlanColor(planDistribution[0].plan)}`}>
+                {planDistribution[0].plan}
+              </span>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                {planDistribution[0].count} usuarios • {planDistribution[0].percentage.toFixed(1)}% del total
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-5xl font-bold text-yellow-600 dark:text-yellow-400">
+                {planDistribution[0].percentage.toFixed(0)}%
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">de las suscripciones</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 dark:text-gray-400">No hay datos disponibles</p>
+        )}
+      </div>
+
+      {/* Recent Payments - Tabla mejorada con fecha y hora */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Pagos Recientes</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Usuarios Suscritos - Pagos Recientes</h3>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Últimas {recentPayments.length} suscripciones</span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Usuario</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Plan</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Monto</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Estado</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Fecha</th>
+              <tr className="border-b-2 border-gray-300 dark:border-gray-600">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Usuario</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Plan Contratado</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Monto</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Método</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Estado</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Fecha y Hora</th>
               </tr>
             </thead>
             <tbody>
               {recentPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <td colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No hay pagos recientes
                   </td>
                 </tr>
               ) : (
                 recentPayments.map((payment) => (
-                  <tr key={payment.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{payment.userName}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{payment.userEmail}</p>
+                  <tr key={payment.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                          {payment.userName[0]?.toUpperCase() || payment.userEmail[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">{payment.userName}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{payment.userEmail}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPlanColor(payment.plan)}`}>{payment.plan}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(payment.amount)}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${payment.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : payment.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
-                        {payment.status === 'completed' ? 'Completado' : payment.status === 'pending' ? 'Pendiente' : 'Fallido'}
+                    <td className="py-4 px-4">
+                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${getPlanColor(payment.plan)}`}>
+                        {payment.plan}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                    <td className="py-4 px-4">
+                      <span className="font-bold text-lg text-green-600 dark:text-green-400">{formatCurrency(payment.amount)}</span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">{payment.paymentMethod}</span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${payment.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : payment.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'}`}>
+                        {payment.status === 'completed' ? '✓ Completado' : payment.status === 'pending' ? '⏳ Pendiente' : '✗ Fallido'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="text-sm">
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {new Date(payment.paymentDate).toLocaleDateString('es-AR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(payment.paymentDate).toLocaleTimeString('es-AR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, FileText, MessageSquare, AlertTriangle, TrendingUp, Calendar, UserPlus, Activity, GraduationCap, DollarSign } from 'lucide-react';
+import { Users, FileText, MessageSquare, AlertTriangle, TrendingUp, Calendar, UserPlus, DollarSign } from 'lucide-react';
 import { api } from '@/services/api';
 import { getAllCohortes } from '@/services/cohorteService';
 import { type LucideIcon } from 'lucide-react';
@@ -191,11 +191,7 @@ export default function MetricsDashboard() {
                 <StatCard icon={AlertTriangle} title="Reportes" value={metrics.totalReports} subtitle="Contenido reportado" color="orange" />
               </div>
 
-              {/* Cohortes Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <StatCard icon={GraduationCap} title="Total Cohortes" value={metrics.totalCohortes} subtitle="Cohortes creadas" color="blue" />
-                <StatCard icon={Activity} title="Cohortes Activas" value={metrics.activeCohortes} subtitle="En progreso actualmente" color="green" />
-              </div>
+              {/* Cohortes Stats - Removido según requerimientos */}
 
               {/* Usuarios Recientes */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">

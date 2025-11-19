@@ -9,6 +9,7 @@ import {openConversation} from "@/services/chatService";
 import {useAuth} from "@/hook/useAuth";
 import ProfileEditModal from "./ProfileEditModal";
 import FollowListModal from "./FollowListModal";
+import Swal from "sweetalert2";
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function ProfileHeader() {
       router.push(`/chat?conversationId=${conversation.id}`);
     } catch (error) {
       console.error("Error al abrir chat:", error);
-      alert("Error al abrir el chat.");
+      Swal.fire("Error al abrir el chat.");
     }
   };
 
@@ -102,10 +103,10 @@ export default function ProfileHeader() {
     try {
       await reportUser(user.id, reason as any, description);
       setShowReportModal(false);
-      alert("Reporte enviado exitosamente.");
+      Swal.fire("Reporte enviado exitosamente.");
     } catch (error) {
       console.error("Error al reportar usuario:", error);
-      alert("Error al enviar el reporte.");
+      Swal.fire("Error al enviar el reporte.");
     }
   };
 
@@ -282,7 +283,7 @@ export default function ProfileHeader() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 isFollowing
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  : "bg-[#ffff00] hover:bg-yellow-500 text-black"
+                  : "bg-[#ffff00] hover:scale-105 cursor-pointer text-black"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {followLoading ? (
@@ -368,7 +369,7 @@ function ReportUserModal({
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      alert("Por favor describe el motivo del reporte");
+      Swal.fire("Por favor describe el motivo del reporte");
       return;
     }
     setSubmitting(true);

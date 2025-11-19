@@ -202,7 +202,7 @@ export const Nav: React.FC = () => {
                         setShowUserMenu(false);
                         router.push("/profile");
                       }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                      className="w-full text-left px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                     >
                       Mi perfil
                     </button>
@@ -213,7 +213,7 @@ export const Nav: React.FC = () => {
                         setShowUserMenu(false);
                         router.push("/config");
                       }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                      className="w-full text-left px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                     >
                       Configuración
                     </button>
@@ -224,7 +224,7 @@ export const Nav: React.FC = () => {
                         setShowUserMenu(false);
                         handleLogout();
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                      className="w-full text-left px-4 py-2 text-sm cursor-pointer text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                     >
                       Cerrar sesión
                     </button>

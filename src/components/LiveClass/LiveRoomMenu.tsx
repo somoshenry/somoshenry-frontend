@@ -153,25 +153,23 @@ export const LiveRoomMenu = () => {
               {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="p-6 bg-[#141722] rounded-xl border border-gray-700 hover:border-yellow-400 transition-all hover:shadow-xl hover:shadow-yellow-500/10 hover:-translate-y-1"
+                  className="p-6 bg-gray-100 text-black  rounded-xl shadow-md/30 shadow-black transition-all hover:shadow-xl hover:shadow-[#ffff00] hover:-translate-y-1"
                 >
-                  <h3 className="text-xl font-bold mb-2 text-white">{room.name}</h3>
-                  {room.description && (
-                    <p className="text-gray-400 mb-4 line-clamp-2 min-h-[3rem]">{room.description}</p>
-                  )}
+                  <h3 className="text-xl font-bold mb-2 ">{room.name}</h3>
+                  {room.description && <p className="mb-2 line-clamp-2">{room.description}</p>}
 
-                  <div className="mb-6 flex gap-4 text-sm text-gray-400 py-3 border-t border-b border-gray-700">
+                  <div className="mb-6 flex gap-4 text-sm  py-3 border-t border-b border-gray-700">
                     <span className="flex items-center gap-1">
-                      👥 <span className="font-semibold text-white">{room.currentParticipants || 0}</span>
+                      👥 <span className="font-semibold ">{room.currentParticipants || 0}</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      📊 Máx: <span className="font-semibold text-white">{room.maxParticipants || 10}</span>
+                      📊 Máx: <span className="font-semibold ">{room.maxParticipants || 10}</span>
                     </span>
                   </div>
 
                   <button
                     onClick={() => handleJoinRoom(room.id)}
-                    className="w-full px-4 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg"
+                    className="w-full px-4 py-3 bg-[#ffff00] cursor-pointer text-black font-bold rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg"
                   >
                     <LogIn size={20} />
                     Unirse

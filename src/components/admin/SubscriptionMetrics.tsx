@@ -20,16 +20,80 @@ export default function SubscriptionMetrics() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [statsData, planData, paymentsData, renewalsData, churnData, ltvData] = await Promise.all([getAdminDashboardStats(), getSubscriptionsByPlan(), getRecentPayments(1, 20), getUpcomingRenewals(7), getChurnRate(), getLTV()]);
+      
+      // Intentar cargar datos del backend
+      const results = await Promise.allSettled([
+        getAdminDashboardStats(),
+        getSubscriptionsByPlan(),
+        getRecentPayments(1, 20),
+        getUpcomingRenewals(7),
+        getChurnRate(),
+        getLTV()
+      ]);
 
-      setStats(statsData);
-      // Ordenar planes por cantidad (más contratado primero)
-      const sortedPlans = [...planData].sort((a, b) => b.count - a.count);
-      setPlanDistribution(sortedPlans);
-      setRecentPayments(paymentsData.data);
-      setUpcomingRenewals(renewalsData);
-      setChurnRate(churnData);
-      setLtv(ltvData);
+      // Procesar stats
+      if (results[0].status === 'fulfilled') {
+        setStats(results[0].value);
+      } else {
+        console.warn('Stats no disponibles, usando mock');
+        // Mock data mientras backend no está listo
+        setStats({
+          totalSubscriptions: 0,
+          activeSubscriptions: 0,
+          expiredSubscriptions: 0,
+          cancelledSubscriptions: 0,
+          totalRevenue: 0,
+          monthlyRevenue: 0,
+          averageRevenuePerUser: 0,
+          subscriptionsByPlan: { BRONCE: 0, PLATA: 0, ORO: 0 },
+          recentPayments: 0,
+          failedPayments: 0,
+          churnRate: 0,
+          lifetimeValue: 0,
+        });
+      }
+
+      // Procesar plan distribution
+      if (results[1].status === 'fulfilled') {
+        const sortedPlans = [...results[1].value].sort((a, b) => b.count - a.count);
+        setPlanDistribution(sortedPlans);
+      } else {
+        console.warn('Plan distribution no disponible');
+        setPlanDistribution([]);
+      }
+
+      // Procesar payments
+      if (results[2].status === 'fulfilled') {
+        setRecentPayments(results[2].value.data);
+      } else {
+        console.warn('Recent payments no disponible');
+        setRecentPayments([]);
+      }
+
+      // Procesar renewals
+      if (results[3].status === 'fulfilled') {
+        setUpcomingRenewals(results[3].value);
+      } else {
+        console.warn('Upcoming renewals no disponible');
+        setUpcomingRenewals([]);
+      }
+
+      // Procesar churn rate
+      if (results[4].status === 'fulfilled') {
+        setChurnRate(results[4].value);
+      } else {
+        console.warn('Churn rate no disponible');
+        setChurnRate(null);
+      }
+
+      // Procesar LTV
+      if (results[5].status === 'fulfilled') {
+        setLtv(results[5].value);
+      } else {
+        console.warn('LTV no disponible');
+        setLtv(null);
+      }
+
     } catch (error) {
       console.error('Error al cargar métricas de suscripciones:', error);
     } finally {
@@ -50,8 +114,12 @@ export default function SubscriptionMetrics() {
     return (
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 text-center">
         <AlertCircle className="mx-auto text-yellow-600 dark:text-yellow-400 mb-2" size={48} />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No se pudieron cargar las métricas</h3>
-        <p className="text-gray-600 dark:text-gray-400">Verifica que el backend esté funcionando correctamente</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Métricas de Suscripciones</h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          Los endpoints del backend para métricas aún no están implementados.
+          <br />
+          <span className="text-sm">Se mostrarán datos cuando el backend esté disponible.</span>
+        </p>
       </div>
     );
   }
@@ -192,17 +260,13 @@ export default function SubscriptionMetrics() {
         {planDistribution.length > 0 ? (
           <div className="flex items-center justify-between">
             <div>
-              <span className={`inline-block px-6 py-3 rounded-full text-2xl font-bold ${getPlanColor(planDistribution[0].plan)}`}>
-                {planDistribution[0].plan}
-              </span>
+              <span className={`inline-block px-6 py-3 rounded-full text-2xl font-bold ${getPlanColor(planDistribution[0].plan)}`}>{planDistribution[0].plan}</span>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
                 {planDistribution[0].count} usuarios • {planDistribution[0].percentage.toFixed(1)}% del total
               </p>
             </div>
             <div className="text-right">
-              <p className="text-5xl font-bold text-yellow-600 dark:text-yellow-400">
-                {planDistribution[0].percentage.toFixed(0)}%
-              </p>
+              <p className="text-5xl font-bold text-yellow-600 dark:text-yellow-400">{planDistribution[0].percentage.toFixed(0)}%</p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">de las suscripciones</p>
             </div>
           </div>
@@ -241,9 +305,7 @@ export default function SubscriptionMetrics() {
                   <tr key={payment.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                          {payment.userName[0]?.toUpperCase() || payment.userEmail[0].toUpperCase()}
-                        </div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">{payment.userName[0]?.toUpperCase() || payment.userEmail[0].toUpperCase()}</div>
                         <div>
                           <p className="font-semibold text-gray-900 dark:text-white">{payment.userName}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">{payment.userEmail}</p>
@@ -251,9 +313,7 @@ export default function SubscriptionMetrics() {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${getPlanColor(payment.plan)}`}>
-                        {payment.plan}
-                      </span>
+                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${getPlanColor(payment.plan)}`}>{payment.plan}</span>
                     </td>
                     <td className="py-4 px-4">
                       <span className="font-bold text-lg text-green-600 dark:text-green-400">{formatCurrency(payment.amount)}</span>
@@ -272,14 +332,14 @@ export default function SubscriptionMetrics() {
                           {new Date(payment.paymentDate).toLocaleDateString('es-AR', {
                             day: '2-digit',
                             month: '2-digit',
-                            year: 'numeric'
+                            year: 'numeric',
                           })}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(payment.paymentDate).toLocaleTimeString('es-AR', {
                             hour: '2-digit',
                             minute: '2-digit',
-                            second: '2-digit'
+                            second: '2-digit',
                           })}
                         </p>
                       </div>

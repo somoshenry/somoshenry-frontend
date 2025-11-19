@@ -53,9 +53,11 @@ const PricingCard: React.FC<PricingCardProps> = ({plan, isCurrentPlan, onUpgrade
     <div
       className={`relative overflow-hidden rounded-2xl p-8 ${
         plan.borderColor
-      } bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-300 ${
-        isCurrentPlan ? "ring-4 ring-green-500 dark:ring-green-400" : "transform hover:scale-105"
-      }`}
+      } bg-white dark:bg-gray-800 transition-all duration-300
+    ${isCurrentPlan ? "" : "shadow-lg hover:shadow-2xl transform hover:scale-105"}`}
+      style={
+        isCurrentPlan ? {boxShadow: "0 0 5px 5px rgba(59, 130, 246, 1), 0 0 20px 10px rgba(59, 130, 246, .7)"} : {}
+      }
     >
       {plan.popular && !isCurrentPlan && (
         <div className="absolute top-5 -right-8 bg-green-500 text-white px-10 py-1 rotate-45 text-xs font-semibold uppercase shadow-md">

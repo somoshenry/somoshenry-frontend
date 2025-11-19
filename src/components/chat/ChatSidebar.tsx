@@ -41,7 +41,7 @@ export default function ChatSidebar({
         <div className="flex gap-2">
           <button
             onClick={onOpenSearch}
-            className="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500 text-black transition-colors"
+            className="p-2 rounded-full bg-[#ffff00] cursor-pointer hover:scale-105 text-black transition-colors"
             title="Nueva conversación"
           >
             <svg
@@ -57,7 +57,7 @@ export default function ChatSidebar({
           </button>
           <button
             onClick={onOpenCreateGroup}
-            className="p-2 rounded-full bg-blue-400 hover:bg-blue-500 text-white transition-colors"
+            className="p-2 rounded-full bg-blue-400 cursor-pointer hover:bg-blue-500 text-white transition-colors"
             title="Nuevo grupo"
           >
             <svg

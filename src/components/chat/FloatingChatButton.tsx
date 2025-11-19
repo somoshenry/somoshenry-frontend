@@ -1,14 +1,23 @@
-'use client';
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/hook/useAuth';
-import { useChat } from '@/context/ChatContext';
-import { useSocket } from '@/hook/useSocket';
-import useDarkMode from '@/hook/useDarkMode';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
-import { tokenStore } from '@/services/tokenStore';
-import { getUserConversations, sendMessage, Message as BackendMessage, Conversation as BackendConversation, MessageType, getDisplayName, markConversationAsRead, deleteConversation /*, uploadChatMedia */ } from '@/services/chatService';
-import { Send } from 'lucide-react';
+"use client";
+import {useState, useRef, useEffect, useCallback} from "react";
+import {usePathname, useRouter} from "next/navigation";
+import {useAuth} from "@/hook/useAuth";
+import {useChat} from "@/context/ChatContext";
+import {useSocket} from "@/hook/useSocket";
+import useDarkMode from "@/hook/useDarkMode";
+import EmojiPicker, {EmojiClickData, Theme} from "emoji-picker-react";
+import {tokenStore} from "@/services/tokenStore";
+import {
+  getUserConversations,
+  sendMessage,
+  Message as BackendMessage,
+  Conversation as BackendConversation,
+  MessageType,
+  getDisplayName,
+  markConversationAsRead,
+  deleteConversation /*, uploadChatMedia */,
+} from "@/services/chatService";
+import {Send} from "lucide-react";
 
 interface Message {
   id: string;
@@ -37,12 +46,18 @@ interface Conversation {
 export default function FloatingChatButton() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
-  const { hasNewMessages, unreadMessagesCount, markMessagesAsRead, markConversationAsRead: markConversationAsReadGlobal, refreshUnreadCount } = useChat();
+  const {user} = useAuth();
+  const {
+    hasNewMessages,
+    unreadMessagesCount,
+    markMessagesAsRead,
+    markConversationAsRead: markConversationAsReadGlobal,
+    refreshUnreadCount,
+  } = useChat();
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,31 +68,32 @@ export default function FloatingChatButton() {
   const menuRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [theme] = useDarkMode();
-  const mensajeSrc = theme === 'dark' ? '/mensajeD.png' : '/mensajeC.png';
+  const mensajeSrc = theme === "dark" ? "/mensajeD.png" : "/mensajeC.png";
 
-  const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED !== 'false';
+  const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED !== "false";
   const token = tokenStore.getAccess();
   const socket = useSocket({
     token: token || null,
     enabled: !!user && !!token && chatEnabled,
   });
-  const buttonBaseClasses = 'py-2 text-black font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90';
+  const buttonBaseClasses =
+    "py-2 text-black font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90";
 
   // Convertir mensaje del backend a formato frontend
   const convertMessage = useCallback((msg: BackendMessage, currentUserId: string): Message => {
     // Normalizar URL de avatar
     const getAvatarUrl = (url: string | null | undefined): string | undefined => {
       if (!url) return undefined;
-      if (url.startsWith('http://') || url.startsWith('https://')) return url;
-      return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${url}`;
+      if (url.startsWith("http://") || url.startsWith("https://")) return url;
+      return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${url}`;
     };
 
     return {
       id: msg.id,
-      senderId: msg.sender?.id || '',
-      senderName: msg.sender ? getDisplayName(msg.sender) : 'Usuario',
+      senderId: msg.sender?.id || "",
+      senderName: msg.sender ? getDisplayName(msg.sender) : "Usuario",
       senderAvatar: getAvatarUrl(msg.sender?.profilePicture),
-      content: msg.content || msg.mediaUrl || '',
+      content: msg.content || msg.mediaUrl || "",
       timestamp: new Date(msg.createdAt),
       isOwn: msg.sender?.id === currentUserId,
       type: msg.type,
@@ -96,8 +112,8 @@ export default function FloatingChatButton() {
       // Normalizar URL de avatar
       const getAvatarUrl = (url: string | null | undefined): string | undefined => {
         if (!url) return undefined;
-        if (url.startsWith('http://') || url.startsWith('https://')) return url;
-        return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${url}`;
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${url}`;
       };
 
       const frontendConvs: Conversation[] = backendConvs.map((conv: BackendConversation) => {
@@ -121,9 +137,9 @@ export default function FloatingChatButton() {
         return {
           id: conv.id,
           userId: otherUser?.id,
-          userName: otherUser ? getDisplayName(otherUser) : 'Conversación',
+          userName: otherUser ? getDisplayName(otherUser) : "Conversación",
           userAvatar: avatarUrl,
-          lastMessage: lastMsg?.content || '',
+          lastMessage: lastMsg?.content || "",
           lastMessageTime: lastMsg?.timestamp || new Date(conv.updatedAt),
           // Contar solo mensajes no leídos del otro usuario (usando isRead del backend)
           unreadCount: (conv.messages || []).filter((msg) => msg.sender?.id !== user.id && !msg.isRead).length,
@@ -133,7 +149,7 @@ export default function FloatingChatButton() {
 
       setConversations(frontendConvs.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime()));
     } catch (error) {
-      console.error('Error al cargar conversaciones:', error);
+      console.error("Error al cargar conversaciones:", error);
     } finally {
       setLoading(false);
     }
@@ -150,16 +166,16 @@ export default function FloatingChatButton() {
   useEffect(() => {
     const handleChatSync = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const { conversationId, action } = customEvent.detail || {};
+      const {conversationId, action} = customEvent.detail || {};
 
-      if (action === 'read' && conversationId) {
+      if (action === "read" && conversationId) {
         // Marcar localmente la conversación como leída
-        setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv)));
+        setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? {...conv, unreadCount: 0} : conv)));
       }
     };
 
-    window.addEventListener('chat-sync', handleChatSync);
-    return () => window.removeEventListener('chat-sync', handleChatSync);
+    window.addEventListener("chat-sync", handleChatSync);
+    return () => window.removeEventListener("chat-sync", handleChatSync);
   }, []);
 
   // Escuchar nuevos mensajes por WebSocket
@@ -210,16 +226,16 @@ export default function FloatingChatButton() {
         setShowEmoji(false);
       }
     };
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
   // Auto-scroll al último mensaje
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
   }, [selectedConversationId, conversations]);
 
-  if (pathname === '/chat' || !user || !chatEnabled) return null;
+  if (pathname === "/chat" || !user || !chatEnabled) return null;
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
@@ -256,7 +272,7 @@ export default function FloatingChatButton() {
       )
     );
 
-    setNewMessage('');
+    setNewMessage("");
 
     // Enviar por WebSocket o HTTP
     try {
@@ -274,7 +290,7 @@ export default function FloatingChatButton() {
         });
       }
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      console.error("Error al enviar mensaje:", error);
       // Revertir mensaje optimista en caso de error
       setConversations((prev) =>
         prev.map((conv) =>
@@ -290,7 +306,7 @@ export default function FloatingChatButton() {
   };
 
   const handleOpenFullChat = () => {
-    router.push('/chat');
+    router.push("/chat");
   };
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
@@ -301,7 +317,7 @@ export default function FloatingChatButton() {
     setSelectedConversationId(conversationId);
 
     // Inmediatamente limpiar el contador de esa conversación
-    setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv)));
+    setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? {...conv, unreadCount: 0} : conv)));
 
     // Marcar los mensajes como leídos usando el ChatContext (sincroniza automáticamente)
     markConversationAsReadGlobal(conversationId);
@@ -310,7 +326,7 @@ export default function FloatingChatButton() {
     try {
       await markConversationAsRead(conversationId);
     } catch (error) {
-      console.error('Error al marcar conversación como leída:', error);
+      console.error("Error al marcar conversación como leída:", error);
     }
   };
 
@@ -318,7 +334,7 @@ export default function FloatingChatButton() {
     // Prevenir que se abra la conversación al hacer clic en eliminar
     e?.stopPropagation();
 
-    if (!confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
+    if (!confirm("¿Estás seguro de que quieres eliminar esta conversación?")) {
       return;
     }
 
@@ -336,8 +352,8 @@ export default function FloatingChatButton() {
       // Refrescar el contador global
       refreshUnreadCount();
     } catch (error) {
-      console.error('Error al eliminar conversación:', error);
-      alert('Error al eliminar la conversación. Por favor intenta de nuevo.');
+      console.error("Error al eliminar conversación:", error);
+      alert("Error al eliminar la conversación. Por favor intenta de nuevo.");
     }
   };
 
@@ -462,18 +478,18 @@ export default function FloatingChatButton() {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Ahora';
+    if (minutes < 1) return "Ahora";
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString("es-ES", {day: "numeric", month: "short"});
   };
 
-  const formatMessageTime = (date: Date) => date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const formatMessageTime = (date: Date) => date.toLocaleTimeString("es-ES", {hour: "2-digit", minute: "2-digit"});
 
   // Ocultar el botón flotante en las páginas de videollamada
   // IMPORTANTE: Este return debe estar AL FINAL, después de todos los hooks
-  if (pathname?.startsWith('/live/') && pathname !== '/live/create') {
+  if (pathname?.startsWith("/live/") && pathname !== "/live/create") {
     return null;
   }
 
@@ -490,9 +506,23 @@ export default function FloatingChatButton() {
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">Mensajes</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{conversations.length} conversaciones</p>
                 </div>
-                <button onClick={handleOpenFullChat} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Abrir chat completo">
-                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <button
+                  onClick={handleOpenFullChat}
+                  className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  title="Abrir chat completo"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-600 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                 </button>
               </div>
@@ -504,35 +534,68 @@ export default function FloatingChatButton() {
                 ) : conversations.length === 0 ? (
                   <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                     <p>No tienes conversaciones</p>
-                    <button onClick={handleOpenFullChat} className="mt-4 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors">
+                    <button
+                      onClick={handleOpenFullChat}
+                      className="mt-4 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
+                    >
                       Iniciar chat
                     </button>
                   </div>
                 ) : (
                   conversations.map((conv) => (
                     <div key={conv.id} className="relative group">
-                      <button onClick={() => handleSelectConversation(conv.id)} className="w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <button
+                        onClick={() => handleSelectConversation(conv.id)}
+                        className="w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      >
                         <div className="relative shrink-0">
-                          {conv.userAvatar ? <img src={conv.userAvatar} alt={conv.userName || 'Usuario'} className="w-12 h-12 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} /> : null}
+                          {conv.userAvatar ? (
+                            <img
+                              src={conv.userAvatar}
+                              alt={conv.userName || "Usuario"}
+                              className="w-12 h-12 rounded-full object-cover"
+                              onError={(e) => (e.currentTarget.style.display = "none")}
+                            />
+                          ) : null}
                           {!conv.userAvatar && (
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-black font-bold" style={{ backgroundColor: '#ffff00' }}>
-                              {(conv.userName || 'U').charAt(0).toUpperCase()}
+                            <div
+                              className="w-12 h-12 rounded-full flex items-center justify-center text-black font-bold"
+                              style={{backgroundColor: "#ffff00"}}
+                            >
+                              {(conv.userName || "U").charAt(0).toUpperCase()}
                             </div>
                           )}
-                          {conv.unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{conv.unreadCount}</span>}
+                          {conv.unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                              {conv.unreadCount}
+                            </span>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold truncate text-gray-900 dark:text-white">{conv.userName || 'Conversación'}</h3>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 shrink-0">{formatTime(conv.lastMessageTime)}</span>
+                            <h3 className="font-semibold truncate text-gray-900 dark:text-white">
+                              {conv.userName || "Conversación"}
+                            </h3>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 shrink-0">
+                              {formatTime(conv.lastMessageTime)}
+                            </span>
                           </div>
                           <p className="text-sm truncate text-gray-500 dark:text-gray-400">{conv.lastMessage}</p>
                         </div>
                       </button>
                       {/* Botón de eliminar - aparece al hacer hover */}
-                      <button onClick={(e) => handleDeleteConversation(conv.id, e)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity" title="Eliminar conversación">
+                      <button
+                        onClick={(e) => handleDeleteConversation(conv.id, e)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Eliminar conversación"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -545,25 +608,49 @@ export default function FloatingChatButton() {
             <>
               {/* Header del chat */}
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center gap-3">
-                <button onClick={() => setSelectedConversationId(null)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <button
+                  onClick={() => setSelectedConversationId(null)}
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                {selectedConversation.userAvatar ? <img src={selectedConversation.userAvatar} alt={selectedConversation.userName || 'Chat'} className="w-10 h-10 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} /> : null}
+                {selectedConversation.userAvatar ? (
+                  <img
+                    src={selectedConversation.userAvatar}
+                    alt={selectedConversation.userName || "Chat"}
+                    className="w-10 h-10 rounded-full object-cover"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                ) : null}
                 {!selectedConversation.userAvatar && (
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-black font-bold" style={{ backgroundColor: '#ffff00' }}>
-                    {(selectedConversation.userName || 'C').charAt(0).toUpperCase()}
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-black font-bold"
+                    style={{backgroundColor: "#ffff00"}}
+                  >
+                    {(selectedConversation.userName || "C").charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-semibold text-gray-900 dark:text-white truncate">{selectedConversation.userName || 'Conversación'}</h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-white truncate">
+                    {selectedConversation.userName || "Conversación"}
+                  </h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400">En línea</p>
                 </div>
                 {/* Botón de eliminar conversación */}
-                <button onClick={(e) => handleDeleteConversation(selectedConversation.id, e)} className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" title="Eliminar conversación">
+                <button
+                  onClick={(e) => handleDeleteConversation(selectedConversation.id, e)}
+                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                  title="Eliminar conversación"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -571,30 +658,70 @@ export default function FloatingChatButton() {
               {/* Mensajes */}
               <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
                 {selectedConversation.messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex gap-2 max-w-[80%] ${message.isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
+                    <div className={`flex gap-2 max-w-[80%] ${message.isOwn ? "flex-row-reverse" : "flex-row"}`}>
                       {!message.isOwn && (
                         <div className="shrink-0">
-                          {selectedConversation.userAvatar ? <img src={selectedConversation.userAvatar} alt={message.senderName} className="w-6 h-6 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} /> : null}
+                          {selectedConversation.userAvatar ? (
+                            <img
+                              src={selectedConversation.userAvatar}
+                              alt={message.senderName}
+                              className="w-6 h-6 rounded-full object-cover"
+                              onError={(e) => (e.currentTarget.style.display = "none")}
+                            />
+                          ) : null}
                           {!selectedConversation.userAvatar && (
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-black text-xs font-bold" style={{ backgroundColor: '#ffff00' }}>
+                            <div
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-black text-xs font-bold"
+                              style={{backgroundColor: "#ffff00"}}
+                            >
                               {message.senderName.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
                       )}
                       <div>
-                        <div className={`rounded-2xl px-3 py-2 ${message.isOwn ? 'text-black' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'}`} style={message.isOwn ? { backgroundColor: '#ffff00' } : {}}>
+                        <div
+                          className={`rounded-2xl px-3 py-2 ${
+                            message.isOwn
+                              ? "text-black"
+                              : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
+                          }`}
+                          style={message.isOwn ? {backgroundColor: "#ffff00"} : {}}
+                        >
                           {/* Mostrar imagen */}
-                          {message.type === MessageType.IMAGE && message.mediaUrl && <img src={message.mediaUrl} alt="Imagen enviada" className="max-w-full rounded-lg mb-1 cursor-pointer hover:opacity-90 transition-opacity" style={{ maxHeight: '300px' }} onClick={() => window.open(message.mediaUrl, '_blank')} />}
+                          {message.type === MessageType.IMAGE && message.mediaUrl && (
+                            <img
+                              src={message.mediaUrl}
+                              alt="Imagen enviada"
+                              className="max-w-full rounded-lg mb-1 cursor-pointer hover:opacity-90 transition-opacity"
+                              style={{maxHeight: "300px"}}
+                              onClick={() => window.open(message.mediaUrl, "_blank")}
+                            />
+                          )}
 
                           {/* Mostrar video */}
-                          {message.type === MessageType.VIDEO && message.mediaUrl && <video src={message.mediaUrl} controls className="max-w-full rounded-lg mb-1" style={{ maxHeight: '300px' }} />}
+                          {message.type === MessageType.VIDEO && message.mediaUrl && (
+                            <video
+                              src={message.mediaUrl}
+                              controls
+                              className="max-w-full rounded-lg mb-1"
+                              style={{maxHeight: "300px"}}
+                            />
+                          )}
 
                           {/* Mostrar texto si existe */}
-                          {message.content && <p className="text-sm whitespace-pre-wrap break-word">{message.content}</p>}
+                          {message.content && (
+                            <p className="text-sm whitespace-pre-wrap break-word">{message.content}</p>
+                          )}
                         </div>
-                        <p className={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${message.isOwn ? 'text-right' : 'text-left'}`}>{formatMessageTime(message.timestamp)}</p>
+                        <p
+                          className={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${
+                            message.isOwn ? "text-right" : "text-left"
+                          }`}
+                        >
+                          {formatMessageTime(message.timestamp)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -603,7 +730,10 @@ export default function FloatingChatButton() {
               </div>
 
               {/* Input de mensaje con emojis */}
-              <form onSubmit={handleSendMessage} className="relative p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <form
+                onSubmit={handleSendMessage}
+                className="relative p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              >
                 {/* ============================================
                     UI DE SUBIDA DE ARCHIVOS - COMENTADA
                     Descomentar cuando el backend esté listo
@@ -628,7 +758,7 @@ export default function FloatingChatButton() {
                 {/* Picker flotante */}
                 {showEmoji && (
                   <div className="absolute bottom-16 left-3 z-50">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT} />
+                    <EmojiPicker onEmojiClick={handleEmojiClick} theme={theme === "dark" ? Theme.DARK : Theme.LIGHT} />
                   </div>
                 )}
 
@@ -649,12 +779,22 @@ export default function FloatingChatButton() {
                   )} */}
 
                   {/* Botón emoji */}
-                  <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="text-xl hover:scale-110 transition-transform">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmoji(!showEmoji)}
+                    className="text-xl hover:scale-110 transition-transform"
+                  >
                     😊
                   </button>
 
                   {/* Input de texto */}
-                  <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escribe un mensaje..." className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Escribe un mensaje..."
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+                  />
 
                   <button
                     type="submit"
@@ -687,17 +827,32 @@ export default function FloatingChatButton() {
       )}
 
       {/* Botón principal */}
-      <button onClick={() => setIsOpen(!isOpen)} className="relative group text-black rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110" style={{ backgroundColor: '#ffff00' }} aria-label="Abrir mensajes">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative group text-black rounded-full p-4 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+        style={{backgroundColor: "#ffff00"}}
+        aria-label="Abrir mensajes"
+      >
         {hasNewMessages && !isOpen && (
           <span className="absolute -top-1 -right-1 flex h-6 w-6">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500 items-center justify-center">{unreadMessagesCount > 0 && <span className="text-white text-xs font-bold">{unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}</span>}</span>
+            <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500 items-center justify-center">
+              {unreadMessagesCount > 0 && (
+                <span className="text-white text-xs font-bold">
+                  {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                </span>
+              )}
+            </span>
           </span>
         )}
 
-        <img src={mensajeSrc} alt="mensajes" className="w-6 h-6" />
+        <img src={mensajeSrc} alt="mensajes" className="w-6 h-6 cursor-pointer" />
 
-        {!isOpen && <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">Mensajes</span>}
+        {!isOpen && (
+          <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+            Mensajes
+          </span>
+        )}
       </button>
     </div>
   );

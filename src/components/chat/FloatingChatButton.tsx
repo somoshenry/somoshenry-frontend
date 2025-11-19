@@ -805,7 +805,7 @@ export default function FloatingChatButton() {
         hover:bg-yellow-300
         
         // Estilos para MÓVIL (Por defecto, solo el icono)
-        px-3 md:hidden 
+        px-3 md:inline-flex
         
         // Estilos para ESCRITORIO (Aparece a partir de 'md')
         md:px-4 md:inline-flex md:text-sm

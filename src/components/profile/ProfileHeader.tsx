@@ -1,28 +1,28 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { MessageCircle, UserPlus, UserMinus, Flag } from 'lucide-react';
-import { getUserProfile, User } from '@/services/userService';
-import { getFollowStats, followUser, unfollowUser, checkFollowStatus } from '@/services/followService';
-import { reportUser } from '@/services/reportService';
-import { openConversation } from '@/services/chatService';
-import { useAuth } from '@/hook/useAuth';
-import ProfileEditModal from './ProfileEditModal';
-import FollowListModal from './FollowListModal';
+"use client";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
+import {MessageCircle, UserPlus, UserMinus, Flag} from "lucide-react";
+import {getUserProfile, User} from "@/services/userService";
+import {getFollowStats, followUser, unfollowUser, checkFollowStatus} from "@/services/followService";
+import {reportUser} from "@/services/reportService";
+import {openConversation} from "@/services/chatService";
+import {useAuth} from "@/hook/useAuth";
+import ProfileEditModal from "./ProfileEditModal";
+import FollowListModal from "./FollowListModal";
 
 export default function ProfileHeader() {
   const router = useRouter();
-  const { user: currentUser } = useAuth();
+  const {user: currentUser} = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [followStats, setFollowStats] = useState({ followersCount: 0, followingCount: 0 });
+  const [followStats, setFollowStats] = useState({followersCount: 0, followingCount: 0});
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFollowModal, setShowFollowModal] = useState(false);
-  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
+  const [followModalTab, setFollowModalTab] = useState<"followers" | "following">("followers");
 
   // Si es el perfil del usuario actual, usar el user del contexto (siempre actualizado)
   const isOwnProfile = currentUser?.id === user?.id;
@@ -46,8 +46,8 @@ export default function ProfileHeader() {
           }
         }
       } catch (err) {
-        console.error('Error al cargar el perfil:', err);
-        setError('No se pudo cargar el perfil');
+        console.error("Error al cargar el perfil:", err);
+        setError("No se pudo cargar el perfil");
       } finally {
         setLoading(false);
       }
@@ -69,17 +69,17 @@ export default function ProfileHeader() {
         const result = await unfollowUser(user.id);
         if (result.success) {
           setIsFollowing(false);
-          setFollowStats((prev) => ({ ...prev, followersCount: Math.max(0, prev.followersCount - 1) }));
+          setFollowStats((prev) => ({...prev, followersCount: Math.max(0, prev.followersCount - 1)}));
         }
       } else {
         const result = await followUser(user.id);
         if (result.success) {
           setIsFollowing(true);
-          setFollowStats((prev) => ({ ...prev, followersCount: prev.followersCount + 1 }));
+          setFollowStats((prev) => ({...prev, followersCount: prev.followersCount + 1}));
         }
       }
     } catch (error) {
-      console.error('Error al seguir/dejar de seguir:', error);
+      console.error("Error al seguir/dejar de seguir:", error);
     } finally {
       setFollowLoading(false);
     }
@@ -91,8 +91,8 @@ export default function ProfileHeader() {
       const conversation = await openConversation(user.id);
       router.push(`/chat?conversationId=${conversation.id}`);
     } catch (error) {
-      console.error('Error al abrir chat:', error);
-      alert('Error al abrir el chat.');
+      console.error("Error al abrir chat:", error);
+      alert("Error al abrir el chat.");
     }
   };
 
@@ -102,10 +102,10 @@ export default function ProfileHeader() {
     try {
       await reportUser(user.id, reason as any, description);
       setShowReportModal(false);
-      alert('Reporte enviado exitosamente.');
+      alert("Reporte enviado exitosamente.");
     } catch (error) {
-      console.error('Error al reportar usuario:', error);
-      alert('Error al enviar el reporte.');
+      console.error("Error al reportar usuario:", error);
+      alert("Error al enviar el reporte.");
     }
   };
 
@@ -127,34 +127,33 @@ export default function ProfileHeader() {
       <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 border-b pb-4">
         <div className="w-full h-32 bg-red-100 dark:bg-red-900" />
         <div className="w-11/12 -mt-10 flex flex-col items-center">
-          <p className="text-red-600 dark:text-red-400">{error || 'Error al cargar el perfil'}</p>
+          <p className="text-red-600 dark:text-red-400">{error || "Error al cargar el perfil"}</p>
         </div>
       </div>
     );
   }
 
   const getInitials = () => {
-    const firstName = user.name?.trim()?.charAt(0) || '';
-    const lastName = user.lastName?.trim()?.charAt(0) || '';
-    return (firstName + lastName).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?';
+    const firstName = user.name?.trim()?.charAt(0) || "";
+    const lastName = user.lastName?.trim()?.charAt(0) || "";
+    return (firstName + lastName).toUpperCase() || user.email?.charAt(0).toUpperCase() || "?";
   };
 
   const formatJoinDate = () => {
     const date = new Date(user.joinDate || user.createdAt);
-    return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString("es-ES", {month: "long", year: "numeric"});
   };
 
   return (
     <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 border-b pb-4">
-
       {/* COVER */}
       <div
         className="w-full h-32 relative group"
         style={{
-          backgroundColor: user.coverPicture ? 'transparent' : '#FFFF00',
-          backgroundImage: user.coverPicture ? `url(${user.coverPicture})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundColor: user.coverPicture ? "transparent" : "#FFFF00",
+          backgroundImage: user.coverPicture ? `url(${user.coverPicture})` : "none",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         {isOwnProfile && (
@@ -169,11 +168,13 @@ export default function ProfileHeader() {
 
       {/* AVATAR + INFO */}
       <div className="w-11/12 -mt-10 flex flex-col text-black items-center">
-
         {/* AVATAR */}
         <div className="relative group">
           {user.profilePicture ? (
-            <img src={user.profilePicture} className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 object-cover" />
+            <img
+              src={user.profilePicture}
+              className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 object-cover"
+            />
           ) : (
             <div className="bg-[#FFFF00] w-20 h-20 rounded-full flex items-center justify-center text-lg font-bold border-4 border-white dark:border-gray-900">
               {getInitials()}
@@ -197,7 +198,7 @@ export default function ProfileHeader() {
         <div className="flex flex-col items-center mt-2">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold dark:text-white">
-              {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || 'Usuario'}
+              {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || "Usuario"}
             </h1>
 
             {isOwnProfile && (
@@ -210,10 +211,10 @@ export default function ProfileHeader() {
             )}
           </div>
 
-          <p className="text-black dark:text-gray-400">@{user.email?.split('@')[0]}</p>
+          <p className="text-black dark:text-gray-400">@{user.email?.split("@")[0]}</p>
 
           {/* 🔥 PLAN REAL DESDE LA BASE DE DATOS */}
-          {isOwnProfile && (
+          {isOwnProfile &&
             (() => {
               const plan = displayUser?.subscription?.plan ?? null;
               const expiresAt = displayUser?.subscription?.endDate ?? null;
@@ -222,33 +223,30 @@ export default function ProfileHeader() {
                 <div className="mt-2 text-center">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-semibold border ${
-                      plan === 'ORO'
-                        ? 'bg-yellow-100 text-yellow-700 border-yellow-400'
-                        : plan === 'PLATA'
-                        ? 'bg-gray-200 text-gray-700 border-gray-400'
-                        : plan === 'BRONCE'
-                        ? 'bg-orange-100 text-orange-700 border-orange-400'
-                        : 'bg-gray-100 text-gray-600 border-gray-300'
+                      plan === "ORO"
+                        ? "bg-yellow-100 text-yellow-700 border-yellow-400"
+                        : plan === "PLATA"
+                        ? "bg-gray-200 text-gray-700 border-gray-400"
+                        : plan === "BRONCE"
+                        ? "bg-orange-100 text-orange-700 border-orange-400"
+                        : "bg-gray-100 text-gray-600 border-gray-300"
                     }`}
                   >
-                    {plan ? `Plan ${plan}` : 'Sin suscripción'}
+                    {plan ? `Plan ${plan}` : "Sin suscripción"}
                   </span>
 
                   {expiresAt && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Vence el: {new Date(expiresAt).toLocaleDateString('es-AR')}
+                      Vence el: {new Date(expiresAt).toLocaleDateString("es-AR")}
                     </p>
                   )}
                 </div>
               );
-            })()
-          )}
+            })()}
 
           {/* BIO */}
           {user.biography && (
-            <p className="text-sm text-black dark:text-gray-400 text-center max-w-md mt-2">
-              {user.biography}
-            </p>
+            <p className="text-sm text-black dark:text-gray-400 text-center max-w-md mt-2">{user.biography}</p>
           )}
         </div>
 
@@ -256,7 +254,7 @@ export default function ProfileHeader() {
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
           <button
             onClick={() => {
-              setFollowModalTab('followers');
+              setFollowModalTab("followers");
               setShowFollowModal(true);
             }}
             className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -266,9 +264,9 @@ export default function ProfileHeader() {
 
           <button
             onClick={() => {
-              setFollowModalTab('following');
+              setFollowModalTab("following");
               setShowFollowModal(true);
-            }} 
+            }}
             className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {followStats.followingCount} <span className="font-normal">Siguiendo</span>
@@ -283,15 +281,21 @@ export default function ProfileHeader() {
               disabled={followLoading}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 isFollowing
-                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+                  ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  : "bg-yellow-400 hover:bg-yellow-500 text-black"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {followLoading
-                ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                : isFollowing
-                ? (<><UserMinus size={18} /> Dejar de seguir</>)
-                : (<><UserPlus size={18} /> Seguir</>)}
+              {followLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+              ) : isFollowing ? (
+                <>
+                  <UserMinus size={18} /> Dejar de seguir
+                </>
+              ) : (
+                <>
+                  <UserPlus size={18} /> Seguir
+                </>
+              )}
             </button>
 
             <button
@@ -317,7 +321,7 @@ export default function ProfileHeader() {
           {user.email && <span>📧 {user.email}</span>}
           {user.website && (
             <a href={user.website} target="_blank" className="hover:text-yellow-500 dark:hover:text-yellow-400">
-              🔗 {user.website.includes('github.com') ? 'GitHub' : 'Sitio Web'}
+              🔗 {user.website.includes("github.com") ? "GitHub" : "Sitio Web"}
             </a>
           )}
         </div>
@@ -340,11 +344,7 @@ export default function ProfileHeader() {
       )}
 
       {showFollowModal && user && (
-        <FollowListModal
-          userId={user.id}
-          initialTab={followModalTab}
-          onClose={() => setShowFollowModal(false)}
-        />
+        <FollowListModal userId={user.id} initialTab={followModalTab} onClose={() => setShowFollowModal(false)} />
       )}
     </div>
   );
@@ -356,19 +356,19 @@ export default function ProfileHeader() {
 function ReportUserModal({
   userName,
   onClose,
-  onSubmit
+  onSubmit,
 }: {
   userName: string;
   onClose: () => void;
   onSubmit: (reason: string, description: string) => void;
 }) {
-  const [reason, setReason] = useState('SPAM');
-  const [description, setDescription] = useState('');
+  const [reason, setReason] = useState("SPAM");
+  const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      alert('Por favor describe el motivo del reporte');
+      alert("Por favor describe el motivo del reporte");
       return;
     }
     setSubmitting(true);
@@ -377,11 +377,11 @@ function ReportUserModal({
   };
 
   const reasons = [
-    { value: 'SPAM', label: 'Spam o contenido no deseado' },
-    { value: 'HARASSMENT', label: 'Acoso o intimidación' },
-    { value: 'INAPPROPRIATE', label: 'Contenido inapropiado' },
-    { value: 'MISINFORMATION', label: 'Información falsa' },
-    { value: 'OTHER', label: 'Otro motivo' }
+    {value: "SPAM", label: "Spam o contenido no deseado"},
+    {value: "HARASSMENT", label: "Acoso o intimidación"},
+    {value: "INAPPROPRIATE", label: "Contenido inapropiado"},
+    {value: "MISINFORMATION", label: "Información falsa"},
+    {value: "OTHER", label: "Otro motivo"},
   ];
 
   return (
@@ -390,9 +390,7 @@ function ReportUserModal({
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Reportar a {userName}
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Reportar a {userName}</h2>
 
         <div className="space-y-4">
           <div>
@@ -413,9 +411,7 @@ function ReportUserModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Descripción
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -435,7 +431,7 @@ function ReportUserModal({
             disabled={submitting || !description.trim()}
             className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50"
           >
-            {submitting ? 'Enviando...' : 'Enviar Reporte'}
+            {submitting ? "Enviando..." : "Enviar Reporte"}
           </button>
         </div>
       </div>

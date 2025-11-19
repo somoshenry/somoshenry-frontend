@@ -140,7 +140,7 @@ export default function ChatWindow({conversation, onSendMessage, onDeleteConvers
               <div className={`flex gap-2 max-w-[70%] ${message.isOwn ? "flex-row-reverse" : "flex-row"}`}>
                 {/* Avatar del remitente (solo en grupos, mensajes de otros, y cuando cambia el remitente) */}
                 {conversation.isGroup && !message.isOwn && (
-                  <div className="flex-shrink-0 w-8 h-8 mt-auto mb-6">
+                  <div className="shrink-0 w-8 h-8 mt-auto mb-6">
                     {showSenderName ? (
                       message.senderAvatar ? (
                         <img

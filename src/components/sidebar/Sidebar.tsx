@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hook/useAuth';
 import { getMyCohortes } from '@/services/cohorteService';
+import Swal from 'sweetalert2';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -55,7 +56,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     } else if (userCohortes.length > 1) {
       router.push('/cohorte');
     } else {
-      alert('No tienes cohortes asignadas');
+      //alert('No tienes cohortes asignadas');
+      Swal.fire({
+        title: 'Atención',
+        text: 'No tienes cohortes asignadas',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
     }
 
     if (window.innerWidth < 768) {
@@ -109,14 +116,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                       onClick={item.onClick}
                       className={`
                         w-full flex items-center space-x-3 p-3 rounded-lg transition-colors
-                        ${item.href && pathname.startsWith(item.href) ? 'bg-[#ffff00] text-black font-semibold text-xl' : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'}
+                        ${
+                          item.href && pathname.startsWith(item.href)
+                            ? 'bg-[#ffff00] text-black font-semibold text-xl'
+                            : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'
+                        }
                       `}
                     >
                       <span className="text-xl">{item.icon}</span>
                       <span>{item.name}</span>
 
                       {/* Badge */}
-                      {'badge' in item && item.badge > 0 && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>}
+                      {'badge' in item && item.badge > 0 && (
+                        <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>
+                      )}
                     </button>
                   ) : (
                     /* 🔥 SI ES LINK NORMAL */
@@ -127,7 +140,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                       }}
                       className={`
                         flex items-center space-x-3 p-3 rounded-lg transition-colors
-                        ${pathname === item.href ? 'bg-[#ffff00] text-black font-semibold text-xl' : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'}
+                        ${
+                          pathname === item.href
+                            ? 'bg-[#ffff00] text-black font-semibold text-xl'
+                            : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'
+                        }
                       `}
                     >
                       <span className="text-xl">{item.icon}</span>

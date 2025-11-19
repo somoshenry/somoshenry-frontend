@@ -2,6 +2,7 @@
 import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hook/useAuth';
+import Swal from 'sweetalert2';
 
 const TailwindSpinner = () => (
   <div className="flex items-center justify-center space-x-2">
@@ -35,7 +36,13 @@ function AuthCallbackContent() {
         router.push('/home');
       } catch (error) {
         console.error('Fallo al procesar el token de URL:', error);
-        alert('El enlace de inicio de sesión ha expirado o es inválido.');
+        //alert('El enlace de inicio de sesión ha expirado o es inválido.');
+        Swal.fire({
+          title: 'Error',
+          text: 'El enlace de inicio de sesión ha expirado o es inválido.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+        });
         router.push('/login');
       }
     };

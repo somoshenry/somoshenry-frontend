@@ -34,9 +34,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       if (!user) return;
       try {
         setLoadingCohortes(true);
-        const cohortes = await getMyCohortes();
-        const myCohortes = cohortes.filter((c) => c.members?.some((m) => m.user.id === user.id) || user.role === 'ADMIN');
-        setUserCohortes(myCohortes);
+        // Pasar el rol del usuario para que ADMIN vea todas las cohortes
+        const cohortes = await getMyCohortes(user.role);
+        setUserCohortes(cohortes);
       } catch (error) {
         console.error('Error al obtener cohortes del usuario:', error);
       } finally {
@@ -45,6 +45,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     };
 
     fetchUserCohortes();
+
+    // Listener para recargar cohortes cuando se recibe notificación de asignación
+    const handleCohorteAssigned = () => {
+      console.log('🎓 Cohorte asignada - recargando lista');
+      fetchUserCohortes();
+    };
+
+    window.addEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+
+    return () => {
+      window.removeEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+    };
   }, [user]);
 
   const handleCohorteClick = (e: React.MouseEvent) => {

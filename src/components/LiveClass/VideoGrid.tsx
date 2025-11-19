@@ -31,61 +31,58 @@ export const VideoGrid: React.FC<VideoGridProps> = ({ localStream, remoteStreams
   // LAYOUT ESPECIAL PARA SCREEN SHARING (estilo Meet/Zoom)
   // -------------------------
   if (isSomeoneSharing) {
+    // Identificar quién está compartiendo pantalla
+    const sharingRemote = remoteStreams.find((r) => r.screen);
+    const isLocalSharing = localScreen;
+
     return (
       <div className="w-full h-full flex gap-2 p-2">
         {/* Pantalla compartida GRANDE - lado izquierdo */}
         <div className="flex-1 bg-black rounded-lg overflow-hidden">
-          {localScreen ? (
+          {isLocalSharing ? (
+            // Mostrar tu pantalla compartida
             <VideoPlayer stream={localStream} muted={true} isLocal={true} username={localFullName} audio={localAudio} video={localVideo} screen={localScreen} avatar={localAvatar} className="w-full h-full" />
           ) : (
-            // Mostrar el stream del participante que está compartiendo
-            remoteStreams
-              .filter((r) => r.screen)
-              .map((remote) => {
-                const fullName = `${remote.name ?? ''} ${remote.lastName ?? ''}`.trim() || remote.username || 'Invitado';
-                return (
-                  <div key={remote.userId} className="w-full h-full">
-                    <VideoPlayer stream={remote.stream} muted={false} username={fullName} isLocal={false} audio={remote.audio} video={remote.video} screen={remote.screen} avatar={remote.avatar ?? null} className="w-full h-full" />
-                  </div>
-                );
-              })
+            // Mostrar pantalla del participante remoto que está compartiendo
+            sharingRemote && (
+              <div className="w-full h-full">
+                <VideoPlayer stream={sharingRemote.stream} muted={false} username={`${sharingRemote.name ?? ''} ${sharingRemote.lastName ?? ''}`.trim() || sharingRemote.username || 'Invitado'} isLocal={false} audio={sharingRemote.audio} video={sharingRemote.video} screen={sharingRemote.screen} avatar={sharingRemote.avatar ?? null} className="w-full h-full" />
+              </div>
+            )
           )}
         </div>
 
-        {/* Cámaras pequeñas - lado derecho */}
+        {/* Cámaras pequeñas - lado derecho - INCLUYE TODAS LAS CÁMARAS */}
         <div className="w-64 flex flex-col gap-2 overflow-y-auto">
-          {/* Tu cámara (si no eres el que comparte) */}
-          {!localScreen && (
-            <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border-2 border-yellow-500/50 shadow-lg shrink-0">
-              <VideoPlayer stream={localStream} muted={true} isLocal={true} username={localFullName} audio={localAudio} video={localVideo} screen={false} avatar={localAvatar} className="w-full h-full" />
-              <div className="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded-md text-xs font-bold shadow-lg">TÚ</div>
+          {/* TU cámara SIEMPRE se muestra en el sidebar */}
+          <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border-2 border-yellow-500/50 shadow-lg shrink-0">
+            <VideoPlayer stream={localStream} muted={true} isLocal={true} username={localFullName} audio={localAudio} video={localVideo} screen={false} avatar={localAvatar} className="w-full h-full" />
+            <div className="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded-md text-xs font-bold shadow-lg">TÚ</div>
 
-              {/* Indicadores */}
-              <div className="absolute bottom-2 left-2 flex gap-1">
-                {!localAudio && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">🔇</span>}
-                {!localVideo && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">📷</span>}
-              </div>
+            {/* Indicadores */}
+            <div className="absolute bottom-2 left-2 flex gap-1">
+              {!localAudio && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">🔇</span>}
+              {!localVideo && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">📷</span>}
             </div>
-          )}
+          </div>
 
-          {/* Participantes remotos (excepto el que comparte) */}
-          {remoteStreams
-            .filter((r) => !r.screen) // Excluir al que comparte pantalla
-            .map((remote) => {
-              const fullName = `${remote.name ?? ''} ${remote.lastName ?? ''}`.trim() || remote.username || 'Invitado';
-              return (
-                <div key={remote.userId} className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-gray-600 shadow-lg shrink-0">
-                  <VideoPlayer stream={remote.stream} muted={false} username={fullName} isLocal={false} audio={remote.audio} video={remote.video} screen={false} avatar={remote.avatar ?? null} className="w-full h-full" />
-                  <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium shadow-lg">{fullName}</div>
+          {/* TODOS los participantes remotos - sin importar si están compartiendo */}
+          {remoteStreams.map((remote) => {
+            const fullName = `${remote.name ?? ''} ${remote.lastName ?? ''}`.trim() || remote.username || 'Invitado';
+            return (
+              <div key={remote.userId} className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-gray-600 shadow-lg shrink-0">
+                {/* Mostrar su cámara (no su pantalla compartida) */}
+                <VideoPlayer stream={remote.stream} muted={false} username={fullName} isLocal={false} audio={remote.audio} video={remote.video} screen={false} avatar={remote.avatar ?? null} className="w-full h-full" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium shadow-lg">{fullName}</div>
 
-                  {/* Indicadores */}
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    {!remote.audio && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">🔇</span>}
-                    {!remote.video && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">📷</span>}
-                  </div>
+                {/* Indicadores */}
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {!remote.audio && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">🔇</span>}
+                  {!remote.video && <span className="px-1.5 py-0.5 text-xs bg-red-600/90 backdrop-blur-sm rounded text-white font-medium shadow-lg">📷</span>}
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -95,25 +92,36 @@ export const VideoGrid: React.FC<VideoGridProps> = ({ localStream, remoteStreams
   // LAYOUT NORMAL (sin screen sharing)
   // -------------------------
   const total = 1 + remoteStreams.length;
+
+  // Grid dinámico basado en el número total de participantes
   let gridClass = '';
 
   if (total === 1) {
     gridClass = 'grid-cols-1';
   } else if (total === 2) {
     gridClass = 'grid-cols-1 md:grid-cols-2';
-  } else if (total === 3 || total === 4) {
-    gridClass = 'grid-cols-1 sm:grid-cols-2';
-  } else {
+  } else if (total === 3) {
     gridClass = 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+  } else if (total === 4) {
+    gridClass = 'grid-cols-2';
+  } else if (total <= 6) {
+    gridClass = 'grid-cols-2 lg:grid-cols-3';
+  } else if (total <= 9) {
+    gridClass = 'grid-cols-2 md:grid-cols-3';
+  } else if (total <= 12) {
+    gridClass = 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+  } else {
+    // Para más de 12 participantes, usar 4 columnas en pantallas grandes
+    gridClass = 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
   }
 
   return (
-    <div className={`w-full h-full p-2 sm:p-4 grid ${gridClass} gap-2 sm:gap-4 overflow-auto`}>
+    <div className={`w-full h-full p-2 sm:p-4 grid ${gridClass} gap-2 sm:gap-3 auto-rows-fr overflow-auto`}>
       {/* ========================== */}
       {/*         LOCAL VIDEO         */}
       {/* ========================== */}
 
-      <div className="relative w-full aspect-video min-h-[200px] sm:min-h-[250px] bg-black rounded-lg sm:rounded-xl overflow-hidden border-2 border-yellow-500/50 shadow-lg">
+      <div className="relative w-full h-full min-h-[180px] bg-black rounded-lg sm:rounded-xl overflow-hidden border-2 border-yellow-500/50 shadow-lg">
         <VideoPlayer stream={localStream} muted={true} isLocal={true} username={localFullName} audio={localAudio} video={localVideo} screen={localScreen} avatar={localAvatar} className="w-full h-full" />
 
         {/* Badge "TÚ" */}
@@ -141,7 +149,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({ localStream, remoteStreams
         const fullName = `${remote.name ?? ''} ${remote.lastName ?? ''}`.trim() || remote.username || 'Invitado';
 
         return (
-          <div key={remote.userId} className="relative w-full aspect-video min-h-[200px] sm:min-h-[250px] bg-black rounded-lg sm:rounded-xl overflow-hidden border border-gray-600 shadow-lg">
+          <div key={remote.userId} className="relative w-full h-full min-h-[180px] bg-black rounded-lg sm:rounded-xl overflow-hidden border border-gray-600 shadow-lg">
             <VideoPlayer stream={remote.stream} muted={false} username={fullName} isLocal={false} audio={remote.audio} video={remote.video} screen={remote.screen} avatar={remote.avatar ?? null} className="w-full h-full" />
 
             {/* Nombre del participante */}

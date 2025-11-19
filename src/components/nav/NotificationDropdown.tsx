@@ -12,11 +12,16 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
   const { notifications, markAsRead, markAllAsRead } = useNotifications();
   const router = useRouter();
 
-  const handleNotificationClick = (notificationId: string, postId?: string) => {
-    markAsRead(notificationId);
-    if (postId) {
+  const handleNotificationClick = (notification: any) => {
+    markAsRead(notification.id);
+
+    // Navegar según el tipo de notificación
+    if (notification.type === 'COHORTE_ASSIGNED' && notification.metadata?.cohorteId) {
+      router.push(`/cohorte/${notification.metadata.cohorteId}`);
+    } else if (notification.postId) {
       router.push(`/home`); // Podrías navegar a `/post/${postId}` si tienes esa ruta
     }
+
     onClose();
   };
 
@@ -42,7 +47,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
           </div>
         ) : (
           notifications.map((notification) => (
-            <div key={notification.id} onClick={() => handleNotificationClick(notification.id, notification.postId)} className={`p-4 cursor-pointer transition hover:bg-gray-50 dark:hover:bg-gray-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+            <div key={notification.id} onClick={() => handleNotificationClick(notification)} className={`p-4 cursor-pointer transition hover:bg-gray-50 dark:hover:bg-gray-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
               <div className="flex items-start gap-3">
                 {/* Avatar */}
                 {notification.type !== 'system' && <img src={notification.authorAvatar || '/avatars/default.svg'} alt={notification.authorName} className="w-10 h-10 rounded-full object-cover shrink-0" />}
@@ -70,6 +75,11 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
                         {notification.type === 'REPLY_COMMENT' && <span className="text-gray-700 dark:text-gray-300"> respondió a tu comentario</span>}
                         {notification.type === 'NEW_FOLLOWER' && <span className="text-gray-700 dark:text-gray-300"> comenzó a seguirte</span>}
                         {notification.type === 'NEW_MESSAGE' && <span className="text-gray-700 dark:text-gray-300"> te envió un mensaje</span>}
+                        {notification.type === 'COHORTE_ASSIGNED' && (
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Has sido asignado como <span className="font-semibold">{notification.metadata?.role}</span> a la cohorte <span className="font-semibold text-blue-600 dark:text-blue-400">{notification.metadata?.cohorteName}</span>
+                          </span>
+                        )}
                       </p>
 
                       {/* Preview del post */}

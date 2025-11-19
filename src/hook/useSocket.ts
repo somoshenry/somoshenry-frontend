@@ -73,6 +73,9 @@ export function useSocket({ token, enabled = true, onNotification }: UseSocketPr
       socket.on('notification', (notification: any) => {
         onNotification(notification);
       });
+      socket.on('notification:new', (notification: any) => {
+        onNotification(notification);
+      });
     }
 
     // Cleanup

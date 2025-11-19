@@ -36,8 +36,9 @@ export default function CohorteManagement() {
     maxStudents: undefined,
   });
 
-  // Form state para agregar miembro (ya no necesitamos role aquí)
+  // Form state para agregar miembro
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedCohorteRole, setSelectedCohorteRole] = useState<CohorteRoleEnum | null>(null);
 
   useEffect(() => {
     fetchCohortes();
@@ -109,37 +110,16 @@ export default function CohorteManagement() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCohorte || !selectedUserId) return;
+    if (!selectedCohorte || !selectedUserId || !selectedCohorteRole) return;
 
     try {
-      // Obtener el usuario seleccionado para usar su rol del sistema
-      const selectedUser = users.find((u) => u.id === selectedUserId);
-      if (!selectedUser) {
-        alert('Usuario no encontrado');
-        return;
-      }
-
-      // Mapear el rol del usuario del sistema al rol de la cohorte
-      let cohorteRole: CohorteRoleEnum;
-      switch (selectedUser.role) {
-        case 'ADMIN':
-          cohorteRole = CohorteRoleEnum.ADMIN;
-          break;
-        case 'TEACHER':
-          cohorteRole = CohorteRoleEnum.TEACHER;
-          break;
-        case 'TA':
-          cohorteRole = CohorteRoleEnum.TA;
-          break;
-        default:
-          cohorteRole = CohorteRoleEnum.STUDENT; // MEMBER -> STUDENT en cohorte
-      }
-
-      await addMemberToCohorte(selectedCohorte.id, selectedUserId, cohorteRole);
-      alert(`Miembro agregado exitosamente como ${cohorteRole}`);
+      // Usar el rol seleccionado manualmente por el admin
+      await addMemberToCohorte(selectedCohorte.id, selectedUserId, selectedCohorteRole);
+      alert(`Miembro agregado exitosamente como ${selectedCohorteRole}`);
       setShowAddMemberModal(false);
       setSelectedCohorte(null);
       setSelectedUserId('');
+      setSelectedCohorteRole(null);
       setSearchTerm('');
       fetchCohortes();
     } catch (error) {
@@ -218,6 +198,12 @@ export default function CohorteManagement() {
                 </div>
               </div>
               <div className="flex gap-2">
+                <button onClick={() => window.open(`/cohorte/${cohorte.id}`, '_blank')} className="p-2 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-lg transition-colors" title="Ver cohorte">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
                 <button
                   onClick={() => {
                     setSelectedCohorte(cohorte);
@@ -400,6 +386,7 @@ export default function CohorteManagement() {
                     setShowAddMemberModal(false);
                     setSelectedCohorte(null);
                     setSelectedUserId('');
+                    setSelectedCohorteRole(null);
                     setSearchTerm('');
                   }}
                   className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -423,10 +410,20 @@ export default function CohorteManagement() {
                   </select>
                 </div>
 
+                {/* Selector de Rol en la Cohorte */}
                 {selectedUserId && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <p className="text-sm text-blue-800 dark:text-blue-300">
-                      <strong>ℹ️ Nota:</strong> El usuario será agregado con el rol que tiene en el sistema: <span className="font-bold">{getRoleBadge(users.find((u) => u.id === selectedUserId)?.role || 'MEMBER')}</span>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Rol en la Cohorte <span className="text-red-500">*</span>
+                    </label>
+                    <select required value={selectedCohorteRole || ''} onChange={(e) => setSelectedCohorteRole(e.target.value as CohorteRoleEnum)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                      <option value="">Selecciona el rol en la cohorte...</option>
+                      <option value={CohorteRoleEnum.TEACHER}>📚 Profesor (TEACHER)</option>
+                      <option value={CohorteRoleEnum.TA}>🎓 Asistente de Enseñanza (TA)</option>
+                      <option value={CohorteRoleEnum.STUDENT}>👤 Estudiante (STUDENT)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      💡 <strong>Importante:</strong> El rol TA permite que un usuario sea tutor en esta cohorte, independientemente de su rol en el sistema. Un MEMBER puede ser TA en una cohorte y STUDENT en otra.
                     </p>
                   </div>
                 )}
@@ -441,6 +438,7 @@ export default function CohorteManagement() {
                       setShowAddMemberModal(false);
                       setSelectedCohorte(null);
                       setSelectedUserId('');
+                      setSelectedCohorteRole(null);
                       setSearchTerm('');
                     }}
                     className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"

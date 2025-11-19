@@ -1,21 +1,11 @@
+// Mock version of Clases for cohorte-mock (no backend dependencies)
 'use client';
 
 import { useState } from 'react';
-import ClaseHang from './ClaseHang'; // Contenido de la primera vista
-import ClassSub from './ClassSub'; // Contenido de la segunda vista
+import ClaseHang from './ClaseHang';
+import ClassSub from './ClassSub';
 
-interface ClasesProps {
-  readonly cohorteId: string;
-  readonly canManage: boolean; // Si el usuario puede gestionar clases (TEACHER, ADMIN)
-  readonly currentUser: {
-    id: string;
-    email: string;
-    name?: string | null;
-    lastName?: string | null;
-  };
-}
-
-const Clases = ({ cohorteId, canManage, currentUser }: ClasesProps) => {
+const ClasesMock = () => {
   const [activeButton, setActiveButton] = useState<'hang' | 'sub'>('hang');
 
   const handleButtonClick = (buttonName: 'hang' | 'sub') => {
@@ -34,9 +24,8 @@ const Clases = ({ cohorteId, canManage, currentUser }: ClasesProps) => {
   return (
     <>
       <div className="w-full md:w-[25%] text-center">
-        <div className="bg-white p-1.5 flex justify-between items-center w-full   rounded-full relative overflow-hidden">
+        <div className="bg-white p-1.5 flex justify-between items-center w-full rounded-full relative overflow-hidden">
           <div className={`absolute left-0 w-1/2 rounded-full h-[80%] bg-[#ffff00] transition-transform duration-300 ease-in ${activeButton === 'sub' ? 'translate-x-[97%] bg-green-400' : 'translate-x-1 bg-sky-400'}`}></div>
-          {/* 1.2. Botones (Deben ser hermanos del slider) */}
           <button className={getButtonTextClass('hang')} onClick={() => handleButtonClick('hang')}>
             Hands On
           </button>
@@ -54,4 +43,4 @@ const Clases = ({ cohorteId, canManage, currentUser }: ClasesProps) => {
   );
 };
 
-export default Clases;
+export default ClasesMock;

@@ -134,13 +134,28 @@ export const removeMemberFromCohorte = async (cohorteId: string, userId: string)
 
 /**
  * Obtener cohortes del usuario actual
+ * - Si es ADMIN: devuelve TODAS las cohortes (GET /cohortes)
+ * - Si es otro rol: devuelve solo sus cohortes (GET /cohortes/me)
  */
-export const getMyCohortes = async (): Promise<Cohorte[]> => {
+export const getMyCohortes = async (userRole?: string): Promise<Cohorte[]> => {
   try {
-    const allCohortes = await getAllCohortes();
-    // El backend ya filtra por usuario en la respuesta de findAll
-    // Si el usuario no es admin, solo verá las cohortes donde es miembro
-    return allCohortes;
+    // Si es ADMIN, obtener TODAS las cohortes
+    if (userRole === 'ADMIN') {
+      const response = await api.get('/cohortes');
+      return response.data;
+    }
+
+    // Si no es ADMIN, obtener solo las cohortes donde es miembro
+    const response = await api.get('/cohortes/me');
+    // El backend devuelve un array con { cohorte, myRole, myStatus, joinedAt }
+    // Mapeamos para extraer solo los cohortes
+    return response.data.map((item: any) => ({
+      ...item.cohorte,
+      // Agregamos el rol del usuario en la cohorte como información adicional
+      myRole: item.myRole,
+      myStatus: item.myStatus,
+      joinedAt: item.joinedAt,
+    }));
   } catch (error) {
     console.error('Error al obtener cohortes del usuario:', error);
     return [];
@@ -268,5 +283,128 @@ export const deleteCohorteAnnouncement = async (cohorteId: string, announcementI
  */
 export const togglePinAnnouncement = async (cohorteId: string, announcementId: string): Promise<CohorteAnnouncement> => {
   const response = await api.patch(`/cohortes/announcements/${announcementId}/pin`);
+  return response.data;
+};
+
+// =============================
+//    CLASSES (CLASES)
+// =============================
+
+export interface CohorteClass {
+  id: string;
+  title: string;
+  description?: string;
+  classDate: string; // Fecha de la clase
+  duration?: number; // Duración en minutos
+  location?: string; // Ubicación física o link
+  classType?: 'LECTURE' | 'WORKSHOP' | 'LAB' | 'EXAM' | 'OTHER';
+  materials?: string; // JSON string o URL
+  recordingUrl?: string;
+  notes?: string;
+  cohorte: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClassDto {
+  cohorteId: string;
+  title: string;
+  description?: string;
+  classDate: string;
+  duration?: number;
+  location?: string;
+  classType?: 'LECTURE' | 'WORKSHOP' | 'LAB' | 'EXAM' | 'OTHER';
+  materials?: string;
+  recordingUrl?: string;
+  notes?: string;
+}
+
+export interface UpdateClassDto extends Partial<CreateClassDto> {}
+
+export interface AttendanceRecord {
+  id: string;
+  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+  notes?: string;
+  student: {
+    id: string;
+    name: string;
+    lastName: string;
+    email: string;
+  };
+  class: {
+    id: string;
+    title: string;
+    classDate: string;
+  };
+  markedAt: string;
+}
+
+/**
+ * Obtener todas las clases
+ */
+export const getAllClasses = async (): Promise<CohorteClass[]> => {
+  const response = await api.get('/cohorte-classes');
+  return response.data;
+};
+
+/**
+ * Obtener una clase por ID
+ */
+export const getClassById = async (id: string): Promise<CohorteClass> => {
+  const response = await api.get(`/cohorte-classes/${id}`);
+  return response.data;
+};
+
+/**
+ * Crear una nueva clase
+ */
+export const createClass = async (dto: CreateClassDto): Promise<CohorteClass> => {
+  const response = await api.post('/cohorte-classes', dto);
+  return response.data;
+};
+
+/**
+ * Actualizar una clase
+ */
+export const updateClass = async (id: string, dto: UpdateClassDto): Promise<CohorteClass> => {
+  const response = await api.patch(`/cohorte-classes/${id}`, dto);
+  return response.data;
+};
+
+/**
+ * Eliminar una clase
+ */
+export const deleteClass = async (id: string): Promise<void> => {
+  await api.delete(`/cohorte-classes/${id}`);
+};
+
+/**
+ * Marcar asistencia de estudiantes
+ */
+export const markAttendance = async (classId: string, studentId: string, status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED', notes?: string): Promise<AttendanceRecord> => {
+  const response = await api.post(`/cohorte-classes/${classId}/attendance`, {
+    studentId,
+    status,
+    notes,
+  });
+  return response.data;
+};
+
+/**
+ * Obtener asistencia de una clase
+ */
+export const getClassAttendance = async (classId: string): Promise<AttendanceRecord[]> => {
+  const response = await api.get(`/cohorte-classes/${classId}/attendance`);
+  return response.data;
+};
+
+/**
+ * Obtener asistencia de un estudiante en una cohorte
+ */
+export const getStudentAttendance = async (cohorteId: string, studentId: string): Promise<AttendanceRecord[]> => {
+  const response = await api.get(`/cohorte-classes/cohorte/${cohorteId}/student/${studentId}`);
   return response.data;
 };

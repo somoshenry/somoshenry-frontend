@@ -8,7 +8,7 @@ import { getSystemNotifications, markSystemNotificationAsRead, SystemNotificatio
 
 export interface Notification {
   id: string;
-  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'system';
+  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'COHORTE_ASSIGNED' | 'system';
   receiverId?: string;
   senderId?: string;
   sender?: {
@@ -74,15 +74,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       systemType: notification.systemType,
       systemTitle: notification.systemTitle,
       systemMessage: notification.systemMessage,
+      metadata: notification.metadata,
+      senderId: notification.senderId,
+      receiverId: notification.receiverId,
     };
 
     // Agregar a la lista de notificaciones
     setNotifications((prev) => [newNotification, ...prev]);
 
+    // Si es asignación de cohorte, disparar evento para recargar sidebar
+    if (notification.type === 'COHORTE_ASSIGNED') {
+      console.log('🎓 Disparando evento de cohorte asignada');
+      window.dispatchEvent(new CustomEvent('notification:cohorte_assigned'));
+    }
+
     // Mostrar notificación del navegador si está permitido
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification(notification.systemTitle || '¡Nueva notificación!', {
-        body: notification.systemMessage || notification.postContent || 'Tienes una nueva notificación',
+      const notifTitle = notification.type === 'COHORTE_ASSIGNED' ? '🎓 Nueva cohorte asignada' : notification.systemTitle || '¡Nueva notificación!';
+
+      const notifBody = notification.type === 'COHORTE_ASSIGNED' ? `Has sido asignado como ${notification.metadata?.role} a ${notification.metadata?.cohorteName}` : notification.systemMessage || notification.postContent || 'Tienes una nueva notificación';
+
+      new Notification(notifTitle, {
+        body: notifBody,
         icon: notification.authorAvatar || '/avatars/default.svg',
       });
     }

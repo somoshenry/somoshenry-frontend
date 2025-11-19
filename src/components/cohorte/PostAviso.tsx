@@ -1,8 +1,9 @@
 // En: /components/mensajes/PostFormCard.tsx
 
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, {useState} from "react";
+import Swal from "sweetalert2";
 // 💡 Importamos la interfaz para asegurar la consistencia de los datos
 
 // Definimos la estructura de los datos que se enviarán al padre, omitiendo
@@ -25,8 +26,8 @@ const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
 
   const handlePost = () => {
     // Validación básica
-    if (title.trim() === '' || message.trim() === '') {
-      alert('Por favor, ingresa un título y un mensaje.');
+    if (title.trim() === "" || message.trim() === "") {
+      Swal.fire("Por favor, ingresa un título y un mensaje.");
       return;
     }
 
@@ -49,7 +50,13 @@ const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">✍️ Crear Nuevo Anuncio</h3>
 
       {/* Input para el Título (corresponde a <h2 className="...">{titulo}</h2> en tu tarjeta) */}
-      <input type="text" placeholder="Título del anuncio o recordatorio" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white text-sm" />
+      <input
+        type="text"
+        placeholder="Título del anuncio o recordatorio"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white text-sm"
+      />
 
       {/* Textarea para el Mensaje (corresponde a <p className="...">{mensaje}</p> en tu tarjeta) */}
       <textarea
@@ -71,7 +78,10 @@ const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
 
       {/* Botón de Postear */}
       <div className="flex justify-end">
-        <button onClick={handlePost} className="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300">
+        <button
+          onClick={handlePost}
+          className="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300"
+        >
           Postear
         </button>
       </div>

@@ -163,7 +163,7 @@ export default function ReportedPosts() {
 
       setShowModal(false);
       fetchReportedPosts();
-      alert(`Post ${isInappropriate ? "ocultado" : "aprobado"} correctamente`);
+      Swal.fire(`Post ${isInappropriate ? "ocultado" : "aprobado"} correctamente`);
     } catch (error) {
       console.error("Error al moderar post:", error);
       Swal.fire("Error al procesar la acción");

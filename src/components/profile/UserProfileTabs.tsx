@@ -19,7 +19,7 @@ export default function UserProfileTabs({userId}: UserProfileTabsProps) {
             onClick={() => setActiveTab(tab)}
             className={`font-semibold capitalize ${
               activeTab === tab
-                ? "capitalize cursor-pointer font-semibold capitalize text-black rounded-xl  px-2 py-1 shadow-md dark:shadow-[#ffff00]/50 shadow-black/50 cursor-pointer dark:text-black  text-md  bg-[#ffff00] transition duration-300 "
+                ? " cursor-pointer font-semibold capitalize text-black rounded-xl  px-2 py-1 shadow-md dark:shadow-[#ffff00]/50 shadow-black/50  dark:text-black  text-md  bg-[#ffff00] transition duration-300 "
                 : "text-gray-600 dark:text-gray-300 cursor-pointer"
             }`}
           >

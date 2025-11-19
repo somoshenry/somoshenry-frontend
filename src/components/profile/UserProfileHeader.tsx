@@ -7,6 +7,7 @@ import {followUser, unfollowUser, checkFollowStatus, getFollowStats, FollowStats
 import {MessageCircle, Flag, UserPlus, UserMinus} from "lucide-react";
 import ReportUserModal from "@/components/common/ReportUserModal";
 import FollowListModal from "./FollowListModal";
+import Swal from "sweetalert2";
 
 interface UserProfileHeaderProps {
   userId: string;
@@ -105,7 +106,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
-      alert("⚠️ Debes iniciar sesión para seguir usuarios");
+      Swal.fire("⚠️ Debes iniciar sesión para seguir usuarios");
       return;
     }
 
@@ -120,13 +121,13 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
           ...prev,
           followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
         }));
-        alert(result.message);
+        Swal.fire(result.message);
       } else {
-        alert(result.message);
+        Swal.fire(result.message);
       }
     } catch (err) {
       console.error("Error al cambiar estado de seguimiento:", err);
-      alert("❌ Error al actualizar seguimiento");
+      Swal.fire("❌ Error al actualizar seguimiento");
     } finally {
       setIsFollowLoading(false);
     }
@@ -134,7 +135,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleMessage = () => {
     if (!currentUser) {
-      alert("⚠️ Debes iniciar sesión para enviar mensajes");
+      Swal.fire("⚠️ Debes iniciar sesión para enviar mensajes");
       return;
     }
     router.push("/chat");

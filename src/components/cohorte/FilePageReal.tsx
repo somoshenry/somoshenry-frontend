@@ -52,7 +52,7 @@ const FilePageReal: React.FC<FilePageRealProps> = ({setFilesList}) => {
       // Resetear el estado de subida local
       handleDeleteFile();
     } else {
-      alert("Por favor, selecciona un archivo y asigna un título antes de guardar.");
+      Swal.fire("Por favor, selecciona un archivo y asigna un título antes de guardar.");
     }
   };
 

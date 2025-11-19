@@ -18,6 +18,7 @@ import {
   deleteConversation /*, uploadChatMedia */,
 } from "@/services/chatService";
 import {Send} from "lucide-react";
+import Swal from "sweetalert2";
 
 interface Message {
   id: string;
@@ -353,7 +354,7 @@ export default function FloatingChatButton() {
       refreshUnreadCount();
     } catch (error) {
       console.error("Error al eliminar conversación:", error);
-      alert("Error al eliminar la conversación. Por favor intenta de nuevo.");
+      Swal.fire("Error al eliminar la conversación. Por favor intenta de nuevo.");
     }
   };
 
@@ -805,7 +806,7 @@ export default function FloatingChatButton() {
         hover:scale-105 cursor-pointer
         
         // Estilos para MÓVIL (Por defecto, solo el icono)
-        px-3 md:inline-flex
+        px-3 
         
         // Estilos para ESCRITORIO (Aparece a partir de 'md')
         md:px-4 md:inline-flex md:text-sm

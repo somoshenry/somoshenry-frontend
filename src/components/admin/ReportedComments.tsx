@@ -127,10 +127,10 @@ export default function ReportedComments() {
 
       setShowModal(false);
       fetchReportedComments();
-      alert(`Reportes ${action === "resolve" ? "resueltos" : "rechazados"} correctamente`);
+      Swal.fire(`Reportes ${action === "resolve" ? "resueltos" : "rechazados"} correctamente`);
     } catch (error) {
       console.error("Error al procesar reportes:", error);
-      alert("Error al procesar la acción");
+      Swal.fire("Error al procesar la acción");
     } finally {
       setActionLoading(false);
     }

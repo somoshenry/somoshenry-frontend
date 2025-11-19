@@ -109,7 +109,7 @@ export default function CreateGroupModal({isOpen, onClose, onGroupCreated}: Crea
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#ffff00] to-yellow-500 p-6 text-white">
+        <div className="bg-linear-to-r from-[#ffff00] to-yellow-500 p-6 text-white">
           <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -130,7 +130,7 @@ export default function CreateGroupModal({isOpen, onClose, onGroupCreated}: Crea
                   className="w-24 h-24 rounded-full object-cover border-4 border-[#ffff00]"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#ffff00] to-yellow-500 flex items-center justify-center text-white">
+                <div className="w-24 h-24 rounded-full bg-linear-to-br from-[#ffff00] to-yellow-500 flex items-center justify-center text-white">
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -269,7 +269,7 @@ export default function CreateGroupModal({isOpen, onClose, onGroupCreated}: Crea
                       className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#ffff00] to-yellow-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#ffff00] to-yellow-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                       {user.name?.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -304,7 +304,7 @@ export default function CreateGroupModal({isOpen, onClose, onGroupCreated}: Crea
           <button
             onClick={handleCreate}
             disabled={loading || !groupName.trim() || selected.length < 2}
-            className="w-full mt-6 py-3 bg-gradient-to-r from-[#ffff00] to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            className="w-full mt-6 py-3 bg-linear-to-r from-[#ffff00] to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
           >
             {loading
               ? "Creando grupo..."

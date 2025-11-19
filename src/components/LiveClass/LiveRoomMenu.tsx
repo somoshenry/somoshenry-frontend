@@ -6,6 +6,7 @@ import {useRouter} from "next/navigation";
 import {webrtcService} from "@/services/webrtcService";
 import {Room} from "@/types/webrtc.types";
 import {Loader2, Plus, LogIn} from "lucide-react";
+import Swal from "sweetalert2";
 
 export const LiveRoomMenu = () => {
   const router = useRouter();
@@ -39,7 +40,7 @@ export const LiveRoomMenu = () => {
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) {
-      alert("El nombre de la sala es obligatorio");
+      Swal.fire("El nombre de la sala es obligatorio");
       return;
     }
 
@@ -50,7 +51,7 @@ export const LiveRoomMenu = () => {
       router.push(`/live/${room.id}`);
     } catch (error) {
       console.error("Error al crear sala:", error);
-      alert("Error al crear la sala");
+      Swal.fire("Error al crear la sala");
     } finally {
       setCreatingRoom(false);
     }

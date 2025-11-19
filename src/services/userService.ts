@@ -1,15 +1,5 @@
-import { SubscriptionPlan } from '@/interfaces/context/auth';
+import { Subscription } from '@/interfaces/context/auth';
 import { api } from './api';
-
-export interface Subscription {
-  id: string;
-  plan: SubscriptionPlan; // BRONCE | PLATA | ORO
-  status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
-  startDate: string;
-  endDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface User {
   id: string;
@@ -28,11 +18,10 @@ export interface User {
   updatedAt: string;
 
   // SUSCRIPCIÓN - Lo que el backend devuelve
-  subscriptionPlan?: SubscriptionPlan; // 'BRONCE' | 'PLATA' | 'ORO' (del backend)
-  subscription?: SubscriptionPlan; // Alias para compatibilidad con componentes
-  subscriptionExpiresAt?: string | null; // Fecha de vencimiento
+  subscription?: Subscription | null;
+  subscriptionExpiresAt?: string | null;
 
-  // LEGADO - Por compatibilidad con componentes antiguos
+  // LEGADO
   suscriptions?: Subscription[];
 }
 
@@ -49,17 +38,10 @@ export async function getUserProfile(): Promise<User> {
   const user = data.user;
 
   console.log('📡 getUserProfile - Respuesta del backend:', {
-    subscriptionPlan: user.subscriptionPlan,
     subscriptionExpiresAt: user.subscriptionExpiresAt,
     subscription: user.subscription,
   });
 
-  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  // Solo mapear si es string y subscription no existe
-  if (user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
-    console.log('✅ Mapeando subscriptionPlan a subscription:', user.subscriptionPlan);
-    user.subscription = user.subscriptionPlan as any;
-  }
   return user;
 }
 /**
@@ -68,10 +50,6 @@ export async function getUserProfile(): Promise<User> {
 export async function getUserById(userId: string): Promise<User> {
   const { data } = await api.get<UserProfileResponse>(`/users/${userId}`);
   const user = data.user;
-  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  if (user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
-    user.subscription = user.subscriptionPlan as any;
-  }
   return user;
 }
 
@@ -90,9 +68,5 @@ export async function updateUserProfile(updates: {
 }): Promise<User> {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
   const user = data.user;
-  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  if (user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
-    user.subscription = user.subscriptionPlan as any;
-  }
   return user;
 }

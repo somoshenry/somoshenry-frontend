@@ -1,5 +1,15 @@
 export type SubscriptionPlan = 'BRONCE' | 'PLATA' | 'ORO';
 
+export interface Subscription {
+  id: string;
+  plan: SubscriptionPlan; // BRONCE | PLATA | ORO
+  status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  startDate: string;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -18,11 +28,10 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 
-  // CAMPOS DE SUSCRIPCIÓN - Lo que el backend devuelve
-  subscriptionPlan?: SubscriptionPlan; // 'BRONCE' | 'PLATA' | 'ORO' (del backend)
-  subscription?: SubscriptionPlan; // Alias para compatibilidad con componentes
-  subscriptionExpiresAt?: string | null; // Fecha de vencimiento
+  // SUSCRIPCIÓN - Lo que el backend devuelve
+  subscription?: Subscription | null; // Objeto completo de suscripción
+  subscriptionExpiresAt?: string | null; // Compatibilidad con versiones antiguas
 
-  // CAMPO LEGADO (por compatibilidad con componentes viejos)
+  // LEGADO
   suscriptions?: any[];
 }

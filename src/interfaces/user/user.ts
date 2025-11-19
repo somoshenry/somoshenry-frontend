@@ -1,29 +1,7 @@
-export type SubscriptionPlan = 'FREE' | 'BASIC' | 'PREMIUM';
+/**
+ * DEPRECATED: This file contains obsolete types.
+ * Use the types from @/interfaces/context/auth.d.ts and @/services/userService.ts instead
+ */
 
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  subscription: SubscriptionPlan; 
-  subscriptionExpiresAt?: string; 
-}
-export interface User {
-  id: string;
-  email: string;
-  name?: string | null;
-  lastName?: string | null;
-  profilePicture?: string | null;
-  coverPicture?: string | null;
-  biography?: string | null;
-  location?: string | null;
-  website?: string | null;
-  joinDate?: string | null;
-  role: "ADMIN" | "TEACHER" | "MEMBER";
-  status: "ACTIVE" | "SUSPENDED" | "DELETED";
-  createdAt: string;
-  updatedAt: string;
-
-  // 🔥 ESTA ES LA RELACIÓN QUE TE FALTABA
-  subscription?: Subscription | null;
-}
+// Re-export the correct types for backward compatibility
+export type { User, Subscription } from '@/interfaces/context/auth';

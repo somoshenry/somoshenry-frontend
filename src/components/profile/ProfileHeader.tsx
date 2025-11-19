@@ -216,7 +216,7 @@ export default function ProfileHeader() {
           {isOwnProfile && (
             (() => {
               const plan = displayUser?.subscription?.plan ?? null;
-              const expiresAt = displayUser?.subscription?.expiresAt ?? null;
+              const expiresAt = displayUser?.subscription?.endDate ?? null;
 
               return (
                 <div className="mt-2 text-center">

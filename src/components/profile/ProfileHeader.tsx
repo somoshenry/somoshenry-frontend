@@ -216,8 +216,8 @@ export default function ProfileHeader() {
           {/* 🔥 PLAN REAL DESDE LA BASE DE DATOS */}
           {isOwnProfile &&
             (() => {
-              const plan = displayUser?.subscription ?? null;
-              const expiresAt = displayUser?.subscriptionExpiresAt ?? null;
+              const plan = displayUser?.subscription?.plan ?? null;
+              const expiresAt = displayUser?.subscription?.endDate ?? null;
 
               return (
                 <div className="mt-2 text-center">

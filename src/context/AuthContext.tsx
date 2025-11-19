@@ -57,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { user } = await meSvc();
       console.log('🔄 AuthContext.refreshUser() - Usuario obtenido:', {
         subscription: user?.subscription,
-        subscriptionPlan: user?.subscriptionPlan,
         subscriptionExpiresAt: user?.subscriptionExpiresAt,
       });
       setUser(user);

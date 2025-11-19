@@ -58,17 +58,9 @@ export async function me() {
   const user = userResponse.user;
 
   console.log('🔐 authService.me() - Datos recibidos:', {
-    subscriptionPlan: user?.subscriptionPlan,
     subscriptionExpiresAt: user?.subscriptionExpiresAt,
     subscription: user?.subscription,
   });
-
-  // Mapear subscriptionPlan (del backend) a subscription (para componentes)
-  // Si subscriptionPlan es un string, usarlo como subscription
-  if (user && user.subscriptionPlan && typeof user.subscriptionPlan === 'string' && !user.subscription) {
-    console.log('✅ authService.me() - Mapeando:', user.subscriptionPlan);
-    user.subscription = user.subscriptionPlan as any;
-  }
 
   return { user };
 }

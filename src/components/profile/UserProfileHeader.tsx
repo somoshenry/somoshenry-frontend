@@ -200,7 +200,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
         {/* User Info */}
         <div className="flex items-center gap-2 mt-2">
-          <h1 className="text-xl font-semibold dark:text-white">
+          <h1 className="text-xl text-black font-semibold dark:text-white">
             {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || "Usuario"}
           </h1>
           {isOwnProfile && (

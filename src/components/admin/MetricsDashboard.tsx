@@ -1,10 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Users, FileText, MessageSquare, AlertTriangle, TrendingUp, Calendar, UserPlus, Activity, GraduationCap } from 'lucide-react';
-import { api } from '@/services/api';
-import { getAllCohortes } from '@/services/cohorteService';
-import { type LucideIcon } from 'lucide-react';
+import {useEffect, useState} from "react";
+import {
+  Users,
+  FileText,
+  MessageSquare,
+  AlertTriangle,
+  TrendingUp,
+  Calendar,
+  UserPlus,
+  Activity,
+  GraduationCap,
+} from "lucide-react";
+import {api} from "@/services/api";
+import {getAllCohortes} from "@/services/cohorteService";
+import {type LucideIcon} from "lucide-react";
 
 interface UserData {
   id: string;
@@ -33,7 +43,7 @@ interface MetricsData {
 export default function MetricsDashboard() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
+  const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
 
   useEffect(() => {
     fetchMetrics();
@@ -44,7 +54,7 @@ export default function MetricsDashboard() {
       setLoading(true);
 
       // Obtener usuarios
-      const usersResponse = await api.get('/users');
+      const usersResponse = await api.get("/users");
       const users = usersResponse.data?.users || usersResponse.data?.data || [];
 
       // Calcular usuarios nuevos este mes
@@ -54,13 +64,13 @@ export default function MetricsDashboard() {
 
       // Obtener cohortes
       const cohortes = await getAllCohortes();
-      const activeCohortes = cohortes.filter((c) => c.status === 'ACTIVE').length;
+      const activeCohortes = cohortes.filter((c) => c.status === "ACTIVE").length;
 
       // Obtener posts y comentarios (usando endpoints existentes)
       let totalPosts = 0;
       let totalComments = 0;
       try {
-        const postsResponse = await api.get('/post');
+        const postsResponse = await api.get("/post");
         totalPosts = postsResponse.data?.length || 0;
 
         // Contar comentarios de todos los posts
@@ -70,20 +80,22 @@ export default function MetricsDashboard() {
           }, 0);
         }
       } catch (error) {
-        console.error('Error al obtener posts:', error);
+        console.error("Error al obtener posts:", error);
       }
 
       // Obtener reportes
       let totalReports = 0;
       try {
-        const reportsResponse = await api.get('/report');
+        const reportsResponse = await api.get("/report");
         totalReports = reportsResponse.data?.length || 0;
       } catch (error) {
-        console.error('Error al obtener reportes:', error);
+        console.error("Error al obtener reportes:", error);
       }
 
       // Ordenar usuarios recientes
-      const recentUsers = users.sort((a: UserData, b: UserData) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+      const recentUsers = users
+        .sort((a: UserData, b: UserData) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
 
       setMetrics({
         totalUsers: users.length,
@@ -96,7 +108,7 @@ export default function MetricsDashboard() {
         recentUsers,
       });
     } catch (error) {
-      console.error('Error al obtener métricas:', error);
+      console.error("Error al obtener métricas:", error);
     } finally {
       setLoading(false);
     }
@@ -118,14 +130,28 @@ export default function MetricsDashboard() {
     );
   }
 
-  const StatCard = ({ icon: Icon, title, value, subtitle, color = 'blue', trend }: { icon: LucideIcon; title: string; value: number | string; subtitle?: string; color?: string; trend?: string }) => {
+  const StatCard = ({
+    icon: Icon,
+    title,
+    value,
+    subtitle,
+    color = "blue",
+    trend,
+  }: {
+    icon: LucideIcon;
+    title: string;
+    value: number | string;
+    subtitle?: string;
+    color?: string;
+    trend?: string;
+  }) => {
     const colorClasses: Record<string, string> = {
-      blue: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
-      green: 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400',
-      purple: 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400',
-      orange: 'bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400',
-      red: 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400',
-      yellow: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400',
+      blue: "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400",
+      green: "bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400",
+      purple: "bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400",
+      orange: "bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400",
+      red: "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400",
+      yellow: "bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-[#ffff00]",
     };
 
     return (
@@ -157,13 +183,34 @@ export default function MetricsDashboard() {
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Estadísticas generales de la plataforma</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setTimeRange('week')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${timeRange === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
+          <button
+            onClick={() => setTimeRange("week")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              timeRange === "week"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
             Semana
           </button>
-          <button onClick={() => setTimeRange('month')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${timeRange === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
+          <button
+            onClick={() => setTimeRange("month")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              timeRange === "month"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
             Mes
           </button>
-          <button onClick={() => setTimeRange('year')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${timeRange === 'year' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
+          <button
+            onClick={() => setTimeRange("year")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              timeRange === "year"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
             Año
           </button>
         </div>
@@ -171,16 +218,53 @@ export default function MetricsDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={Users} title="Total Usuarios" value={metrics.totalUsers} subtitle={`${metrics.newUsersThisMonth} nuevos este mes`} color="blue" trend={metrics.newUsersThisMonth > 0 ? `+${metrics.newUsersThisMonth}` : undefined} />
-        <StatCard icon={FileText} title="Total Posts" value={metrics.totalPosts} subtitle="Publicaciones totales" color="purple" />
-        <StatCard icon={MessageSquare} title="Total Comentarios" value={metrics.totalComments} subtitle="Interacciones en posts" color="green" />
-        <StatCard icon={AlertTriangle} title="Reportes" value={metrics.totalReports} subtitle="Contenido reportado" color="orange" />
+        <StatCard
+          icon={Users}
+          title="Total Usuarios"
+          value={metrics.totalUsers}
+          subtitle={`${metrics.newUsersThisMonth} nuevos este mes`}
+          color="blue"
+          trend={metrics.newUsersThisMonth > 0 ? `+${metrics.newUsersThisMonth}` : undefined}
+        />
+        <StatCard
+          icon={FileText}
+          title="Total Posts"
+          value={metrics.totalPosts}
+          subtitle="Publicaciones totales"
+          color="purple"
+        />
+        <StatCard
+          icon={MessageSquare}
+          title="Total Comentarios"
+          value={metrics.totalComments}
+          subtitle="Interacciones en posts"
+          color="green"
+        />
+        <StatCard
+          icon={AlertTriangle}
+          title="Reportes"
+          value={metrics.totalReports}
+          subtitle="Contenido reportado"
+          color="orange"
+        />
       </div>
 
       {/* Cohortes Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StatCard icon={GraduationCap} title="Total Cohortes" value={metrics.totalCohortes} subtitle="Cohortes creadas" color="blue" />
-        <StatCard icon={Activity} title="Cohortes Activas" value={metrics.activeCohortes} subtitle="En progreso actualmente" color="green" />
+        <StatCard
+          icon={GraduationCap}
+          title="Total Cohortes"
+          value={metrics.totalCohortes}
+          subtitle="Cohortes creadas"
+          color="blue"
+        />
+        <StatCard
+          icon={Activity}
+          title="Cohortes Activas"
+          value={metrics.activeCohortes}
+          subtitle="En progreso actualmente"
+          color="green"
+        />
       </div>
 
       {/* Usuarios Recientes */}
@@ -193,9 +277,13 @@ export default function MetricsDashboard() {
           {metrics.recentUsers.map((user) => (
             <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">{user.name?.[0] || user.email[0].toUpperCase()}</div>
+                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                  {user.name?.[0] || user.email[0].toUpperCase()}
+                </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.email}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.email}
+                  </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                 </div>
               </div>
@@ -216,7 +304,9 @@ export default function MetricsDashboard() {
           </div>
         </div>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Métricas de Suscripciones</h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">Sistema de pagos y suscripciones próximamente disponible</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Sistema de pagos y suscripciones próximamente disponible
+        </p>
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">
           <Activity size={16} />
           En desarrollo

@@ -60,7 +60,7 @@ export const LiveRoomMenu = () => {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gray-100 dark:text-white text-black dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-yellow-400 animate-spin" />
+          <Loader2 className="w-12 h-12 text-[#ffff00] animate-spin" />
           <p className="text-white text-lg">Cargando salas...</p>
         </div>
       </div>

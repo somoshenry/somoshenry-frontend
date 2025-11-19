@@ -73,7 +73,7 @@ export default function ChatWindow({conversation, onSendMessage, onDeleteConvers
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold">
+            <div className="w-10 h-10 rounded-full bg-[#ffff00] flex items-center justify-center text-black font-bold">
               {(conversation.userName || conversation.groupName || "C").charAt(0).toUpperCase()}
             </div>
           )}
@@ -117,7 +117,7 @@ export default function ChatWindow({conversation, onSendMessage, onDeleteConvers
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={3}
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
             />
           </svg>
@@ -171,7 +171,7 @@ export default function ChatWindow({conversation, onSendMessage, onDeleteConvers
                   <div
                     className={`rounded-2xl px-4 py-2.5 ${
                       message.isOwn
-                        ? "bg-yellow-400 text-black rounded-br-sm"
+                        ? "bg-[#ffff00] text-black rounded-br-sm"
                         : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-sm"
                     }`}
                   >
@@ -222,14 +222,14 @@ export default function ChatWindow({conversation, onSendMessage, onDeleteConvers
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Escribe un mensaje..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffff00]"
           />
 
           {/* Botón enviar */}
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-medium rounded-full transition-colors cursor-pointer"
+            className="px-6 py-2 bg-[#ffff00] hover:scale-105 disabled:bg-gray-300 dark:disabled:bg-[#ffff00] disabled:cursor-not-allowed text-black font-medium rounded-full transition-colors cursor-pointer disabled:scale-100"
           >
             Enviar
           </button>

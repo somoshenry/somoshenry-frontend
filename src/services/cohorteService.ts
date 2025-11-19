@@ -1,30 +1,30 @@
-import { api } from './api';
+import {api} from "./api";
 
 // Enums del backend
 export enum CohorteStatusEnum {
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED',
-  UPCOMING = 'UPCOMING',
-  CANCELLED = 'CANCELLED',
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
+  UPCOMING = "UPCOMING",
+  CANCELLED = "CANCELLED",
 }
 
 export enum CohorteModalityEnum {
-  FULL_TIME = 'FULL_TIME',
-  PART_TIME = 'PART_TIME',
+  FULL_TIME = "FULL_TIME",
+  PART_TIME = "PART_TIME",
 }
 
 export enum CohorteRoleEnum {
-  ADMIN = 'ADMIN',
-  TEACHER = 'TEACHER',
-  TA = 'TA',
-  STUDENT = 'STUDENT',
+  ADMIN = "ADMIN",
+  TEACHER = "TEACHER",
+  TA = "TA",
+  STUDENT = "STUDENT",
 }
 
 export enum MemberStatusEnum {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  GRADUATED = 'GRADUATED',
-  DROPPED = 'DROPPED',
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  GRADUATED = "GRADUATED",
+  DROPPED = "DROPPED",
 }
 
 // Interfaces
@@ -82,7 +82,7 @@ export interface AddMemberDto {
  * Obtener todas las cohortes
  */
 export const getAllCohortes = async (): Promise<Cohorte[]> => {
-  const response = await api.get('/cohortes');
+  const response = await api.get("/cohortes");
   return response.data;
 };
 
@@ -98,7 +98,7 @@ export const getCohorteById = async (id: string): Promise<Cohorte> => {
  * Crear una nueva cohorte
  */
 export const createCohorte = async (dto: CreateCohorteDto): Promise<Cohorte> => {
-  const response = await api.post('/cohortes', dto);
+  const response = await api.post("/cohortes", dto);
   return response.data;
 };
 
@@ -120,8 +120,12 @@ export const deleteCohorte = async (id: string): Promise<void> => {
 /**
  * Agregar miembro a una cohorte
  */
-export const addMemberToCohorte = async (cohorteId: string, userId: string, role: CohorteRoleEnum): Promise<CohorteMember> => {
-  const response = await api.post(`/cohortes/${cohorteId}/members/${userId}`, { role });
+export const addMemberToCohorte = async (
+  cohorteId: string,
+  userId: string,
+  role: CohorteRoleEnum
+): Promise<CohorteMember> => {
+  const response = await api.post(`/cohortes/${cohorteId}/members/${userId}`, {role});
   return response.data;
 };
 
@@ -142,7 +146,7 @@ export const getMyCohortes = async (): Promise<Cohorte[]> => {
     // Si el usuario no es admin, solo verá las cohortes donde es miembro
     return allCohortes;
   } catch (error) {
-    console.error('Error al obtener cohortes del usuario:', error);
+    console.error("Error al obtener cohortes del usuario:", error);
     return [];
   }
 };
@@ -152,38 +156,38 @@ export const getMyCohortes = async (): Promise<Cohorte[]> => {
  */
 export const translateStatus = (status: CohorteStatusEnum): string => {
   const translations: Record<CohorteStatusEnum, string> = {
-    [CohorteStatusEnum.ACTIVE]: 'Activa',
-    [CohorteStatusEnum.COMPLETED]: 'Completada',
-    [CohorteStatusEnum.UPCOMING]: 'Próxima',
-    [CohorteStatusEnum.CANCELLED]: 'Cancelada',
+    [CohorteStatusEnum.ACTIVE]: "Activa",
+    [CohorteStatusEnum.COMPLETED]: "Completada",
+    [CohorteStatusEnum.UPCOMING]: "Próxima",
+    [CohorteStatusEnum.CANCELLED]: "Cancelada",
   };
   return translations[status] || status;
 };
 
 export const translateModality = (modality: CohorteModalityEnum): string => {
   const translations: Record<CohorteModalityEnum, string> = {
-    [CohorteModalityEnum.FULL_TIME]: 'Tiempo Completo',
-    [CohorteModalityEnum.PART_TIME]: 'Medio Tiempo',
+    [CohorteModalityEnum.FULL_TIME]: "Tiempo Completo",
+    [CohorteModalityEnum.PART_TIME]: "Medio Tiempo",
   };
   return translations[modality] || modality;
 };
 
 export const translateRole = (role: CohorteRoleEnum): string => {
   const translations: Record<CohorteRoleEnum, string> = {
-    [CohorteRoleEnum.ADMIN]: 'Administrador',
-    [CohorteRoleEnum.TEACHER]: 'Profesor',
-    [CohorteRoleEnum.TA]: 'Asistente',
-    [CohorteRoleEnum.STUDENT]: 'Estudiante',
+    [CohorteRoleEnum.ADMIN]: "Administrador",
+    [CohorteRoleEnum.TEACHER]: "Profesor",
+    [CohorteRoleEnum.TA]: "Asistente",
+    [CohorteRoleEnum.STUDENT]: "Estudiante",
   };
   return translations[role] || role;
 };
 
 export const translateMemberStatus = (status: MemberStatusEnum): string => {
   const translations: Record<MemberStatusEnum, string> = {
-    [MemberStatusEnum.ACTIVE]: 'Activo',
-    [MemberStatusEnum.INACTIVE]: 'Inactivo',
-    [MemberStatusEnum.GRADUATED]: 'Graduado',
-    [MemberStatusEnum.DROPPED]: 'Retirado',
+    [MemberStatusEnum.ACTIVE]: "Activo",
+    [MemberStatusEnum.INACTIVE]: "Inactivo",
+    [MemberStatusEnum.GRADUATED]: "Graduado",
+    [MemberStatusEnum.DROPPED]: "Retirado",
   };
   return translations[status] || status;
 };
@@ -193,22 +197,22 @@ export const translateMemberStatus = (status: MemberStatusEnum): string => {
  */
 export const getStatusColor = (status: CohorteStatusEnum): string => {
   const colors: Record<CohorteStatusEnum, string> = {
-    [CohorteStatusEnum.ACTIVE]: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900',
-    [CohorteStatusEnum.COMPLETED]: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900',
-    [CohorteStatusEnum.UPCOMING]: 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900',
-    [CohorteStatusEnum.CANCELLED]: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900',
+    [CohorteStatusEnum.ACTIVE]: "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900",
+    [CohorteStatusEnum.COMPLETED]: "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900",
+    [CohorteStatusEnum.UPCOMING]: "text-yellow-600 dark:text-[#ffff00] bg-yellow-100 dark:bg-yellow-900",
+    [CohorteStatusEnum.CANCELLED]: "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900",
   };
-  return colors[status] || 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900';
+  return colors[status] || "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900";
 };
 
 export const getRoleColor = (role: CohorteRoleEnum): string => {
   const colors: Record<CohorteRoleEnum, string> = {
-    [CohorteRoleEnum.ADMIN]: 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900',
-    [CohorteRoleEnum.TEACHER]: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900',
-    [CohorteRoleEnum.TA]: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900',
-    [CohorteRoleEnum.STUDENT]: 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900',
+    [CohorteRoleEnum.ADMIN]: "text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900",
+    [CohorteRoleEnum.TEACHER]: "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900",
+    [CohorteRoleEnum.TA]: "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900",
+    [CohorteRoleEnum.STUDENT]: "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900",
   };
-  return colors[role] || 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900';
+  return colors[role] || "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900";
 };
 
 // =============================
@@ -251,7 +255,10 @@ export const getCohorteAnnouncements = async (cohorteId: string): Promise<Cohort
 /**
  * Crear un anuncio en una cohorte
  */
-export const createCohorteAnnouncement = async (cohorteId: string, announcement: CreateAnnouncementDto): Promise<CohorteAnnouncement> => {
+export const createCohorteAnnouncement = async (
+  cohorteId: string,
+  announcement: CreateAnnouncementDto
+): Promise<CohorteAnnouncement> => {
   const response = await api.post(`/cohortes/${cohorteId}/announcements`, announcement);
   return response.data;
 };
@@ -266,7 +273,10 @@ export const deleteCohorteAnnouncement = async (cohorteId: string, announcementI
 /**
  * Fijar/Desfijar un anuncio (solo el autor)
  */
-export const togglePinAnnouncement = async (cohorteId: string, announcementId: string): Promise<CohorteAnnouncement> => {
+export const togglePinAnnouncement = async (
+  cohorteId: string,
+  announcementId: string
+): Promise<CohorteAnnouncement> => {
   const response = await api.patch(`/cohortes/announcements/${announcementId}/pin`);
   return response.data;
 };

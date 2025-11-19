@@ -1,28 +1,28 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getUserById, User } from '@/services/userService';
-import { useAuth } from '@/hook/useAuth';
-import { followUser, unfollowUser, checkFollowStatus, getFollowStats, FollowStats } from '@/services/followService';
-import { MessageCircle, Flag, UserPlus, UserMinus } from 'lucide-react';
-import ReportUserModal from '@/components/common/ReportUserModal';
-import FollowListModal from './FollowListModal';
+"use client";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
+import {getUserById, User} from "@/services/userService";
+import {useAuth} from "@/hook/useAuth";
+import {followUser, unfollowUser, checkFollowStatus, getFollowStats, FollowStats} from "@/services/followService";
+import {MessageCircle, Flag, UserPlus, UserMinus} from "lucide-react";
+import ReportUserModal from "@/components/common/ReportUserModal";
+import FollowListModal from "./FollowListModal";
 
 interface UserProfileHeaderProps {
   userId: string;
 }
 
-export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
+export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
+  const [followStats, setFollowStats] = useState<FollowStats>({followersCount: 0, followingCount: 0});
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFollowModal, setShowFollowModal] = useState(false);
-  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
-  const { user: currentUser } = useAuth();
+  const [followModalTab, setFollowModalTab] = useState<"followers" | "following">("followers");
+  const {user: currentUser} = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -46,8 +46,8 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
           setFollowStats(stats);
         }
       } catch (err) {
-        console.error('Error al cargar el perfil:', err);
-        setError('No se pudo cargar el perfil');
+        console.error("Error al cargar el perfil:", err);
+        setError("No se pudo cargar el perfil");
       } finally {
         setLoading(false);
       }
@@ -74,7 +74,7 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
       <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 border-b pb-4">
         <div className="w-full h-32 bg-red-100 dark:bg-red-900" />
         <div className="w-11/12 -mt-10 flex flex-col items-center">
-          <p className="text-red-600 dark:text-red-400">{error || 'Error al cargar el perfil'}</p>
+          <p className="text-red-600 dark:text-red-400">{error || "Error al cargar el perfil"}</p>
         </div>
       </div>
     );
@@ -82,22 +82,22 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
 
   // Generar iniciales del usuario
   const getInitials = () => {
-    const firstName = user.name?.trim()?.charAt(0) || '';
-    const lastName = user.lastName?.trim()?.charAt(0) || '';
+    const firstName = user.name?.trim()?.charAt(0) || "";
+    const lastName = user.lastName?.trim()?.charAt(0) || "";
     const initials = (firstName + lastName).toUpperCase();
 
     if (initials) return initials;
-    return user.email?.trim()?.charAt(0)?.toUpperCase() || '?';
+    return user.email?.trim()?.charAt(0)?.toUpperCase() || "?";
   };
 
   // Formatear fecha de unión
   const formatJoinDate = () => {
     if (!user.joinDate) {
       const date = new Date(user.createdAt);
-      return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      return date.toLocaleDateString("es-ES", {month: "long", year: "numeric"});
     }
     const date = new Date(user.joinDate);
-    return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString("es-ES", {month: "long", year: "numeric"});
   };
 
   // Verificar si es el perfil del usuario actual
@@ -105,7 +105,7 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
-      alert('⚠️ Debes iniciar sesión para seguir usuarios');
+      alert("⚠️ Debes iniciar sesión para seguir usuarios");
       return;
     }
 
@@ -125,8 +125,8 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
         alert(result.message);
       }
     } catch (err) {
-      console.error('Error al cambiar estado de seguimiento:', err);
-      alert('❌ Error al actualizar seguimiento');
+      console.error("Error al cambiar estado de seguimiento:", err);
+      alert("❌ Error al actualizar seguimiento");
     } finally {
       setIsFollowLoading(false);
     }
@@ -134,10 +134,10 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
 
   const handleMessage = () => {
     if (!currentUser) {
-      alert('⚠️ Debes iniciar sesión para enviar mensajes');
+      alert("⚠️ Debes iniciar sesión para enviar mensajes");
       return;
     }
-    router.push('/chat');
+    router.push("/chat");
   };
 
   return (
@@ -146,37 +146,55 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
       <div
         className="w-full h-32 relative"
         style={{
-          backgroundColor: user.coverPicture ? 'transparent' : '#FFFF00',
-          backgroundImage: user.coverPicture ? `url(${user.coverPicture})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundColor: user.coverPicture ? "transparent" : "#FFFF00",
+          backgroundImage: user.coverPicture ? `url(${user.coverPicture})` : "none",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       />
 
       <div className="w-11/12 -mt-10 flex flex-col items-center">
         {/* Profile Picture */}
         <div className="relative">
-          {user.profilePicture ? <img src={user.profilePicture} alt={`${user.name || user.email}'s profile`} className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 object-cover" /> : <div className="bg-[#FFFF00] w-20 h-20 rounded-full flex items-center justify-center text-lg font-bold border-4 border-white dark:border-gray-900">{getInitials()}</div>}
+          {user.profilePicture ? (
+            <img
+              src={user.profilePicture}
+              alt={`${user.name || user.email}'s profile`}
+              className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 object-cover"
+            />
+          ) : (
+            <div className="bg-[#FFFF00] w-20 h-20 rounded-full flex items-center justify-center text-lg font-bold border-4 border-white dark:border-gray-900">
+              {getInitials()}
+            </div>
+          )}
         </div>
 
         {/* User Info */}
         <div className="flex items-center gap-2 mt-2">
-          <h1 className="text-xl font-semibold dark:text-white">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || 'Usuario'}</h1>
+          <h1 className="text-xl font-semibold dark:text-white">
+            {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || "Usuario"}
+          </h1>
           {isOwnProfile && (
-            <a href="/profile" className="text-gray-500 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400" title="Ir a mi perfil">
+            <a
+              href="/profile"
+              className="text-gray-500 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-[#ffff00]"
+              title="Ir a mi perfil"
+            >
               ✏️
             </a>
           )}
         </div>
-        <p className="text-gray-600 dark:text-gray-400">@{user.email?.split('@')[0] || 'usuario'}</p>
+        <p className="text-gray-600 dark:text-gray-400">@{user.email?.split("@")[0] || "usuario"}</p>
 
-        {user.biography && <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mt-2">{user.biography}</p>}
+        {user.biography && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mt-2">{user.biography}</p>
+        )}
 
         {/* Follow Stats */}
         <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
           <button
             onClick={() => {
-              setFollowModalTab('followers');
+              setFollowModalTab("followers");
               setShowFollowModal(true);
             }}
             className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -185,7 +203,7 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
           </button>
           <button
             onClick={() => {
-              setFollowModalTab('following');
+              setFollowModalTab("following");
               setShowFollowModal(true);
             }}
             className="font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -198,9 +216,17 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
         {!isOwnProfile && currentUser && (
           <div className="flex gap-3 mt-3">
             {/* Botón Follow/Unfollow */}
-            <button onClick={handleFollowToggle} disabled={isFollowLoading} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${isFollowing ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-[#FFFF00] text-black hover:bg-yellow-300'} disabled:opacity-50 disabled:cursor-not-allowed`}>
+            <button
+              onClick={handleFollowToggle}
+              disabled={isFollowLoading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                isFollowing
+                  ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  : "bg-[#FFFF00] text-black hover:bg-yellow-300"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
               {isFollowLoading ? (
-                '...'
+                "..."
               ) : isFollowing ? (
                 <>
                   <UserMinus size={18} />
@@ -215,13 +241,21 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
             </button>
 
             {/* Botón Mensaje */}
-            <button onClick={handleMessage} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition" title="Enviar mensaje">
+            <button
+              onClick={handleMessage}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              title="Enviar mensaje"
+            >
               <MessageCircle size={18} />
               Mensaje
             </button>
 
             {/* Botón Reportar */}
-            <button onClick={() => setShowReportModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 transition" title="Reportar usuario">
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 transition"
+              title="Reportar usuario"
+            >
               <Flag size={18} />
               Reportar
             </button>
@@ -234,18 +268,32 @@ export default function UserProfileHeader({ userId }: UserProfileHeaderProps) {
           <span>✅​ Miembro desde {formatJoinDate()}</span>
           {user.email && <span>📧 {user.email}</span>}
           {user.website && (
-            <a href={user.website} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors">
-              🔗 {user.website.includes('github.com') ? 'GitHub' : 'Sitio Web'}
+            <a
+              href={user.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-yellow-500 dark:hover:text-[#ffff00] transition-colors"
+            >
+              🔗 {user.website.includes("github.com") ? "GitHub" : "Sitio Web"}
             </a>
           )}
         </div>
       </div>
 
       {/* Modal de reporte */}
-      {showReportModal && user && <ReportUserModal userId={userId} userName={user.name || user.email || 'Usuario'} onClose={() => setShowReportModal(false)} onSuccess={() => setShowReportModal(false)} />}
+      {showReportModal && user && (
+        <ReportUserModal
+          userId={userId}
+          userName={user.name || user.email || "Usuario"}
+          onClose={() => setShowReportModal(false)}
+          onSuccess={() => setShowReportModal(false)}
+        />
+      )}
 
       {/* Modal de seguidores */}
-      {showFollowModal && user && <FollowListModal userId={userId} initialTab={followModalTab} onClose={() => setShowFollowModal(false)} />}
+      {showFollowModal && user && (
+        <FollowListModal userId={userId} initialTab={followModalTab} onClose={() => setShowFollowModal(false)} />
+      )}
     </div>
   );
 }

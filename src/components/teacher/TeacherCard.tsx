@@ -9,7 +9,7 @@
 //       <img
 //         src="/avatars/teacher.png"
 //         alt="teacher"
-//         className="w-16 h-16 rounded-full border-2 border-yellow-400"
+//         className="w-16 h-16 rounded-full border-2 border-[#ffff00]"
 //       />
 //       <div>
 //         <h1 className="text-2xl font-bold">{name}</h1>

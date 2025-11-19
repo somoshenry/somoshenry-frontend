@@ -184,7 +184,7 @@ export default function ProfileHeader() {
           {isOwnProfile && (
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="absolute bottom-0 right-0 bg-yellow-400 hover:bg-yellow-500 text-black p-1.5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute bottom-0 right-0 bg-[#ffff00] hover:bg-yellow-500 text-black p-1.5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
               title="Editar foto"
             >
               ✏️
@@ -204,7 +204,7 @@ export default function ProfileHeader() {
             {isOwnProfile && (
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="text-black hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400"
+                className="text-black hover:text-yellow-500 dark:text-gray-400 dark:hover:text-[#ffff00]"
               >
                 ✏️
               </button>
@@ -224,7 +224,7 @@ export default function ProfileHeader() {
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-semibold border ${
                       plan === "ORO"
-                        ? "bg-yellow-100 text-yellow-700 border-yellow-400"
+                        ? "bg-yellow-100 text-yellow-700 border-[#ffff00]"
                         : plan === "PLATA"
                         ? "bg-gray-200 text-gray-700 border-gray-400"
                         : plan === "BRONCE"
@@ -282,7 +282,7 @@ export default function ProfileHeader() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 isFollowing
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  : "bg-yellow-400 hover:bg-yellow-500 text-black"
+                  : "bg-[#ffff00] hover:bg-yellow-500 text-black"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {followLoading ? (
@@ -320,7 +320,7 @@ export default function ProfileHeader() {
           <span>✅ Miembro desde {formatJoinDate()}</span>
           {user.email && <span>📧 {user.email}</span>}
           {user.website && (
-            <a href={user.website} target="_blank" className="hover:text-yellow-500 dark:hover:text-yellow-400">
+            <a href={user.website} target="_blank" className="hover:text-yellow-500 dark:hover:text-[#ffff00]">
               🔗 {user.website.includes("github.com") ? "GitHub" : "Sitio Web"}
             </a>
           )}

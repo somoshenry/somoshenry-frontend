@@ -59,7 +59,7 @@ export default function LiveClassPage() {
   if (loadingUser) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <Loader2 className="w-10 h-10 text-yellow-400 animate-spin" />
+        <Loader2 className="w-10 h-10 text-[#ffff00] animate-spin" />
       </div>
     );
   }

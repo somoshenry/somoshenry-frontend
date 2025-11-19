@@ -147,7 +147,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({roomId, token, userName, user
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="Escribe un mensaje..."
-            className="flex-1 px-3 py-2 bg-black/30 border border-gray-600 rounded-lg text-white placeholder-gray-500 text-sm focus:border-yellow-400 focus:outline-none"
+            className="flex-1 px-3 py-2 bg-black/30 border border-gray-600 rounded-lg text-white placeholder-gray-500 text-sm focus:border-[#ffff00] focus:outline-none"
             disabled={!isConnected}
           />
           <button

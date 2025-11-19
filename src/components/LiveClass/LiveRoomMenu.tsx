@@ -101,7 +101,7 @@ export const LiveRoomMenu = () => {
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
                   placeholder="Ej: Clase de WebRTC"
-                  className="w-full px-4 py-3 bg-gray-200 border  dark:border dark:border-gray-600 rounded-lg placeholder-gray-500 focus:border-[#ffff00] text-black focus:outline-none transition dark:focus:border-[#ffff00] dark:focus:outline-none dark:transition"
+                  className="w-full px-4 py-3 bg-gray-700 border dark:text-white  dark:border dark:border-gray-600 rounded-lg placeholder-gray-500 focus:border-[#ffff00] text-black focus:outline-none transition dark:focus:border-[#ffff00] dark:focus:outline-none dark:transition"
                 />
               </div>
               <div>
@@ -111,7 +111,7 @@ export const LiveRoomMenu = () => {
                   onChange={(e) => setNewRoomDescription(e.target.value)}
                   placeholder="Ej: Clase de WebRTC y Socket.io"
                   rows={3}
-                  className="w-full px-4 py-3 bg-bl  bg-gray-200 border  dark:border text-black dark:border-gray-600 rounded-lg  placeholder-gray-500 focus:border-[#ffff00] focus:outline-none transition dark:focus:border-[#ffff00] dark:focus:outline-none dark:transition"
+                  className="w-full px-4 py-3 bg-bl  bg-gray-700 border dark:text-white  dark:border text-black dark:border-gray-600 rounded-lg  placeholder-gray-500 focus:border-[#ffff00] focus:outline-none transition dark:focus:border-[#ffff00] dark:focus:outline-none dark:transition"
                 />
               </div>
               <div className="flex gap-4 pt-2">

@@ -1,6 +1,4 @@
-import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {Router} from "next/router";
 import React from "react";
 
 export interface lectureProp {

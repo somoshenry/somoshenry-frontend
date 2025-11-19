@@ -237,8 +237,8 @@ export default function ConfigForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-black pt-20 md:pl-64">
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-black pt-20 md:pl-64">
+      <div className="max-w-4xl mx-auto bg-gray-100 dark:bg-gray-900 p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold dark:text-white mb-2">Configuración</h1>
@@ -273,7 +273,7 @@ export default function ConfigForm() {
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 onChange={handleCoverPictureChange}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ffff00] file:text-black hover:file:scale-105 file:cursor-pointer"
               />
               {coverPicturePreview && (
                 <div className="mt-3 rounded-lg overflow-hidden h-40 border dark:border-gray-600">
@@ -299,7 +299,7 @@ export default function ConfigForm() {
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 onChange={handleProfilePictureChange}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500 file:cursor-pointer"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ffff00] file:text-black hover:file:scale-105 file:cursor-pointer"
               />
               {profilePicturePreview && (
                 <div className="mt-3 flex justify-center">
@@ -405,14 +405,14 @@ export default function ConfigForm() {
                 type="button"
                 onClick={() => router.push("/profile")}
                 disabled={isLoading}
-                className="px-6 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white disabled:opacity-50 transition"
+                className="px-6 py-2  bg-red-400 dark:border-gray-600 cursor-pointer rounded-lg hover:scale-105 text-black disabled:opacity-50 transition"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-6 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="px-6 py-2 bg-[#ffff00] text-black rounded-lg hover:scale-105 cursor-pointer font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 {isLoading ? "Guardando..." : "Guardar Cambios"}
               </button>

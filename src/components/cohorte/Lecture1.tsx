@@ -235,7 +235,7 @@ FIN`}
         </motion.section>
         <button
           onClick={() => router.push("/cohorte?tab=Lecturas")}
-          className="flex items-center justify-center gap-2 mx-auto mt-10 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out"
+          className="flex items-center justify-center gap-2 mx-auto mt-10 px-6 py-3 bg-gradient-to-r from-[#ffff00] to-yellow-500 text-black font-semibold rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out"
         >
           ← Volver a Lecturas
         </button>

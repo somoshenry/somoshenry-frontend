@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React from "react";
+import {useRouter} from "next/navigation";
 
 export interface UserResult {
   id: string;
@@ -9,7 +9,7 @@ export interface UserResult {
   lastName?: string | null;
   email: string;
   profilePicture?: string | null;
-  role: 'ADMIN' | 'MEMBER' | 'TEACHER' | 'TA' | 'STUDENT';
+  role: "ADMIN" | "MEMBER" | "TEACHER" | "TA" | "STUDENT";
 }
 
 interface GenericListProps {
@@ -17,13 +17,13 @@ interface GenericListProps {
   onClose: () => void;
 }
 
-const GenericList: React.FC<GenericListProps> = ({ data, onClose }) => {
+const GenericList: React.FC<GenericListProps> = ({data, onClose}) => {
   const router = useRouter();
 
   const getDisplayName = (user: UserResult) => {
     if (user.name && user.lastName) return `${user.name} ${user.lastName}`;
     if (user.name) return user.name;
-    return user.email.split('@')[0];
+    return user.email.split("@")[0];
   };
 
   const handleUserClick = (userId: string) => {
@@ -37,9 +37,23 @@ const GenericList: React.FC<GenericListProps> = ({ data, onClose }) => {
         <p className="p-4 text-center text-gray-500 text-sm">No hay usuarios</p>
       ) : (
         data.map((user) => (
-          <div key={user.id} onClick={() => handleUserClick(user.id)} className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer border-b last:border-none transition-all">
+          <div
+            key={user.id}
+            onClick={() => handleUserClick(user.id)}
+            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer border-b last:border-none transition-all"
+          >
             {/* Foto o inicial */}
-            {user.profilePicture ? <img src={user.profilePicture} alt={getDisplayName(user)} className="md:w-12 md:h-12 w-10 h-10 rounded-full object-cover" /> : <div className="md:w-12 md:h-12 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg">{getDisplayName(user).charAt(0).toUpperCase()}</div>}
+            {user.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt={getDisplayName(user)}
+                className="md:w-12 md:h-12 w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="md:w-12 md:h-12 w-10 h-10 rounded-full bg-[#ffff00] flex items-center justify-center text-black font-bold text-lg">
+                {getDisplayName(user).charAt(0).toUpperCase()}
+              </div>
+            )}
 
             {/* Info */}
             <div className="flex flex-col">
@@ -47,7 +61,13 @@ const GenericList: React.FC<GenericListProps> = ({ data, onClose }) => {
               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 font-medium">
                 {
-                  user.role === 'MEMBER' ? '🎓 Estudiante' : user.role === 'TEACHER' ? '📚 Docente' : user.role === 'TA' ? '👨‍💻 TA' : user.role // Muestra el rol si es desconocido
+                  user.role === "MEMBER"
+                    ? "🎓 Estudiante"
+                    : user.role === "TEACHER"
+                    ? "📚 Docente"
+                    : user.role === "TA"
+                    ? "👨‍💻 TA"
+                    : user.role // Muestra el rol si es desconocido
                 }
               </p>
             </div>

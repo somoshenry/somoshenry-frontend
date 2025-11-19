@@ -404,7 +404,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="fixed top-16 left-0 md:left-64 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="fixed top-16 left-0 md:left-65 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
       {/* Sidebar con lista de conversaciones - Se oculta en móvil cuando hay conversación seleccionada */}
       <div className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block w-full md:w-80 shrink-0 h-full`}>
         <ChatSidebar

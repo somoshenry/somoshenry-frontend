@@ -79,7 +79,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Lista de conversaciones */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pl-2 pr-1">
         {conversations.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             <p>No tienes conversaciones aún</p>
@@ -90,8 +90,10 @@ export default function ChatSidebar({
             <button
               key={conv.id}
               onClick={() => onSelectConversation(conv.id)}
-              className={`w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                selectedId === conv.id ? "bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-l-yellow-500" : ""
+              className={`w-full p-4 flex items-start gap-3 rounded-xl  transition-colors cursor-pointer ${
+                selectedId === conv.id
+                  ? "border border-[#ffff00] bg-yellow-50 dark:bg-gray-600"
+                  : "hover:bg-gray-500/20"
               }`}
             >
               {/* Avatar */}
@@ -103,7 +105,7 @@ export default function ChatSidebar({
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold">
+                  <div className="w-12 h-12 rounded-full bg-[#ffff00] flex items-center justify-center text-black font-bold">
                     {(conv.userName || conv.groupName || "U").charAt(0).toUpperCase()}
                   </div>
                 )}

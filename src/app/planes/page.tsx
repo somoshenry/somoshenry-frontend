@@ -232,7 +232,7 @@ export default function PlanesPage() {
       case "PLATA":
         return {text: "Plata", color: "bg-gray-400 text-white"};
       case "ORO":
-        return {text: "Oro", color: "bg-yellow-400 text-black"};
+        return {text: "Oro", color: "bg-[#ffff00] text-black"};
       default:
         return {text: "Sin Plan", color: "bg-gray-500 text-white"};
     }

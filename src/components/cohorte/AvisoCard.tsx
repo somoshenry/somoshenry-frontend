@@ -60,7 +60,7 @@ const AvisoCard: React.FC<CardMensajeProps> = ({nombre, rol, fecha, titulo, pict
         {/* 👈 BLOQUE IZQUIERDO: Imagen y Nombre/Rol */}
         <div className="flex items-start gap-3">
           {shouldShowInitials ? (
-            <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg shrink-0">
+            <div className="w-12 h-12 rounded-full bg-[#ffff00] flex items-center justify-center text-black font-bold text-lg shrink-0">
               {getInitial(nombre)}
             </div>
           ) : (

@@ -178,7 +178,7 @@ export default function ChatGrupal() {
         <button
           type="button"
           onClick={() => setShowEmoji(!showEmoji)}
-          className="text-2xl hover:scale-110 transition-transform"
+          className="text-2xl hover:scale-110 transition-transform cursor-pointer"
         >
           😊
         </button>

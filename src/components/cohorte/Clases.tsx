@@ -5,13 +5,13 @@ import ClaseHang from "./ClaseHang"; // Contenido de la primera vista
 import ClassSub from "./ClassSub"; // Contenido de la segunda vista
 
 const Clases = () => {
-  const [activeButton, setActiveButton] = useState<"hang" | "sub">("hang");
+  const [activeButton, setActiveButton] = useState<"hands" | "sub">("hands");
 
-  const handleButtonClick = (buttonName: "hang" | "sub") => {
+  const handleButtonClick = (buttonName: "hands" | "sub") => {
     setActiveButton(buttonName);
   };
 
-  const getButtonTextClass = (buttonName: "hang" | "sub") => {
+  const getButtonTextClass = (buttonName: "hands" | "sub") => {
     const baseClasses = "text-sm w-1/2 text-center relative z-10 py-1 transition-colors duration-300";
     if (activeButton === buttonName) {
       return "font-bold text-black " + baseClasses;
@@ -30,17 +30,17 @@ const Clases = () => {
             }`}
           ></div>
           {/* 1.2. Botones (Deben ser hermanos del slider) */}
-          <button className={getButtonTextClass("hang")} onClick={() => handleButtonClick("hang")}>
-            Hang zone
+          <button className={getButtonTextClass("hands")} onClick={() => handleButtonClick("hands")}>
+            Hands on
           </button>
 
           <button className={getButtonTextClass("sub")} onClick={() => handleButtonClick("sub")}>
-            Sub
+            Stand up
           </button>
         </div>
       </div>
       <div className="mt-6 w-full">
-        {activeButton === "hang" && <ClaseHang theme={"hang"} />}
+        {activeButton === "hands" && <ClaseHang theme={"hang"} />}
         {activeButton === "sub" && <ClassSub theme={"sub"} />}
       </div>
     </>

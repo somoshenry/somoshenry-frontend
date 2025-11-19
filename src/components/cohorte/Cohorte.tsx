@@ -127,14 +127,14 @@ export const Cohorte = () => {
     const fetchUsers = async () => {
       try {
         const {data} = await api.get(`/users`);
-        console.log("🔍 Respuesta cruda del backend:", data);
+        //console.log("🔍 Respuesta cruda del backend:", data);
 
         const users = data?.users || data?.data || [];
-        console.log("📦 Array de usuarios procesado:", users);
+        //console.log("📦 Array de usuarios procesado:", users);
 
         setUserResults(users);
       } catch (error) {
-        console.error("❌ Error al obtener usuarios:", error);
+        //console.error("❌ Error al obtener usuarios:", error);
       }
     };
     fetchUsers();
@@ -240,7 +240,7 @@ export const Cohorte = () => {
             {/* Tabs */}
             <div className="flex  justify-end w-full mt-[8%]">
               <div className="flex w-full px-1 justify-evenly dark:text-white text-xs md:text-md text-black pb-2 lg:text-xl md:text-lg xl:text-lg">
-                {["avisos", "Lecturas", "Clases", "material extra", "chat grupal"].map((tab) => (
+                {["avisos", "Lecciones", "Clases", "material extra", "chat grupal"].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -264,7 +264,7 @@ export const Cohorte = () => {
         {activeTab === "avisos" && <AvisoPage />}
         {activeTab === "material extra" && <FilePage />}
         {activeTab === "chat grupal" && <ChatGrupal />}
-        {activeTab === "Lecturas" && mockLectures.map((post, index) => <Lecture key={index} {...post} />)}
+        {activeTab === "Lecciones" && mockLectures.map((post, index) => <Lecture key={index} {...post} />)}
         {activeTab === "Clases" && <Clases />}
       </div>
     </div>

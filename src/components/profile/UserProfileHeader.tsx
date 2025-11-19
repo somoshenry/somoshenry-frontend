@@ -106,7 +106,6 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
-<<<<<<< HEAD
       //alert("⚠️ Debes iniciar sesión para seguir usuarios");
       Swal.fire({
         title: 'Atención',
@@ -114,9 +113,6 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
         icon: 'warning',
         confirmButtonText: 'Aceptar',
       });
-=======
-      Swal.fire("⚠️ Debes iniciar sesión para seguir usuarios");
->>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
       return;
     }
 
@@ -131,7 +127,6 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
           ...prev,
           followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
         }));
-<<<<<<< HEAD
         Swal.fire({
           title: 'Listo',
           text: result.message,
@@ -155,15 +150,6 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
         icon: 'error',
         confirmButtonText: 'Aceptar',
       });
-=======
-        Swal.fire(result.message);
-      } else {
-        Swal.fire(result.message);
-      }
-    } catch (err) {
-      console.error("Error al cambiar estado de seguimiento:", err);
-      Swal.fire("❌ Error al actualizar seguimiento");
->>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
     } finally {
       setIsFollowLoading(false);
     }
@@ -171,7 +157,6 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleMessage = () => {
     if (!currentUser) {
-<<<<<<< HEAD
       //alert("⚠️ Debes iniciar sesión para enviar mensajes");
       Swal.fire({
         title: 'Atención',
@@ -179,9 +164,6 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
         icon: 'warning',
         confirmButtonText: 'Aceptar',
       });
-=======
-      Swal.fire("⚠️ Debes iniciar sesión para enviar mensajes");
->>>>>>> 2c57b8fd98277ce7024fd0c610da1fec06408b37
       return;
     }
     router.push("/chat");

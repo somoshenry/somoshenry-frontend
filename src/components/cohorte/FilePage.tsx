@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Download, Upload, Filter, Search, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { getMaterials, createMaterial, deleteMaterial, registerDownload, toggleVisibility, uploadMaterialFile, type CohorteMaterial, type CreateMaterialDto, MaterialCategory, FileType, translateCategory, translateFileType, getCategoryColor, getFileTypeIcon, formatFileSize } from '@/services/materialService';
+import Swal from 'sweetalert2';
 
 interface FilePageProps {
   readonly cohorteId: string;
@@ -114,27 +115,44 @@ export default function FilePage({ cohorteId, canUpload, currentUserId }: FilePa
         // Esperar un poco antes de recargar para que el backend procese
         setTimeout(async () => {
           await fetchMaterials();
-          alert('✅ Material subido y visible en la lista');
+          Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Material subido y visible en la lista',
+          });
         }, 500);
       } catch (error: any) {
         console.error('❌ Error al subir material:', error);
         console.error('Response:', error.response?.data);
 
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
-        alert(`Error al subir el material: ${errorMessage}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error al subir el material: ${errorMessage}`,
+        });
       } finally {
         setUploading(false);
       }
     } else {
-      alert('Por favor selecciona un archivo para subir');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: 'Por favor selecciona un archivo para subir',
+      });
     }
+    
   };
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validar tamaño (20MB máx)
       if (file.size > 20 * 1024 * 1024) {
-        alert('El archivo debe pesar máximo 20 MB');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Atención',
+          text: 'El archivo debe pesar máximo 20 MB',
+        });
         return;
       }
 
@@ -155,7 +173,11 @@ export default function FilePage({ cohorteId, canUpload, currentUserId }: FilePa
 
   const handleDownload = async (material: CohorteMaterial) => {
     // Mostrar mensaje de funcionalidad en desarrollo
-    alert('🚧 Función en desarrollo\n\nLa descarga de archivos estará disponible próximamente.\n\nArchivo: ' + material.fileName);
+    Swal.fire({
+      icon: 'info',
+      title: 'Función en desarrollo',
+      text: 'La descarga de archivos estará disponible próximamente.\n\nArchivo: ' + material.fileName,
+    });
 
     // Registrar intento de descarga
     try {
@@ -173,7 +195,11 @@ export default function FilePage({ cohorteId, canUpload, currentUserId }: FilePa
       setMaterials(materials.filter((m) => m.id !== materialId));
     } catch (error) {
       console.error('Error al eliminar material:', error);
-      alert('Error al eliminar el material');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al eliminar el material',
+      });
     }
   };
 

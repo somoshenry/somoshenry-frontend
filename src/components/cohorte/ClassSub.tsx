@@ -3,6 +3,7 @@ import ClaseCard, { CardMensajeProps } from './ClaseCard';
 import ClassProgramar, { cardDataProps, UserInfo } from './ClassProgramar';
 import { getUserProfile, User } from '@/services/userService';
 import { getClassesByCohorte, createClass, CreateClassDto } from '@/services/cohorteService';
+import Swal from 'sweetalert2';
 
 interface ClaseHangProps {
   theme: 'hang' | 'sub';
@@ -147,10 +148,18 @@ const ClassSub: React.FC<ClaseHangProps> = ({ theme, cohorteId }) => {
       }));
 
       setBackendClasses(mappedClasses);
-      alert('✅ Clase agendada exitosamente');
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Clase agendada exitosamente',
+      });
     } catch (error: any) {
       console.error('❌ Error al guardar clase:', error);
-      alert(`Error al agendar clase: ${error.response?.data?.message || error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al agendar clase: ${error.response?.data?.message || error.message}`,
+      });
     } finally {
       setSavingClass(false);
     }

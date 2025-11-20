@@ -3,6 +3,7 @@ import ProfesorCard, { CardMensajeProps } from './AvisoCard';
 import AvisoForm from './AvisoForm';
 import { getCohorteAnnouncements, createCohorteAnnouncement } from '@/services/cohorteService';
 import { Loader2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface AvisoPageProps {
   readonly cohorteId: string;
@@ -106,7 +107,11 @@ export default function AvisoPage({ cohorteId, canPost, currentUserId }: AvisoPa
       console.error('Response:', error.response?.data);
 
       const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
-      alert(`Error al publicar el aviso: ${errorMessage}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al publicar el aviso: ${errorMessage}`,
+      });
     }
   };
 

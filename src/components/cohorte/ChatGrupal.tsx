@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getCohorteChatGroupId } from '@/services/cohorteService';
 import { io, Socket } from 'socket.io-client';
 import { tokenStore } from '@/services/tokenStore';
+import Swal from 'sweetalert2';
 
 interface ChatGrupalProps {
   readonly cohorteId: string;
@@ -149,7 +150,11 @@ export default function ChatGrupal({ cohorteId, currentUser }: ChatGrupalProps) 
       setNewMessage('');
     } catch (error) {
       console.error('❌ Error al enviar mensaje:', error);
-      alert('Error al enviar el mensaje');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al enviar el mensaje',
+      });
     } finally {
       setSending(false);
     }

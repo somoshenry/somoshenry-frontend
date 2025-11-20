@@ -688,7 +688,7 @@ export default function FloatingChatButton() {
                               ? "text-black"
                               : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
                           }`}
-                          style={message.isOwn ? {backgroundColor: "#ffff00"} : {}}
+                          style={message.isOwn ? {backgroundColor: "#D1D5DB"} : {}}
                         >
                           {/* Mostrar imagen */}
                           {message.type === MessageType.IMAGE && message.mediaUrl && (

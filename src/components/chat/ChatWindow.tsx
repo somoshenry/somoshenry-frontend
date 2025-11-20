@@ -171,7 +171,7 @@ export default function ChatWindow({conversation, onSendMessage, onDeleteConvers
                   <div
                     className={`rounded-2xl px-4 py-2.5 ${
                       message.isOwn
-                        ? "bg-[#ffff00] text-black rounded-br-sm"
+                        ? "bg-gray-300 text-black rounded-br-sm"
                         : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-sm"
                     }`}
                   >

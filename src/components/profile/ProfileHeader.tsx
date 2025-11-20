@@ -9,6 +9,7 @@ import {openConversation} from "@/services/chatService";
 import {useAuth} from "@/hook/useAuth";
 import ProfileEditModal from "./ProfileEditModal";
 import FollowListModal from "./FollowListModal";
+import Swal from "sweetalert2";
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -92,7 +93,13 @@ export default function ProfileHeader() {
       router.push(`/chat?conversationId=${conversation.id}`);
     } catch (error) {
       console.error("Error al abrir chat:", error);
-      alert("Error al abrir el chat.");
+      //alert("Error al abrir el chat.");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al abrir el chat.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
     }
   };
 
@@ -102,10 +109,10 @@ export default function ProfileHeader() {
     try {
       await reportUser(user.id, reason as any, description);
       setShowReportModal(false);
-      alert("Reporte enviado exitosamente.");
+      Swal.fire("Reporte enviado exitosamente.");
     } catch (error) {
       console.error("Error al reportar usuario:", error);
-      alert("Error al enviar el reporte.");
+      Swal.fire("Error al enviar el reporte.");
     }
   };
 
@@ -184,7 +191,7 @@ export default function ProfileHeader() {
           {isOwnProfile && (
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="absolute bottom-0 right-0 bg-yellow-400 hover:bg-yellow-500 text-black p-1.5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute bottom-0 right-0 bg-[#ffff00] hover:bg-yellow-500 text-black p-1.5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
               title="Editar foto"
             >
               ✏️
@@ -197,14 +204,14 @@ export default function ProfileHeader() {
         {/* ========================== */}
         <div className="flex flex-col items-center mt-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold dark:text-white">
+            <h1 className="text-xl text-black font-semibold dark:text-white">
               {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || "Usuario"}
             </h1>
 
             {isOwnProfile && (
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="text-black hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400"
+                className="text-black hover:text-yellow-500 dark:text-gray-400 dark:hover:text-[#ffff00]"
               >
                 ✏️
               </button>
@@ -224,7 +231,7 @@ export default function ProfileHeader() {
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-semibold border ${
                       plan === "ORO"
-                        ? "bg-yellow-100 text-yellow-700 border-yellow-400"
+                        ? "bg-yellow-100 text-yellow-700 border-[#ffff00]"
                         : plan === "PLATA"
                         ? "bg-gray-200 text-gray-700 border-gray-400"
                         : plan === "BRONCE"
@@ -282,7 +289,7 @@ export default function ProfileHeader() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 isFollowing
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  : "bg-yellow-400 hover:bg-yellow-500 text-black"
+                  : "bg-[#ffff00] hover:scale-105 cursor-pointer text-black"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {followLoading ? (
@@ -320,7 +327,7 @@ export default function ProfileHeader() {
           <span>✅ Miembro desde {formatJoinDate()}</span>
           {user.email && <span>📧 {user.email}</span>}
           {user.website && (
-            <a href={user.website} target="_blank" className="hover:text-yellow-500 dark:hover:text-yellow-400">
+            <a href={user.website} target="_blank" className="hover:text-yellow-500 dark:hover:text-[#ffff00]">
               🔗 {user.website.includes("github.com") ? "GitHub" : "Sitio Web"}
             </a>
           )}
@@ -368,7 +375,7 @@ function ReportUserModal({
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      alert("Por favor describe el motivo del reporte");
+      Swal.fire("Por favor describe el motivo del reporte");
       return;
     }
     setSubmitting(true);

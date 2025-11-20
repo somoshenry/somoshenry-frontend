@@ -13,7 +13,7 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({participants}
     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Participantes</h3>
-        <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm font-bold">
+        <span className="bg-[#ffff00] text-gray-900 px-3 py-1 rounded-full text-sm font-bold">
           {participants.length}
         </span>
       </div>

@@ -225,7 +225,7 @@ export default function ConfigForm() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ffff00] mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function ConfigForm() {
         {/* Card de Edición de Perfil */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
           <div className="border-b dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold dark:text-white">Editar Perfil</h2>
+            <h2 className="text-xl text-black font-semibold dark:text-white">Editar Perfil</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Actualiza tu información personal y pública</p>
           </div>
 
@@ -273,7 +273,7 @@ export default function ConfigForm() {
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 onChange={handleCoverPictureChange}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ffff00] file:text-black hover:file:scale-105 file:cursor-pointer"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ffff00] file:text-black hover:file:scale-105 file:cursor-pointer"
               />
               {coverPicturePreview && (
                 <div className="mt-3 rounded-lg overflow-hidden h-40 border dark:border-gray-600">
@@ -299,7 +299,7 @@ export default function ConfigForm() {
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 onChange={handleProfilePictureChange}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ffff00] file:text-black hover:file:scale-105 file:cursor-pointer"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ffff00] file:text-black hover:file:scale-105 file:cursor-pointer"
               />
               {profilePicturePreview && (
                 <div className="mt-3 flex justify-center">
@@ -327,7 +327,7 @@ export default function ConfigForm() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Tu nombre"
-                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white"
                 />
               </div>
 
@@ -338,7 +338,7 @@ export default function ConfigForm() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Tu apellido"
-                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white"
                 />
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function ConfigForm() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="valen_henry"
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Tu nombre de usuario único en la plataforma
@@ -367,7 +367,7 @@ export default function ConfigForm() {
                 placeholder="Cuéntanos sobre ti..."
                 rows={4}
                 maxLength={500}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white resize-none"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white resize-none"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{biography.length}/500 caracteres</p>
             </div>
@@ -380,7 +380,7 @@ export default function ConfigForm() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Ciudad, País"
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white"
               />
             </div>
 
@@ -392,7 +392,7 @@ export default function ConfigForm() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://github.com/tu-usuario"
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffff00] dark:bg-gray-700 dark:text-white"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Ingresa el link a tu perfil de GitHub o portafolio

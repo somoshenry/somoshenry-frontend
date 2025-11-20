@@ -105,7 +105,7 @@ export default function SearchUserModal({isOpen, onClose, onSelectUser, currentU
 
           {/* Buscador con estilo del navbar/modal */}
           <div className="flex items-center bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl px-5 py-3 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-shadow">
-            <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[#ffff00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -140,19 +140,14 @@ export default function SearchUserModal({isOpen, onClose, onSelectUser, currentU
             <div className="flex flex-col items-center justify-center py-16">
               <div className="relative">
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-gray-700"></div>
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-yellow-400 absolute top-0"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-[#ffff00] absolute top-0"></div>
               </div>
               <p className="mt-6 text-gray-500 dark:text-gray-400 font-medium">Buscando...</p>
             </div>
           ) : searchQuery.length < 2 ? (
             <div className="text-center py-16">
-              <div className="bg-yellow-400/10 p-6 rounded-full inline-block mb-6">
-                <svg
-                  className="w-16 h-16 text-yellow-400 mx-auto"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+              <div className="bg-[#ffff00]/10 p-6 rounded-full inline-block mb-6">
+                <svg className="w-16 h-16 text-[#ffff00] mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -190,7 +185,7 @@ export default function SearchUserModal({isOpen, onClose, onSelectUser, currentU
                 <button
                   key={user.id}
                   onClick={() => handleSelectUser(user)}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 backdrop-blur-sm transition-all text-left hover:shadow-lg hover:scale-[1.01] border border-gray-200/50 dark:border-gray-700/50 hover:border-yellow-400/50"
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 backdrop-blur-sm transition-all text-left hover:shadow-lg hover:scale-[1.01] border border-gray-200/50 dark:border-gray-700/50 hover:border-[#ffff00]/50"
                 >
                   {user.profilePicture ? (
                     <img
@@ -199,7 +194,7 @@ export default function SearchUserModal({isOpen, onClose, onSelectUser, currentU
                       className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg shadow">
+                    <div className="w-12 h-12 rounded-full bg-[#ffff00] flex items-center justify-center text-black font-bold text-lg shadow">
                       {getInitials(user)}
                     </div>
                   )}
@@ -209,7 +204,7 @@ export default function SearchUserModal({isOpen, onClose, onSelectUser, currentU
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
                   </div>
-                  <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#ffff00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>

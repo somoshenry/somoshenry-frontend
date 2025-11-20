@@ -18,6 +18,7 @@ import {
   deleteConversation /*, uploadChatMedia */,
 } from "@/services/chatService";
 import {Send} from "lucide-react";
+import Swal from "sweetalert2";
 
 interface Message {
   id: string;
@@ -353,7 +354,7 @@ export default function FloatingChatButton() {
       refreshUnreadCount();
     } catch (error) {
       console.error("Error al eliminar conversación:", error);
-      alert("Error al eliminar la conversación. Por favor intenta de nuevo.");
+      Swal.fire("Error al eliminar la conversación. Por favor intenta de nuevo.");
     }
   };
 
@@ -536,7 +537,7 @@ export default function FloatingChatButton() {
                     <p>No tienes conversaciones</p>
                     <button
                       onClick={handleOpenFullChat}
-                      className="mt-4 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
+                      className="mt-4 px-4 py-2 bg-[#ffff00] hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
                     >
                       Iniciar chat
                     </button>
@@ -586,7 +587,7 @@ export default function FloatingChatButton() {
                       {/* Botón de eliminar - aparece al hacer hover */}
                       <button
                         onClick={(e) => handleDeleteConversation(conv.id, e)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute right-3 top-14 -translate-y-1/2 p-1 rounded-lg bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         title="Eliminar conversación"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,14 +642,14 @@ export default function FloatingChatButton() {
                 {/* Botón de eliminar conversación */}
                 <button
                   onClick={(e) => handleDeleteConversation(selectedConversation.id, e)}
-                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
                   title="Eliminar conversación"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={3}
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
@@ -782,7 +783,7 @@ export default function FloatingChatButton() {
                   <button
                     type="button"
                     onClick={() => setShowEmoji(!showEmoji)}
-                    className="text-xl hover:scale-110 transition-transform"
+                    className="text-xl hover:scale-110 transition-transform cursor-pointer"
                   >
                     😊
                   </button>
@@ -793,7 +794,7 @@ export default function FloatingChatButton() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Escribe un mensaje..."
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffff00] text-sm"
                   />
 
                   <button
@@ -802,10 +803,10 @@ export default function FloatingChatButton() {
                     className={`
         ${buttonBaseClasses}
         bg-[#ffff00] 
-        hover:bg-yellow-300
+        hover:scale-105 cursor-pointer
         
         // Estilos para MÓVIL (Por defecto, solo el icono)
-        px-3 md:inline-flex
+        px-3 
         
         // Estilos para ESCRITORIO (Aparece a partir de 'md')
         md:px-4 md:inline-flex md:text-sm

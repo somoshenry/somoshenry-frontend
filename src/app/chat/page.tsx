@@ -14,6 +14,7 @@ import {useChatCache} from "@/hook/chat/useChatCache";
 import {convertMessage, convertGroupToConversation} from "@/utils/chat/conversationHelpers";
 import {Message as BackendMessage, MessageType, getDisplayName} from "@/services/chatService";
 import type {Message, Conversation} from "@/interfaces/chat";
+import Swal from "sweetalert2";
 
 // Tipo para evento de grupo creado
 type GroupCreatedEvent = {
@@ -272,7 +273,7 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Error al crear conversación:", error);
-      alert("Error al crear la conversación");
+      Swal.fire("Error al crear la conversación");
     }
   };
 
@@ -341,7 +342,7 @@ export default function ChatPage() {
 
     if (!sent) {
       console.error("No se pudo enviar el mensaje, socket desconectado");
-      alert("Error: No hay conexión con el servidor");
+      //alert("Error: No hay conexión con el servidor");
 
       // Remover el mensaje temporal
       setConversations((prev) =>
@@ -388,7 +389,7 @@ export default function ChatPage() {
         setSelectedConversationId(null);
       }
     } catch (e: any) {
-      alert("Error al eliminar la conversación o grupo");
+      Swal.fire("Error al eliminar la conversación o grupo");
     }
   };
 
@@ -404,7 +405,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="fixed top-16 left-0 md:left-64 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="fixed top-16 left-0 md:left-65 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
       {/* Sidebar con lista de conversaciones - Se oculta en móvil cuando hay conversación seleccionada */}
       <div className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block w-full md:w-80 shrink-0 h-full`}>
         <ChatSidebar

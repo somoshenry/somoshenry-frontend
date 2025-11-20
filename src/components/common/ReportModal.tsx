@@ -118,7 +118,7 @@ export default function ReportModal({type, targetId, targetTitle, onClose, onSuc
             <button
               type="submit"
               disabled={loading || !selectedReason}
-              className="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-red-500 hover:scale-105 cursor-pointer text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Enviando..." : "Enviar Reporte"}
             </button>
@@ -126,7 +126,7 @@ export default function ReportModal({type, targetId, targetTitle, onClose, onSuc
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancelar
             </button>

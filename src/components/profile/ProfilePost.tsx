@@ -271,7 +271,7 @@ export default function ProfilePosts() {
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold text-black">
+                <div className="w-10 h-10 rounded-full bg-[#ffff00] flex items-center justify-center text-sm font-bold text-black">
                   {getInitials(post.user)}
                 </div>
               )}
@@ -380,7 +380,7 @@ export default function ProfilePosts() {
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold">
+                            <div className="w-8 h-8 rounded-full bg-[#ffff00] flex items-center justify-center text-xs font-bold">
                               {comment.author.name?.charAt(0) || comment.author.email.charAt(0).toUpperCase()}
                             </div>
                           )}

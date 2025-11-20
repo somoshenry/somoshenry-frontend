@@ -31,6 +31,7 @@ export default function AvisoPage({ cohorteId, canPost, currentUserId }: AvisoPa
           titulo: ann.title,
           mensaje: ann.content,
           picture: ann.author.profilePicture || undefined,
+          linkConectate: ann.linkUrl || (ann as any).linkConectate,
         }));
 
         setPosts(mappedPosts);

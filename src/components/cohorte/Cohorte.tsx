@@ -3,14 +3,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/services/api';
 import GenericList, { UserResult } from '@/components/ui/GenericList';
-import FilePageMock from '@/components/cohorte/FilePageMock';
+import FilePage from '@/components/cohorte/FilePage';
 import Lecture, { lectureProp } from '@/components/cohorte/Lecture';
-import ChatGrupalMock from '@/components/cohorte/ChatGrupalMock';
+import ChatGrupal from '@/components/cohorte/ChatGrupal';
 import { useSearchParams } from 'next/navigation';
-import AvisoPageMock from './AvisoPageMock';
-import ClasesMock from './ClasesMock';
+import AvisoPage from './AvisoPage';
+import Clases from './Clases';
+import { useAuth } from '@/hook/useAuth';
+
+// MOCKS COMENTADOS PARA REFERENCIA
+// import FilePageMock from '@/components/cohorte/FilePageMock';
+// import ChatGrupalMock from '@/components/cohorte/ChatGrupalMock';
+// import AvisoPageMock from './AvisoPageMock';
+// import ClasesMock from './ClasesMock';
 
 export const Cohorte = () => {
+  const { user } = useAuth();
   const mockUsers: UserResult[] = [
     {
       id: '1',

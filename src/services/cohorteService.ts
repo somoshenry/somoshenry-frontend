@@ -55,6 +55,7 @@ export interface Cohorte {
   schedule?: string;
   modality: CohorteModalityEnum;
   maxStudents?: number;
+  chatGroupId?: string; // ID del grupo de chat asociado
   members?: CohorteMember[];
   createdAt: string;
   updatedAt: string;
@@ -100,6 +101,49 @@ export const getCohorteById = async (id: string): Promise<Cohorte> => {
 export const createCohorte = async (dto: CreateCohorteDto): Promise<Cohorte> => {
   const response = await api.post('/cohortes', dto);
   return response.data;
+};
+
+/**
+ * Crear grupo de chat para una cohorte y retornar el grupo creado
+ */
+export const createCohorteGroupChat = async (cohorteName: string, memberIds: string[]): Promise<string> => {
+  const { createGroup } = await import('./chatService');
+
+  const group = await createGroup({
+    name: `Chat ${cohorteName}`,
+    userIds: memberIds,
+    description: `Chat grupal de la cohorte ${cohorteName}`,
+  });
+
+  console.log('✅ Grupo de chat creado:', group.id);
+  return group.id; // Retornar el ID del grupo
+};
+
+/**
+ * Guardar la relación cohorte → chatGroup en localStorage (temporal)
+ * TODO: Mover al backend agregando campo chatGroupId en Cohorte entity
+ */
+export const saveCohorteChatGroupId = (cohorteId: string, chatGroupId: string): void => {
+  try {
+    const mapping = JSON.parse(localStorage.getItem('cohorte_chat_mapping') || '{}');
+    mapping[cohorteId] = chatGroupId;
+    localStorage.setItem('cohorte_chat_mapping', JSON.stringify(mapping));
+  } catch (error) {
+    console.error('Error guardando mapping cohorte-chat:', error);
+  }
+};
+
+/**
+ * Obtener el ID del grupo de chat asociado a una cohorte
+ */
+export const getCohorteChatGroupId = (cohorteId: string): string | null => {
+  try {
+    const mapping = JSON.parse(localStorage.getItem('cohorte_chat_mapping') || '{}');
+    return mapping[cohorteId] || null;
+  } catch (error) {
+    console.error('Error obteniendo mapping cohorte-chat:', error);
+    return null;
+  }
 };
 
 /**
@@ -292,15 +336,23 @@ export const togglePinAnnouncement = async (cohorteId: string, announcementId: s
 
 export interface CohorteClass {
   id: string;
-  title: string;
+  name: string; // Backend usa 'name'
   description?: string;
-  classDate: string; // Fecha de la clase
-  duration?: number; // Duración en minutos
-  location?: string; // Ubicación física o link
-  classType?: 'LECTURE' | 'WORKSHOP' | 'LAB' | 'EXAM' | 'OTHER';
-  materials?: string; // JSON string o URL
+  module?: string;
+  scheduledDate?: string; // Backend usa 'scheduledDate'
+  duration?: number;
+  teacher?: {
+    id: string;
+    name?: string;
+    lastName?: string;
+    email: string;
+    profilePicture?: string;
+    role: string;
+  };
+  meetingUrl?: string;
   recordingUrl?: string;
-  notes?: string;
+  materialsUrl?: string;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   cohorte: {
     id: string;
     name: string;
@@ -311,15 +363,16 @@ export interface CohorteClass {
 
 export interface CreateClassDto {
   cohorteId: string;
-  title: string;
+  name: string; // Backend usa 'name', no 'title'
   description?: string;
-  classDate: string;
+  module?: string;
+  scheduledDate?: string; // Backend usa 'scheduledDate', no 'classDate'
   duration?: number;
-  location?: string;
-  classType?: 'LECTURE' | 'WORKSHOP' | 'LAB' | 'EXAM' | 'OTHER';
-  materials?: string;
+  teacherId?: string;
+  meetingUrl?: string;
   recordingUrl?: string;
-  notes?: string;
+  materialsUrl?: string;
+  status?: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 }
 
 export interface UpdateClassDto extends Partial<CreateClassDto> {}
@@ -356,6 +409,25 @@ export const getAllClasses = async (): Promise<CohorteClass[]> => {
 export const getClassById = async (id: string): Promise<CohorteClass> => {
   const response = await api.get(`/cohorte-classes/${id}`);
   return response.data;
+};
+
+/**
+ * Obtener todas las clases de una cohorte específica
+ * @param cohorteId ID de la cohorte
+ * @returns Array de clases ordenadas por fecha descendente
+ */
+export const getClassesByCohorte = async (cohorteId: string): Promise<CohorteClass[]> => {
+  try {
+    const response = await api.get(`/cohorte-classes/by-cohorte/${cohorteId}`);
+    return response.data;
+  } catch (error: any) {
+    // Si es 404, devolver array vacío sin loggear error
+    if (error.response?.status === 404) {
+      return [];
+    }
+    // Para otros errores, sí lanzar excepción
+    throw error;
+  }
 };
 
 /**

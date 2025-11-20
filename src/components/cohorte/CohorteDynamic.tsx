@@ -118,13 +118,13 @@ export default function CohorteDynamic({ cohorte, currentUser }: CohorteDynamicP
               <p className="text-xs/3 mt-0.5 md:text-xl/4 lg:text-2xl xl:text-3xl text-black">¡Bienvenido a {cohorte.name}!</p>
 
               {/* Botón de Miembros */}
-              <button onClick={() => setShowMembersModal(true)} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 text-xs md:text-sm lg:text-base">
+              <button onClick={() => setShowMembersModal(true)} className="bg-gray-800/40 hover:bg-gray-700/60 backdrop-blur-sm border border-gray-600/50 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 text-xs md:text-sm lg:text-base">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
                 <span className="hidden md:inline">Ver Miembros</span>
                 <span className="inline md:hidden">{totalMembers}</span>
-                <span className="bg-white text-purple-600 rounded-full px-2 py-0.5 text-xs font-bold hidden md:inline">{totalMembers}</span>
+                <span className="bg-white/90 text-gray-800 rounded-full px-2 py-0.5 text-xs font-bold hidden md:inline">{totalMembers}</span>
               </button>
             </div>
 
@@ -149,7 +149,7 @@ export default function CohorteDynamic({ cohorte, currentUser }: CohorteDynamicP
       {/* Contenido dinámico según el tab */}
       <div className="rounded-xl lg:mt-8 md:mt-7 xl:mt-10 md:m-5 m-2 md:pt-5 p-5 bg-gray-100 mt-10 dark:bg-gray-800 min-h-screen">
         {activeTab === 'avisos' && <AvisoPage cohorteId={cohorte.id} canPost={isTeacherOrAdmin || isTA} currentUserId={currentUser.id} />}
-        {activeTab === 'material extra' && <FilePage cohorteId={cohorte.id} canUpload={isTeacherOrAdmin || isTA} />}
+        {activeTab === 'material extra' && <FilePage cohorteId={cohorte.id} canUpload={isTeacherOrAdmin || isTA} currentUserId={currentUser.id} />}
         {activeTab === 'chat grupal' && <ChatGrupal cohorteId={cohorte.id} currentUser={currentUser} />}
         {activeTab === 'Lecturas' && mockLectures.map((lecture) => <Lecture key={lecture.lecture} {...lecture} />)}
         {activeTab === 'Clases' && <Clases cohorteId={cohorte.id} canManage={isTeacherOrAdmin} currentUser={currentUser} />}

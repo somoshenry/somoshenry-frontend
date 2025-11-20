@@ -120,9 +120,7 @@ export default function SubscriptionMetrics() {
           </div>
           <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Suscripciones Activas</h3>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">{subscribedUsers.length}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {totalSubscribed > 0 ? `${((subscribedUsers.length / users.length) * 100).toFixed(1)}% del total` : 'Sin suscripciones'}
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{totalSubscribed > 0 ? `${((subscribedUsers.length / users.length) * 100).toFixed(1)}% del total` : 'Sin suscripciones'}</p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -152,10 +150,7 @@ export default function SubscriptionMetrics() {
                   <span className="text-2xl font-bold text-gray-900 dark:text-white">{plan.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-500 ${plan.plan === 'ORO' ? 'bg-yellow-500' : plan.plan === 'PLATA' ? 'bg-gray-400' : 'bg-orange-500'}`}
-                    style={{ width: `${plan.percentage}%` }}
-                  ></div>
+                  <div className={`h-3 rounded-full transition-all duration-500 ${plan.plan === 'ORO' ? 'bg-yellow-500' : plan.plan === 'PLATA' ? 'bg-gray-400' : 'bg-orange-500'}`} style={{ width: `${plan.percentage}%` }}></div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center">{plan.percentage.toFixed(1)}% del total</p>
               </div>
@@ -192,26 +187,18 @@ export default function SubscriptionMetrics() {
                   <tr key={user.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                          {(user.name?.[0] || user.email[0]).toUpperCase()}
-                        </div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">{(user.name?.[0] || user.email[0]).toUpperCase()}</div>
                         <div>
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.email}
-                          </p>
+                          <p className="font-semibold text-gray-900 dark:text-white">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.email}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${getPlanColor(user.subscription?.plan || '')}`}>
-                        {user.subscription?.plan || 'N/A'}
-                      </span>
+                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${getPlanColor(user.subscription?.plan || '')}`}>{user.subscription?.plan || 'N/A'}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                        ✓ Activo
-                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">✓ Activo</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="text-sm">
@@ -254,37 +241,17 @@ export default function SubscriptionMetrics() {
                 <tr key={user.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white font-bold text-xs">
-                        {(user.name?.[0] || user.email[0]).toUpperCase()}
-                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white font-bold text-xs">{(user.name?.[0] || user.email[0]).toUpperCase()}</div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white text-sm">
-                          {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.email}
-                        </p>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm">{user.name && user.lastName ? `${user.name} ${user.lastName}` : user.email}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    {user.subscription && user.subscription.status === 'ACTIVE' ? (
-                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                        Suscrito
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                        Sin Suscripción
-                      </span>
-                    )}
+                    {user.subscription && user.subscription.status === 'ACTIVE' ? <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Suscrito</span> : <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">Sin Suscripción</span>}
                   </td>
-                  <td className="py-3 px-4">
-                    {user.subscription && user.subscription.status === 'ACTIVE' ? (
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPlanColor(user.subscription.plan)}`}>
-                        {user.subscription.plan}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-400 dark:text-gray-500">-</span>
-                    )}
-                  </td>
+                  <td className="py-3 px-4">{user.subscription && user.subscription.status === 'ACTIVE' ? <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPlanColor(user.subscription.plan)}`}>{user.subscription.plan}</span> : <span className="text-sm text-gray-400 dark:text-gray-500">-</span>}</td>
                 </tr>
               ))}
             </tbody>

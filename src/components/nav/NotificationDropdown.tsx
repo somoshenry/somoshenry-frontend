@@ -16,7 +16,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
     markAsRead(notification.id);
 
     // Navegar según el tipo de notificación
-    if (notification.type === 'COHORTE_ASSIGNED' && notification.metadata?.cohorteId) {
+    if (notification.type === 'COHORTE_INVITATION' && notification.metadata?.cohorteId) {
       router.push(`/cohorte/${notification.metadata.cohorteId}`);
     } else if (notification.postId) {
       router.push(`/home`); // Podrías navegar a `/post/${postId}` si tienes esa ruta

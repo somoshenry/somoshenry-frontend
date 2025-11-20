@@ -47,8 +47,8 @@ const Clases = ({ cohorteId, canManage, currentUser }: ClasesProps) => {
         </div>
       </div>
       <div className="mt-6 w-full">
-        {activeButton === 'hang' && <ClaseHang theme={'hang'} />}
-        {activeButton === 'sub' && <ClassSub theme={'sub'} />}
+        {activeButton === 'hang' && <ClaseHang theme={'hang'} cohorteId={cohorteId} />}
+        {activeButton === 'sub' && <ClassSub theme={'sub'} cohorteId={cohorteId} />}
       </div>
     </>
   );

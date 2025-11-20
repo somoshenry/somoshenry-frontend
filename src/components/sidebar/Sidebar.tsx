@@ -52,10 +52,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       fetchUserCohortes();
     };
 
-    window.addEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+    globalThis.addEventListener('notification:cohorte_assigned', handleCohorteAssigned);
 
     return () => {
-      window.removeEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+      globalThis.removeEventListener('notification:cohorte_assigned', handleCohorteAssigned);
     };
   }, [user]);
 
@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     { name: 'Clases en Vivo', href: '/live/create', icon: <Video size={20} /> },
 
     { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
-    { name: 'Cohorte 68 (Mock)', href: '/cohorte-mock', icon: <BookOpenText size={20} /> },
+    // { name: 'Cohorte 68 (Mock)', href: '/cohorte-mock', icon: <BookOpenText size={20} /> }, // 🔒 COMENTADO PARA PRE-DEMO
 
     // Este item usa botón, NO link
     { name: 'Mis Cohortes', href: '/cohorte', icon: <BookOpenText size={20} />, onClick: handleCohorteClick, badge: userCohortes.length },

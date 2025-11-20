@@ -1,27 +1,27 @@
 'use client';
 import { useState } from 'react';
-import { api } from '@/services/api';
+import { reportUser } from '@/services/reportService';
+import { ReportReason } from '@/services/adminService';
 import { X } from 'lucide-react';
 
 interface ReportUserModalProps {
-  userId: string;
-  userName: string;
-  onClose: () => void;
-  onSuccess?: () => void;
+  readonly userId: string;
+  readonly userName: string;
+  readonly onClose: () => void;
+  readonly onSuccess?: () => void;
 }
 
 export default function ReportUserModal({ userId, userName, onClose, onSuccess }: ReportUserModalProps) {
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState<ReportReason | ''>('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reasons = [
-    { value: 'SPAM', label: '🚫 Spam o contenido no deseado' },
-    { value: 'HARASSMENT', label: '😡 Acoso o intimidación' },
-    { value: 'HATE_SPEECH', label: '💢 Discurso de odio' },
-    { value: 'INAPPROPRIATE', label: '⚠️ Contenido inapropiado' },
-    { value: 'IMPERSONATION', label: '👤 Suplantación de identidad' },
-    { value: 'OTHER', label: '📝 Otro motivo' },
+    { value: ReportReason.SPAM, label: '🚫 Spam o contenido no deseado' },
+    { value: ReportReason.HARASSMENT, label: '😡 Acoso o intimidación' },
+    { value: ReportReason.INAPPROPRIATE, label: '⚠️ Contenido inapropiado' },
+    { value: ReportReason.MISINFORMATION, label: '📰 Desinformación' },
+    { value: ReportReason.OTHER, label: '📝 Otro motivo' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,23 +34,17 @@ export default function ReportUserModal({ userId, userName, onClose, onSuccess }
 
     try {
       setIsSubmitting(true);
-      await api.post('/report/user', {
-        userId,
-        reason,
-        description: description.trim() || undefined,
-      });
 
-      alert('✅ Usuario reportado correctamente. Revisaremos tu reporte.');
+      await reportUser(userId, reason, description.trim() || undefined);
+
+      alert('✅ Usuario reportado correctamente. Un administrador revisará tu reporte.');
       onSuccess?.();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al reportar usuario:', error);
 
-      if (error?.response?.status === 404) {
-        alert('⚠️ Funcionalidad de reportes no disponible en el backend');
-      } else {
-        alert('❌ Error al reportar usuario. Intenta nuevamente.');
-      }
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`❌ Error al reportar usuario: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -74,8 +68,10 @@ export default function ReportUserModal({ userId, userName, onClose, onSuccess }
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Motivo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Motivo del reporte *</label>
-            <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
+            <label htmlFor="report-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Motivo del reporte *
+            </label>
+            <select id="report-reason" value={reason} onChange={(e) => setReason(e.target.value as ReportReason)} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
               <option value="">Selecciona un motivo</option>
               {reasons.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -87,8 +83,10 @@ export default function ReportUserModal({ userId, userName, onClose, onSuccess }
 
           {/* Descripción opcional */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción adicional (opcional)</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Proporciona más detalles sobre el reporte..." rows={4} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" maxLength={500} />
+            <label htmlFor="report-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Descripción adicional (opcional)
+            </label>
+            <textarea id="report-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Proporciona más detalles sobre el reporte..." rows={4} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" maxLength={500} />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description.length}/500 caracteres</p>
           </div>
 

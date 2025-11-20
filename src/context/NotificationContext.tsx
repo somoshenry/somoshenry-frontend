@@ -8,7 +8,7 @@ import { getSystemNotifications, markSystemNotificationAsRead, SystemNotificatio
 
 export interface Notification {
   id: string;
-  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'COHORTE_ASSIGNED' | 'system';
+  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'COHORTE_INVITATION' | 'system';
   receiverId?: string;
   senderId?: string;
   sender?: {
@@ -83,16 +83,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => [newNotification, ...prev]);
 
     // Si es asignación de cohorte, disparar evento para recargar sidebar
-    if (notification.type === 'COHORTE_ASSIGNED') {
+    if (notification.type === 'COHORTE_INVITATION') {
       console.log('🎓 Disparando evento de cohorte asignada');
-      window.dispatchEvent(new CustomEvent('notification:cohorte_assigned'));
+      globalThis.dispatchEvent(new CustomEvent('notification:cohorte_assigned'));
     }
 
     // Mostrar notificación del navegador si está permitido
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      const notifTitle = notification.type === 'COHORTE_ASSIGNED' ? '🎓 Nueva cohorte asignada' : notification.systemTitle || '¡Nueva notificación!';
+    if (typeof globalThis !== 'undefined' && 'Notification' in globalThis && Notification.permission === 'granted') {
+      const notifTitle = notification.type === 'COHORTE_INVITATION' ? '🎓 Nueva cohorte asignada' : notification.systemTitle || '¡Nueva notificación!';
 
-      const notifBody = notification.type === 'COHORTE_ASSIGNED' ? `Has sido asignado como ${notification.metadata?.role} a ${notification.metadata?.cohorteName}` : notification.systemMessage || notification.postContent || 'Tienes una nueva notificación';
+      const notifBody = notification.type === 'COHORTE_INVITATION' ? `Has sido asignado como ${notification.metadata?.role} a ${notification.metadata?.cohorteName}` : notification.systemMessage || notification.postContent || 'Tienes una nueva notificación';
 
       new Notification(notifTitle, {
         body: notifBody,
@@ -325,11 +325,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const handleSystemNotification = () => {
       fetchNotifications();
     };
-    window.addEventListener('systemNotification', handleSystemNotification);
+    globalThis.addEventListener('systemNotification', handleSystemNotification);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('systemNotification', handleSystemNotification);
+      globalThis.removeEventListener('systemNotification', handleSystemNotification);
     };
   }, [fetchNotifications, user]);
 

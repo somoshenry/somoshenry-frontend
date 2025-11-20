@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, Users, Calendar, Clock, Edit, Trash2, UserPlus, X } from 'lucide-react';
-import { getAllCohortes, createCohorte, deleteCohorte, addMemberToCohorte, Cohorte, CreateCohorteDto, CohorteStatusEnum, CohorteModalityEnum, CohorteRoleEnum, translateStatus, translateModality, translateRole, getStatusColor, getRoleColor } from '@/services/cohorteService';
+import { getAllCohortes, createCohorte, deleteCohorte, addMemberToCohorte, createCohorteGroupChat, saveCohorteChatGroupId, Cohorte, CreateCohorteDto, CohorteStatusEnum, CohorteModalityEnum, CohorteRoleEnum, translateStatus, translateModality, translateRole, getStatusColor, getRoleColor } from '@/services/cohorteService';
 import { api } from '@/services/api';
 
 interface UserForSelection {
@@ -38,7 +38,25 @@ export default function CohorteManagement() {
 
   // Form state para agregar miembro
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [selectedCohorteRole, setSelectedCohorteRole] = useState<CohorteRoleEnum | null>(null);
+
+  // Estados adicionales para días y horarios
+  const [startDay, setStartDay] = useState<string>('Lunes');
+  const [endDay, setEndDay] = useState<string>('Viernes');
+  const [startTime, setStartTime] = useState<string>('09:00');
+  const [endTime, setEndTime] = useState<string>('17:00');
+
+  const weekDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const dayAbbreviations: Record<string, string> = {
+    Lunes: 'Lun',
+    Martes: 'Mar',
+    Miércoles: 'Mié',
+    Jueves: 'Jue',
+    Viernes: 'Vie',
+    Sábado: 'Sáb',
+    Domingo: 'Dom',
+  };
 
   useEffect(() => {
     fetchCohortes();
@@ -85,7 +103,26 @@ export default function CohorteManagement() {
   const handleCreateCohorte = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createCohorte(formData);
+      // Generar schedule automáticamente: "Lun-Vie 9:00-17:00"
+      const scheduleString = `${dayAbbreviations[startDay]}-${dayAbbreviations[endDay]} ${startTime}-${endTime}`;
+
+      const dataToSend = {
+        ...formData,
+        schedule: scheduleString,
+      };
+
+      const newCohorte = await createCohorte(dataToSend);
+
+      // Crear grupo de chat automáticamente para la cohorte
+      try {
+        const chatGroupId = await createCohorteGroupChat(newCohorte.name, []);
+        saveCohorteChatGroupId(newCohorte.id, chatGroupId);
+        console.log('✅ Grupo de chat creado y vinculado:', chatGroupId);
+      } catch (chatError) {
+        console.warn('⚠️ No se pudo crear el grupo de chat:', chatError);
+        // No bloquear el flujo si falla el chat
+      }
+
       alert('Cohorte creada exitosamente');
       setShowCreateModal(false);
       resetForm();
@@ -110,21 +147,40 @@ export default function CohorteManagement() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCohorte || !selectedUserId || !selectedCohorteRole) return;
+
+    if (!selectedCohorte || !selectedUserIds || selectedUserIds.length === 0 || !selectedCohorteRole) {
+      alert('Debes seleccionar al menos un usuario y un rol');
+      return;
+    }
 
     try {
-      // Usar el rol seleccionado manualmente por el admin
-      await addMemberToCohorte(selectedCohorte.id, selectedUserId, selectedCohorteRole);
-      alert(`Miembro agregado exitosamente como ${selectedCohorteRole}`);
+      // Agregar múltiples miembros en paralelo
+      const promises = selectedUserIds.map((userId) =>
+        addMemberToCohorte(selectedCohorte.id, userId, selectedCohorteRole)
+          .then(() => ({ status: 'success', userId }))
+          .catch((error) => ({ status: 'error', userId, error }))
+      );
+
+      const results = await Promise.all(promises);
+      const successes = results.filter((r) => r.status === 'success').length;
+      const failures = results.filter((r) => r.status === 'error').length;
+
+      if (failures === 0) {
+        alert(`✅ ${successes} miembro(s) agregado(s) exitosamente`);
+      } else {
+        alert(`⚠️ ${successes} agregados, ${failures} fallaron (pueden estar ya en la cohorte)`);
+      }
+
       setShowAddMemberModal(false);
       setSelectedCohorte(null);
       setSelectedUserId('');
+      setSelectedUserIds([]);
       setSelectedCohorteRole(null);
       setSearchTerm('');
-      fetchCohortes();
+      fetchCohortes(); // Refrescar lista
     } catch (error) {
-      console.error('Error al agregar miembro:', error);
-      alert('Error al agregar miembro. Verifica que no esté ya en la cohorte.');
+      console.error('Error al agregar miembros:', error);
+      alert('Error inesperado al agregar miembros.');
     }
   };
 
@@ -325,8 +381,43 @@ export default function CohorteManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Horario</label>
-                  <input type="text" value={formData.schedule} onChange={(e) => setFormData({ ...formData, schedule: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="ej: Lun-Vie 9:00-17:00" />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Días y Horario</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Día Inicio</label>
+                      <select value={startDay} onChange={(e) => setStartDay(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        {weekDays.map((day) => (
+                          <option key={day} value={day}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Día Fin</label>
+                      <select value={endDay} onChange={(e) => setEndDay(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        {weekDays.map((day) => (
+                          <option key={day} value={day}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Hora Inicio</label>
+                      <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Hora Fin</label>
+                      <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Vista previa:{' '}
+                    <span className="font-semibold">
+                      {dayAbbreviations[startDay]}-{dayAbbreviations[endDay]} {startTime}-{endTime}
+                    </span>
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -386,6 +477,7 @@ export default function CohorteManagement() {
                     setShowAddMemberModal(false);
                     setSelectedCohorte(null);
                     setSelectedUserId('');
+                    setSelectedUserIds([]);
                     setSelectedCohorteRole(null);
                     setSearchTerm('');
                   }}
@@ -400,18 +492,56 @@ export default function CohorteManagement() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Buscar Usuario</label>
                   <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-3" placeholder="Buscar por nombre, email o username..." />
 
-                  <select required value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" size={10}>
-                    <option value="">Selecciona un usuario</option>
-                    {filteredUsers.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {getRoleBadge(user.role || 'MEMBER')} | {getUserName(user)} - {user.email}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 max-h-96 overflow-y-auto">
+                    <div className="p-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 sticky top-0">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUserIds(filteredUsers.map((u) => u.id));
+                            } else {
+                              setSelectedUserIds([]);
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                        />
+                        Seleccionar todos ({selectedUserIds.length} seleccionado{selectedUserIds.length !== 1 ? 's' : ''})
+                      </label>
+                    </div>
+                    {filteredUsers.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No se encontraron usuarios</div>
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <label key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.includes(user.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedUserIds([...selectedUserIds, user.id]);
+                              } else {
+                                setSelectedUserIds(selectedUserIds.filter((id) => id !== user.id));
+                              }
+                            }}
+                            className="w-4 h-4 rounded"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">{getUserName(user)}</span>
+                              <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">{getRoleBadge(user.role || 'MEMBER')}</span>
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
+                          </div>
+                        </label>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 {/* Selector de Rol en la Cohorte */}
-                {selectedUserId && (
+                {selectedUserIds.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Rol en la Cohorte <span className="text-red-500">*</span>
@@ -429,8 +559,8 @@ export default function CohorteManagement() {
                 )}
 
                 <div className="flex gap-3 pt-4">
-                  <button type="submit" className="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
-                    Agregar Miembro
+                  <button type="submit" disabled={selectedUserIds.length === 0 || !selectedCohorteRole} className="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors">
+                    Agregar {selectedUserIds.length} Miembro{selectedUserIds.length !== 1 ? 's' : ''}
                   </button>
                   <button
                     type="button"
@@ -438,6 +568,7 @@ export default function CohorteManagement() {
                       setShowAddMemberModal(false);
                       setSelectedCohorte(null);
                       setSelectedUserId('');
+                      setSelectedUserIds([]);
                       setSelectedCohorteRole(null);
                       setSearchTerm('');
                     }}

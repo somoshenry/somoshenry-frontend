@@ -70,10 +70,17 @@ export default function AvisoPage({ cohorteId, canPost, currentUserId }: AvisoPa
   // 4. Función de posteo
   const handleNewPost = async (formData: { titulo: string; mensaje: string; linkConectate?: string }) => {
     try {
+      console.log('📤 Enviando aviso:', {
+        title: formData.titulo,
+        content: formData.mensaje,
+      });
+
       const announcement = await createCohorteAnnouncement(cohorteId, {
         title: formData.titulo,
         content: formData.mensaje,
       });
+
+      console.log('✅ Aviso creado:', announcement);
 
       // Agregar el nuevo post a la lista
       const nombrePost = `${announcement.author.name} ${announcement.author.lastName}`;
@@ -93,9 +100,12 @@ export default function AvisoPage({ cohorteId, canPost, currentUserId }: AvisoPa
       };
 
       setPosts((prevPosts) => [newPost, ...prevPosts]);
-    } catch (error) {
-      console.error('Error al publicar aviso:', error);
-      alert('Error al publicar el aviso');
+    } catch (error: any) {
+      console.error('❌ Error al publicar aviso:', error);
+      console.error('Response:', error.response?.data);
+
+      const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+      alert(`Error al publicar el aviso: ${errorMessage}`);
     }
   };
 

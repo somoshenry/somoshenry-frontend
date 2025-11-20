@@ -41,6 +41,18 @@ export default function CohortePage() {
     }
 
     loadCohortes();
+
+    // Escuchar eventos de asignación de cohorte para recargar automáticamente
+    const handleCohorteAssigned = () => {
+      console.log('🎓 Evento de cohorte asignada detectado, recargando...');
+      loadCohortes();
+    };
+
+    globalThis.addEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+
+    return () => {
+      globalThis.removeEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+    };
   }, [user, authLoading, router]);
 
   if (authLoading || loading) {

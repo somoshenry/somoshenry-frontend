@@ -12,6 +12,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
   const { notifications, markAsRead, markAllAsRead } = useNotifications();
   const router = useRouter();
 
+  // Manejar click en notificación y navegación
   const handleNotificationClick = (notification: any) => {
     markAsRead(notification.id);
 

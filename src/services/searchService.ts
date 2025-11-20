@@ -13,7 +13,7 @@ export interface SearchUserResult {
   profilePicture?: string;
   biography?: string;
   location?: string;
-  role: 'ADMIN' | 'TEACHER' | 'MEMBER';
+  role: 'ADMIN' | 'TEACHER' | 'TA' | 'MEMBER';
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
 }
 
@@ -34,7 +34,7 @@ export interface SearchPostResult {
 
 export interface UserSearchFilters {
   name?: string;
-  role?: 'ADMIN' | 'TEACHER' | 'MEMBER';
+  role?: 'ADMIN' | 'TEACHER' | 'TA' | 'MEMBER';
   status?: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
   page?: number;
   limit?: number;

@@ -12,6 +12,7 @@ export default function CohortePage() {
   const [cohortes, setCohortes] = useState<Cohorte[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Cargar cohortes del usuario al montar el componente
   useEffect(() => {
     async function loadCohortes() {
       if (authLoading) return;

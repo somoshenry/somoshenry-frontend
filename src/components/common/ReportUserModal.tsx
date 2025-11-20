@@ -52,9 +52,7 @@ export default function ReportUserModal({ userId, userName, onClose, onSuccess }
     } catch (error: any) {
       console.error('Error al reportar usuario:', error);
 
-      if (error?.response?.status === 404) {
-        //alert('⚠️ Funcionalidad de reportes no disponible en el backend');
-      } else {
+      if (error?.response?.status !== 404) {
         Swal.fire({
           title: 'Error',
           text: 'Error al reportar usuario. Intenta nuevamente.',

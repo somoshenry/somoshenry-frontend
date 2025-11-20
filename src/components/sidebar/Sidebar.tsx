@@ -68,7 +68,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     } else if (userCohortes.length > 1) {
       router.push('/cohorte');
     } else {
-      //alert('No tienes cohortes asignadas');
       Swal.fire({
         title: 'Atención',
         text: 'No tienes cohortes asignadas',

@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { useAuth } from '../hook/useAuth';
 import { useSocket } from '../hook/useSocket';
 import { tokenStore } from '../services/tokenStore';
-import { getSystemNotifications, markSystemNotificationAsRead, SystemNotification } from '../services/notificationService';
+import { getSystemNotifications, markSystemNotificationAsRead } from '../services/notificationService';
 
 export interface Notification {
   id: string;
@@ -110,21 +110,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // Persistencia local para estado de lectura y contadores vistos (fallback por conteo)
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
-  const [seenPostLikeCounts, setSeenPostLikeCounts] = useState<Record<string, number>>({}); // postId -> count
-  const [seenCommentLikeCounts, setSeenCommentLikeCounts] = useState<Record<string, number>>({}); // commentId -> count
-
-  // Helpers de persistencia
-  const persistReadIds = useCallback((ids: Set<string>) => {
-    try {
-      localStorage.setItem('notif_read_ids', JSON.stringify(Array.from(ids)));
-    } catch {}
-  }, []);
-
-  const persistSeenCounts = useCallback((key: string, obj: Record<string, number>) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(obj));
-    } catch {}
-  }, []);
 
   // Cargar persistencia al montar
   useEffect(() => {
@@ -132,42 +117,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const rawRead = localStorage.getItem('notif_read_ids');
       if (rawRead) setReadIds(new Set(JSON.parse(rawRead)));
     } catch {}
-    try {
-      const rawPostCounts = localStorage.getItem('notif_seen_post_like_counts');
-      if (rawPostCounts) setSeenPostLikeCounts(JSON.parse(rawPostCounts));
-    } catch {}
-    try {
-      const rawCommentCounts = localStorage.getItem('notif_seen_comment_like_counts');
-      if (rawCommentCounts) setSeenCommentLikeCounts(JSON.parse(rawCommentCounts));
-    } catch {}
   }, []);
-
-  // Normaliza un like-array con estructura opcional de usuario
-  const toLikeNotification = (like: any, post: any): Notification => ({
-    id: `post-like-${like.id}`,
-    type: 'LIKE_POST',
-    postId: post.id,
-    postContent: post.content || '(sin contenido)',
-    authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
-    authorAvatar: like.user?.profilePicture,
-    createdAt: like.createdAt || new Date().toISOString(),
-    read: false,
-    isRead: false,
-  });
-
-  // Normaliza un like en comentario
-  const toCommentLikeNotification = (like: any, post: any, comment: any): Notification => ({
-    id: `comment-like-${like.id}`,
-    type: 'LIKE_COMMENT',
-    postId: post.id,
-    postContent: post.content || '(sin contenido)',
-    authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
-    authorAvatar: like.user?.profilePicture,
-    commentContent: comment.content,
-    createdAt: like.createdAt || new Date().toISOString(),
-    read: false,
-    isRead: false,
-  });
 
   // Función para obtener notificaciones desde el backend
   const fetchNotifications = useCallback(async () => {
@@ -292,11 +242,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       // Marcar notificaciones del sistema
       if (user) {
-        notifications.forEach((n) => {
+        for (const n of notifications) {
           if (n.type === 'system') {
             markSystemNotificationAsRead(user.id, n.id);
           }
-        });
+        }
       }
 
       // Actualizar localmente

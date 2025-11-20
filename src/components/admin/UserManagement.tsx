@@ -221,7 +221,7 @@ export default function UserManagement() {
                 />
                 <button
                   onClick={handleSearch}
-                  className="ml-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 cursor-pointer text-white rounded-lg transition cursor-pointer"
+                  className="ml-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 cursor-pointer text-white rounded-lg transition"
                 >
                   Buscar
                 </button>

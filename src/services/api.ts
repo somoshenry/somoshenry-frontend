@@ -1,169 +1,72 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { tokenStore } from './tokenStore';
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
-const IS_DEV = process.env.NODE_ENV === 'development';
+import axios, {AxiosError, AxiosRequestConfig} from "axios";
 
 export const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 60000, // 60 segundos timeout (aumentado para chat grupal)
+  baseURL: "http://tu-back.com/api",
 });
 
-// 🔹 REQUEST INTERCEPTOR - Agrega token automáticamente
-api.interceptors.request.use(
-  (config) => {
-    const token = tokenStore.getAccess();
+let isRefreshing = false;
 
-    // Agregar token si existe
-    if (token) {
-      config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    // 📊 Logging en desarrollo (útil para debugging)
-    if (IS_DEV) {
-    }
-
-    return config;
-  },
-  (error) => {
-    // Manejo de errores en la configuración de request
-    if (IS_DEV) {
-      console.error('❌ Request Error:', error);
-    }
-    return Promise.reject(error);
-  }
-);
-
-//  🔹 RESPONSE INTERCEPTOR - Manejo de 401 + refresh automático
-let refreshing = false;
-let queue: Array<(token: string | null) => void> = [];
-
-const runQueue = (newToken: string | null) => {
-  queue.forEach((cb) => cb(newToken));
-  queue = [];
-};
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 api.interceptors.response.use(
-  (res) => {
-    // ✅ Respuesta exitosa
-    if (IS_DEV) {
-    }
-    return res;
-  },
+  (res) => res,
   async (error: AxiosError) => {
     const status = error.response?.status;
-    const original = error.config as AxiosRequestConfig & { retry?: boolean };
+    const original = error.config as AxiosRequestConfig & {_retry?: boolean};
 
-    // 📊 Logging de errores
-    if (IS_DEV) {
-      console.error('❌ Response Error:', {
-        status,
-        url: original?.url,
-        message: error.message,
-      });
-    }
-
-    // 🚫 Manejo de errores específicos
+    // ⛔ 403 → No expulsar, solo avisar
     if (status === 403) {
-      // Usuario no tiene permisos
-      console.error('🚫 Acceso denegado (403): No tienes permisos para esta acción');
-    }
-
-    if (status === 404) {
-      // Recurso no encontrado
-      if (IS_DEV) {
-        console.warn('🔍 Recurso no encontrado (404):', original?.url);
-      }
-    }
-
-    if (status === 500) {
-      // Error del servidor
-      console.error('🔥 Error del servidor (500): Contacta al equipo de backend');
-    }
-
-    // 🔄 Manejo especial de 401 (token expirado)
-    if (status !== 401 || original.retry) {
+      console.warn("⚠ 403 – Usuario sin permiso, pero la sesión sigue");
       return Promise.reject(error);
     }
 
-    original.retry = true;
+    // ❌ Si es 401 y ya hicimos reintento → desloguear
+    if (status === 401 && original._retry) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
 
-    // Si ya estamos refrescando, agregar a la cola
-    if (refreshing) {
-      return new Promise((resolve, reject) => {
-        queue.push((newToken) => {
-          if (newToken) {
-            original.headers = original.headers ?? {};
-            original.headers.Authorization = `Bearer ${newToken}`;
-            resolve(api(original));
-          } else {
-            reject(error);
-          }
+    // 🔄 Intentar refrescar token
+    if (status === 401 && !original._retry) {
+      original._retry = true;
+
+      if (isRefreshing) return Promise.reject(error);
+      isRefreshing = true;
+
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No hay refresh token");
+
+        const resp = await axios.post("http://tu-back.com/api/refresh", {
+          refreshToken,
         });
-      });
+
+        const newAccess = resp.data.accessToken;
+        localStorage.setItem("accessToken", newAccess);
+
+        original.headers = original.headers || {};
+        original.headers.Authorization = `Bearer ${newAccess}`;
+
+        isRefreshing = false;
+
+        return api(original);
+      } catch (err) {
+        isRefreshing = false;
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return Promise.reject(err);
+      }
     }
 
-    // Iniciar proceso de refresh
-    refreshing = true;
-    try {
-      const refreshToken = tokenStore.getRefresh();
-      if (!refreshToken) {
-        console.warn('⚠️ No hay refresh token disponible');
-        tokenStore.clear();
-        runQueue(null);
-        // Redirigir al login si es necesario
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-
-      if (IS_DEV) {
-        console.log('🔄 Refrescando token...');
-      }
-
-      // Llamada de refresh con refreshToken
-      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken }, { headers: { 'Content-Type': 'application/json' } });
-      const newAccess = data.accessToken as string | undefined;
-      const newRefresh = data.refreshToken as string | undefined;
-
-      if (!newAccess) {
-        console.warn('⚠️ No se recibió nuevo access token');
-        tokenStore.clear();
-        runQueue(null);
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-
-      // Guardar nuevos tokens
-      tokenStore.setAccess(newAccess);
-      if (newRefresh) tokenStore.setRefresh(newRefresh);
-
-      if (IS_DEV) {
-        console.log('✅ Token refrescado exitosamente');
-      }
-
-      // Ejecutar cola de peticiones pendientes
-      runQueue(newAccess);
-
-      // Reintentar petición original con nuevo token
-      original.headers = original.headers ?? {};
-      original.headers.Authorization = `Bearer ${newAccess}`;
-      return api(original);
-    } catch (e) {
-      console.error('❌ Error al refrescar token:', e);
-      tokenStore.clear();
-      runQueue(null);
-      // Redirigir al login
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
-      return Promise.reject(e);
-    } finally {
-      refreshing = false;
-    }
+    return Promise.reject(error);
   }
 );

@@ -248,7 +248,7 @@ export default function ConfigForm() {
         {/* Card de Edición de Perfil */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
           <div className="border-b dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold dark:text-white text-black">Editar Perfil</h2>
+            <h2 className="text-xl text-black font-semibold dark:text-white">Editar Perfil</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Actualiza tu información personal y pública</p>
           </div>
 

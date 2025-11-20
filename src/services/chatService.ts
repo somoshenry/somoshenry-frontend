@@ -199,12 +199,10 @@ export async function getUserGroups(): Promise<ChatGroup[]> {
 
 /**
  * Envía un mensaje a un grupo
- * NOTA: Usar la misma ruta que chat 1:1 porque el backend trata ambos igual
  */
 export async function sendGroupMessage(dto: { groupId: string; content: string; type: MessageType }): Promise<GroupMessage> {
-  // Usar la ruta genérica /chat/messages que funciona para AMBOS tipos
-  const { data } = await api.post<GroupMessage>('/chat/messages', {
-    conversationId: dto.groupId, // El groupId ES el conversationId
+  // Usar la ruta específica para grupos: /chat/groups/:groupId/messages
+  const { data } = await api.post<GroupMessage>(`/chat/groups/${dto.groupId}/messages`, {
     content: dto.content,
     type: dto.type,
   });

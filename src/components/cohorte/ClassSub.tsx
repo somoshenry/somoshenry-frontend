@@ -1,69 +1,19 @@
-import {useEffect, useState} from "react";
-import ClaseCard, {CardMensajeProps} from "./ClaseCard";
-import ClassProgramar, {cardDataProps, UserInfo} from "./ClassProgramar";
-import {getUserProfile, User} from "@/services/userService";
+import { useEffect, useState } from 'react';
+import ClaseCard, { CardMensajeProps } from './ClaseCard';
+import ClassProgramar, { cardDataProps, UserInfo } from './ClassProgramar';
+import { getUserProfile, User } from '@/services/userService';
+import { getClassesByCohorte, createClass, CreateClassDto } from '@/services/cohorteService';
 
 interface ClaseHangProps {
-  theme: "hang" | "sub";
+  theme: 'hang' | 'sub';
+  cohorteId: string;
 }
 type PublishedCard = CardMensajeProps;
 
-const ClassSub: React.FC<ClaseHangProps> = ({theme}) => {
-  const mockMensajes: CardMensajeProps[] = [
-    {
-      name: "Dr. Elena Rojas",
-      rol: "TA",
-      picture: "https://ejemplo.com/avatar/elena.jpg",
-      date: "Lunes, 18 de Dic",
-      time: "10:30 Hrs",
-      title: "Lecture 1: Introducción a la Arquitectura Web",
-      datePublished: "sábado, 12 de nov",
-      description:
-        "Revisaremos la lectura obligatoria sobre los modelos cliente-servidor, el ciclo de vida de una solicitud HTTP y las capas básicas del desarrollo Full Stack.",
-      linkConectate: "https://meet.google.com/abc-defg-hij",
-      theme: "hang", // Tema de lectura
-    },
-    {
-      name: "Javier Solís",
-      rol: "TA", // Rol de alumno avanzado
-      picture: "https://ejemplo.com/avatar/javier.png",
-      date: "Miércoles, 20 de Dic",
-      time: "04:00 PM",
-      title: "Tutoría Avanzada: Dudas sobre el Deploy de React",
-      datePublished: "domingo, 13 de nov",
-      description:
-        "Sesión de ayuda con el TA para resolver problemas específicos en la configuración de entornos y el despliegue del proyecto. ¡Trae tu código para revisión!",
-      linkConectate: "https://zoom.us/j/1234567890",
-      theme: "sub", // Ambiente de apoyo
-    },
-    {
-      name: "Laura Gómez",
-      rol: "TA", // Rol de alumno avanzado
-      picture: "https://ejemplo.com/avatar/laura.jpg",
-      date: "Viernes, 22 de Dic",
-      time: "09:00 AM",
-      title: "Mesa de Ayuda Abierta: Algoritmos y Estructuras",
-      datePublished: "lunes, 14 de nov",
-      description:
-        "Conexión informal con la TA para cualquier duda sobre los ejercicios de práctica. Ideal para reforzar el compañerismo y la ayuda mutua.",
-      linkConectate: "https://teams.microsoft.com/r/s/1a2b3c4d",
-      theme: "sub", // Ambiente de apoyo
-    },
-    {
-      name: "Miguel Torres",
-      rol: "TA",
-      picture: "https://ejemplo.com/avatar/miguel.jpg",
-      date: "Jueves, 21 de Dic",
-      time: "03:00 PM",
-      title: "Sesión Colaborativa: Revisión de Proyectos Fase 1",
-      datePublished: "martes, 15 de nov",
-      description:
-        "Nos reuniremos para una revisión grupal de los proyectos iniciales. Fomenta el *feedback* entre compañeros y el aprendizaje de errores comunes.",
-      linkConectate: "https://meet.google.com/sesion-ayuda-dev",
-      theme: "sub", // Ambiente de apoyo
-    },
-  ];
-
+const ClassSub: React.FC<ClaseHangProps> = ({ theme, cohorteId }) => {
+  const [backendClasses, setBackendClasses] = useState<PublishedCard[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [savingClass, setSavingClass] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [publishedCards, setPublishedCards] = useState<PublishedCard[]>([]);
 
@@ -73,56 +23,137 @@ const ClassSub: React.FC<ClaseHangProps> = ({theme}) => {
         const userData = await getUserProfile();
         setUser(userData);
       } catch (err) {
-        console.error("Error al cargar el perfil:", err);
+        console.error('Error al cargar el perfil:', err);
       }
     };
     fetchUserProfile();
   }, []);
 
+  // Cargar clases desde el backend
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        setLoadingClasses(true);
+        const classes = await getClassesByCohorte(cohorteId);
+
+        // Convertir CohorteClass a CardMensajeProps
+        const mappedClasses: PublishedCard[] = classes.map((cls) => ({
+          name: cls.teacher?.name || 'Instructor',
+          rol: 'TEACHER',
+          picture: cls.teacher?.profilePicture || undefined,
+          date: new Date(cls.scheduledDate || cls.createdAt).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'short',
+          }),
+          time: new Date(cls.scheduledDate || cls.createdAt).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          title: cls.name, // Backend usa 'name'
+          datePublished: new Date(cls.createdAt).toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+          description: cls.description || '',
+          linkConectate: cls.meetingUrl || '',
+          theme: theme,
+        }));
+
+        setBackendClasses(mappedClasses);
+        console.log(`✅ Cargadas ${classes.length} clases SUP desde el backend`);
+      } catch (err: any) {
+        // Si es 404, tratar como "sin clases" en lugar de error
+        if (err.response?.status === 404) {
+          console.warn('⚠️ No se encontraron clases SUP para este cohorte (404)');
+          setBackendClasses([]);
+        } else {
+          console.error('❌ Error al cargar clases:', err);
+        }
+      } finally {
+        setLoadingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [cohorteId, theme]);
+
   const currentUserRole = user?.role;
-  const isUploader = currentUserRole === "ADMIN";
+  const isUploader = currentUserRole === 'ADMIN' || currentUserRole === 'TA' || currentUserRole === 'TEACHER';
   const formatFullDate = (isoDate: string): string => {
-    if (!isoDate) return "";
+    if (!isoDate) return '';
     try {
-      const dateObj = new Date(isoDate + "T00:00:00");
+      const dateObj = new Date(isoDate + 'T00:00:00');
       const options: Intl.DateTimeFormatOptions = {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
       };
-      let formatted = new Intl.DateTimeFormat("es-ES", options).format(dateObj);
+      let formatted = new Intl.DateTimeFormat('es-ES', options).format(dateObj);
       formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
       return formatted;
     } catch (e) {
-      console.error("Error al formatear fecha completa:", e);
+      console.error('Error al formatear fecha completa:', e);
       return isoDate;
     }
   };
-  const currentUserInfo: UserInfo | null = user
-    ? {loggedName: user.name || "Desconocido", loggedRol: user.role || "Desconocido"}
-    : null;
-  const handleDataUpdate = (data: cardDataProps & UserInfo) => {
-    const now = new Date();
-    const datePublishedString = now
-      .toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-      .replace(".", "");
-    const formattedEventDate = formatFullDate(data.date);
-    const newCard: PublishedCard = {
-      name: data.loggedName,
-      rol: data.loggedRol,
-      ...data,
-      date: formattedEventDate,
-      linkConectate: data.linkclace,
+  const currentUserInfo: UserInfo | null = user ? { loggedName: user.name || 'Desconocido', loggedRol: user.role || 'Desconocido' } : null;
 
-      datePublished: datePublishedString,
-      picture: user?.profilePicture || undefined,
-    };
-    setPublishedCards((prevCards) => [newCard, ...prevCards]);
+  const handleDataUpdate = async (data: cardDataProps & UserInfo) => {
+    try {
+      setSavingClass(true);
+
+      // 1. Construir DTO para backend
+      const classDto: CreateClassDto = {
+        cohorteId: cohorteId,
+        name: data.title, // Backend usa 'name'
+        description: data.description,
+        scheduledDate: `${data.date}T${data.time}:00`, // Backend usa 'scheduledDate'
+      };
+
+      console.log('💾 Guardando clase SUP en backend:', classDto);
+
+      // 2. Guardar en backend
+      const savedClass = await createClass(classDto);
+
+      console.log('✅ Clase SUP guardada:', savedClass);
+
+      // 3. Recargar clases desde backend para mantener sincronización
+      const updatedClasses = await getClassesByCohorte(cohorteId);
+      const mappedClasses: PublishedCard[] = updatedClasses.map((cls) => ({
+        name: cls.teacher?.name || 'Instructor',
+        rol: 'TEACHER',
+        picture: cls.teacher?.profilePicture || undefined,
+        date: new Date(cls.scheduledDate || cls.createdAt).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'short',
+        }),
+        time: new Date(cls.scheduledDate || cls.createdAt).toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        title: cls.name,
+        datePublished: new Date(cls.createdAt).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+        description: cls.description || '',
+        linkConectate: cls.meetingUrl || '',
+        theme: theme,
+      }));
+
+      setBackendClasses(mappedClasses);
+      alert('✅ Clase agendada exitosamente');
+    } catch (error: any) {
+      console.error('❌ Error al guardar clase:', error);
+      alert(`Error al agendar clase: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setSavingClass(false);
+    }
   };
 
   return (
@@ -134,18 +165,22 @@ const ClassSub: React.FC<ClaseHangProps> = ({theme}) => {
         </div>
       </div>
       <div className=" md:flex md:flex-row flex flex-col items-center md:items-start">
-        {isUploader && currentUserInfo && (
-          <ClassProgramar onDataUpdate={handleDataUpdate} sectionTheme={theme} currentUser={currentUserInfo} />
-        )}
+        {isUploader && currentUserInfo && <ClassProgramar onDataUpdate={handleDataUpdate} sectionTheme={theme} currentUser={currentUserInfo} isLoading={savingClass} />}
         <div className="ml-3 p-3 w-full">
-          {/* RENDERIZAR NUEVAS TARJETAS */}
-          {publishedCards.map((card, index) => (
-            <ClaseCard key={`pub-${index}`} {...card} theme={theme} />
-          ))}
-          {/* RENDERIZAR MOCKS */}
-          {mockMensajes.map((post, index) => (
-            <ClaseCard key={`mock-${index}`} {...post} theme={theme} />
-          ))}
+          {loadingClasses ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Cargando clases...</p>
+            </div>
+          ) : (
+            <>
+              {publishedCards.map((card) => (
+                <ClaseCard key={`pub-${card.title}-${card.datePublished}`} {...card} theme={theme} />
+              ))}
+              {backendClasses.map((post) => (
+                <ClaseCard key={`backend-${post.title}-${post.date}`} {...post} theme={theme} />
+              ))}
+            </>
+          )}
         </div>
       </div>
     </>

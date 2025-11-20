@@ -55,6 +55,7 @@ export interface Cohorte {
   schedule?: string;
   modality: CohorteModalityEnum;
   maxStudents?: number;
+  chatGroupId?: string; // ID del grupo de chat asociado
   members?: CohorteMember[];
   createdAt: string;
   updatedAt: string;
@@ -103,6 +104,49 @@ export const createCohorte = async (dto: CreateCohorteDto): Promise<Cohorte> => 
 };
 
 /**
+ * Crear grupo de chat para una cohorte y retornar el grupo creado
+ */
+export const createCohorteGroupChat = async (cohorteName: string, memberIds: string[]): Promise<string> => {
+  const { createGroup } = await import('./chatService');
+
+  const group = await createGroup({
+    name: `Chat ${cohorteName}`,
+    userIds: memberIds,
+    description: `Chat grupal de la cohorte ${cohorteName}`,
+  });
+
+  console.log('✅ Grupo de chat creado:', group.id);
+  return group.id; // Retornar el ID del grupo
+};
+
+/**
+ * Guardar la relación cohorte → chatGroup en localStorage (temporal)
+ * TODO: Mover al backend agregando campo chatGroupId en Cohorte entity
+ */
+export const saveCohorteChatGroupId = (cohorteId: string, chatGroupId: string): void => {
+  try {
+    const mapping = JSON.parse(localStorage.getItem('cohorte_chat_mapping') || '{}');
+    mapping[cohorteId] = chatGroupId;
+    localStorage.setItem('cohorte_chat_mapping', JSON.stringify(mapping));
+  } catch (error) {
+    console.error('Error guardando mapping cohorte-chat:', error);
+  }
+};
+
+/**
+ * Obtener el ID del grupo de chat asociado a una cohorte
+ */
+export const getCohorteChatGroupId = (cohorteId: string): string | null => {
+  try {
+    const mapping = JSON.parse(localStorage.getItem('cohorte_chat_mapping') || '{}');
+    return mapping[cohorteId] || null;
+  } catch (error) {
+    console.error('Error obteniendo mapping cohorte-chat:', error);
+    return null;
+  }
+};
+
+/**
  * Actualizar una cohorte
  */
 export const updateCohorte = async (id: string, dto: UpdateCohorteDto): Promise<Cohorte> => {
@@ -138,13 +182,28 @@ export const removeMemberFromCohorte = async (cohorteId: string, userId: string)
 
 /**
  * Obtener cohortes del usuario actual
+ * - Si es ADMIN: devuelve TODAS las cohortes (GET /cohortes)
+ * - Si es otro rol: devuelve solo sus cohortes (GET /cohortes/me)
  */
-export const getMyCohortes = async (): Promise<Cohorte[]> => {
+export const getMyCohortes = async (userRole?: string): Promise<Cohorte[]> => {
   try {
-    const allCohortes = await getAllCohortes();
-    // El backend ya filtra por usuario en la respuesta de findAll
-    // Si el usuario no es admin, solo verá las cohortes donde es miembro
-    return allCohortes;
+    // Si es ADMIN, obtener TODAS las cohortes
+    if (userRole === 'ADMIN') {
+      const response = await api.get('/cohortes');
+      return response.data;
+    }
+
+    // Si no es ADMIN, obtener solo las cohortes donde es miembro
+    const response = await api.get('/cohortes/me');
+    // El backend devuelve un array con { cohorte, myRole, myStatus, joinedAt }
+    // Mapeamos para extraer solo los cohortes
+    return response.data.map((item: any) => ({
+      ...item.cohorte,
+      // Agregamos el rol del usuario en la cohorte como información adicional
+      myRole: item.myRole,
+      myStatus: item.myStatus,
+      joinedAt: item.joinedAt,
+    }));
   } catch (error) {
     console.error("Error al obtener cohortes del usuario:", error);
     return [];
@@ -278,5 +337,156 @@ export const togglePinAnnouncement = async (
   announcementId: string
 ): Promise<CohorteAnnouncement> => {
   const response = await api.patch(`/cohortes/announcements/${announcementId}/pin`);
+  return response.data;
+};
+
+// =============================
+//    CLASSES (CLASES)
+// =============================
+
+export interface CohorteClass {
+  id: string;
+  name: string; // Backend usa 'name'
+  description?: string;
+  module?: string;
+  scheduledDate?: string; // Backend usa 'scheduledDate'
+  duration?: number;
+  teacher?: {
+    id: string;
+    name?: string;
+    lastName?: string;
+    email: string;
+    profilePicture?: string;
+    role: string;
+  };
+  meetingUrl?: string;
+  recordingUrl?: string;
+  materialsUrl?: string;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  cohorte: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClassDto {
+  cohorteId: string;
+  name: string; // Backend usa 'name', no 'title'
+  description?: string;
+  module?: string;
+  scheduledDate?: string; // Backend usa 'scheduledDate', no 'classDate'
+  duration?: number;
+  teacherId?: string;
+  meetingUrl?: string;
+  recordingUrl?: string;
+  materialsUrl?: string;
+  status?: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+}
+
+export interface UpdateClassDto extends Partial<CreateClassDto> {}
+
+export interface AttendanceRecord {
+  id: string;
+  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+  notes?: string;
+  student: {
+    id: string;
+    name: string;
+    lastName: string;
+    email: string;
+  };
+  class: {
+    id: string;
+    title: string;
+    classDate: string;
+  };
+  markedAt: string;
+}
+
+/**
+ * Obtener todas las clases
+ */
+export const getAllClasses = async (): Promise<CohorteClass[]> => {
+  const response = await api.get('/cohorte-classes');
+  return response.data;
+};
+
+/**
+ * Obtener una clase por ID
+ */
+export const getClassById = async (id: string): Promise<CohorteClass> => {
+  const response = await api.get(`/cohorte-classes/${id}`);
+  return response.data;
+};
+
+/**
+ * Obtener todas las clases de una cohorte específica
+ * @param cohorteId ID de la cohorte
+ * @returns Array de clases ordenadas por fecha descendente
+ */
+export const getClassesByCohorte = async (cohorteId: string): Promise<CohorteClass[]> => {
+  try {
+    const response = await api.get(`/cohorte-classes/by-cohorte/${cohorteId}`);
+    return response.data;
+  } catch (error: any) {
+    // Si es 404, devolver array vacío sin loggear error
+    if (error.response?.status === 404) {
+      return [];
+    }
+    // Para otros errores, sí lanzar excepción
+    throw error;
+  }
+};
+
+/**
+ * Crear una nueva clase
+ */
+export const createClass = async (dto: CreateClassDto): Promise<CohorteClass> => {
+  const response = await api.post('/cohorte-classes', dto);
+  return response.data;
+};
+
+/**
+ * Actualizar una clase
+ */
+export const updateClass = async (id: string, dto: UpdateClassDto): Promise<CohorteClass> => {
+  const response = await api.patch(`/cohorte-classes/${id}`, dto);
+  return response.data;
+};
+
+/**
+ * Eliminar una clase
+ */
+export const deleteClass = async (id: string): Promise<void> => {
+  await api.delete(`/cohorte-classes/${id}`);
+};
+
+/**
+ * Marcar asistencia de estudiantes
+ */
+export const markAttendance = async (classId: string, studentId: string, status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED', notes?: string): Promise<AttendanceRecord> => {
+  const response = await api.post(`/cohorte-classes/${classId}/attendance`, {
+    studentId,
+    status,
+    notes,
+  });
+  return response.data;
+};
+
+/**
+ * Obtener asistencia de una clase
+ */
+export const getClassAttendance = async (classId: string): Promise<AttendanceRecord[]> => {
+  const response = await api.get(`/cohorte-classes/${classId}/attendance`);
+  return response.data;
+};
+
+/**
+ * Obtener asistencia de un estudiante en una cohorte
+ */
+export const getStudentAttendance = async (cohorteId: string, studentId: string): Promise<AttendanceRecord[]> => {
+  const response = await api.get(`/cohorte-classes/cohorte/${cohorteId}/student/${studentId}`);
   return response.data;
 };

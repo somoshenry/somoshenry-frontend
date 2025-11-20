@@ -1,72 +1,22 @@
-import {useEffect, useState} from "react";
-import ClaseCard, {CardMensajeProps} from "./ClaseCard";
-import ClassProgramar, {cardDataProps, UserInfo} from "./ClassProgramar";
-import {getUserProfile, User} from "@/services/userService";
+import { useEffect, useState } from 'react';
+import ClaseCard, { CardMensajeProps } from './ClaseCard';
+import ClassProgramar, { cardDataProps, UserInfo } from './ClassProgramar';
+import { getUserProfile, User } from '@/services/userService';
+import { getClassesByCohorte, createClass, CreateClassDto } from '@/services/cohorteService';
 
 interface ClaseHangProps {
-  theme: "hang" | "sub";
+  theme: 'hang' | 'sub';
+  cohorteId: string;
 }
 
 type PublishedCard = CardMensajeProps;
 
-const ClaseHang: React.FC<ClaseHangProps> = ({theme}) => {
-  const mockMensajes: CardMensajeProps[] = [
-    {
-      name: "Dr. Elena Rojas",
-      rol: "TEACHER",
-      picture: "https://ejemplo.com/avatar/elena.jpg",
-      date: "Lunes, 18 de Dic",
-      time: "10:30 Hrs",
-      title: "Lecture 1: Introducción a la Arquitectura Web",
-      datePublished: "sábado, 12 de nov",
-      description:
-        "Revisaremos la lectura obligatoria sobre los modelos cliente-servidor, el ciclo de vida de una solicitud HTTP y las capas básicas del desarrollo Full Stack.",
-      linkConectate: "https://meet.google.com/abc-defg-hij",
-      theme: "sub", // Manteniendo el tema original de este mock
-    },
-    {
-      name: "Javier Solís",
-      rol: "TEACHER",
-      picture: null,
-      date: "Miércoles, 20 de Dic",
-      time: "04:00 PM",
-      title: "Lecture 2: Patrones de Diseño Backend (MVC)",
-      datePublished: "domingo, 13 de nov",
-      description:
-        "Clase de discusión sobre la lectura enfocada en el patrón MVC (Modelo-Vista-Controlador). Analizaremos su implementación en frameworks populares.",
-      linkConectate: "https://zoom.us/j/1234567890",
-      theme: "hang", // Asumiendo que quieres que este sea un ejemplo de 'hang'
-    },
-    {
-      name: "Laura Gómez",
-      rol: "TEACHER",
-      picture: "https://ejemplo.com/avatar/laura.jpg",
-      date: "Viernes, 22 de Dic",
-      time: "09:00 AM",
-      title: "Lecture 3: Manejo de Estado en el Frontend",
-      datePublished: "lunes, 14 de nov",
-      description:
-        "Revisaremos la lectura sobre las diferentes estrategias de manejo de estado en SPA (React/Vue/Angular), desde el estado local hasta Redux/Zustand.",
-      linkConectate: "https://teams.microsoft.com/r/s/1a2b3c4d",
-      theme: "hang", // Asumiendo que quieres que este sea un ejemplo de 'hang'
-    },
-    {
-      name: "Miguel Torres",
-      rol: "TEACHER",
-      picture: "https://ejemplo.com/avatar/miguel.jpg",
-      date: "Jueves, 21 de Dic",
-      time: "03:00 PM",
-      title: "Lecture 4: Seguridad y Autenticación con JWT",
-      datePublished: "martes, 15 de nov",
-      description:
-        "Discusión sobre la lectura de seguridad. Nos centraremos en la autenticación, la autorización y el uso de JSON Web Tokens (JWT) en aplicaciones Full Stack.",
-      linkConectate: "https://meet.google.com/sesion-ayuda-dev",
-      theme: "sub", // Manteniendo el tema original de este mock
-    },
-  ];
-
+const ClaseHang: React.FC<ClaseHangProps> = ({ theme, cohorteId }) => {
   const [user, setUser] = useState<User | null>(null);
   const [publishedCards, setPublishedCards] = useState<PublishedCard[]>([]);
+  const [backendClasses, setBackendClasses] = useState<PublishedCard[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [savingClass, setSavingClass] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -74,60 +24,139 @@ const ClaseHang: React.FC<ClaseHangProps> = ({theme}) => {
         const userData = await getUserProfile();
         setUser(userData);
       } catch (err) {
-        console.error("Error al cargar el perfil:", err);
+        console.error('Error al cargar el perfil:', err);
       }
     };
     fetchUserProfile();
   }, []);
 
-  const isUploader = user?.role === "TEACHER";
-  const currentUserInfo: UserInfo | null = user
-    ? {loggedName: user.name || "Desconocido", loggedRol: user.role || "Desconocido"}
-    : null;
+  // Cargar clases desde el backend
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        setLoadingClasses(true);
+        const classes = await getClassesByCohorte(cohorteId);
+
+        // Convertir CohorteClass a CardMensajeProps
+        const mappedClasses: PublishedCard[] = classes.map((cls) => ({
+          name: cls.teacher?.name || 'Instructor',
+          rol: 'TEACHER',
+          picture: cls.teacher?.profilePicture || undefined,
+          date: new Date(cls.scheduledDate || cls.createdAt).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'short',
+          }),
+          time: new Date(cls.scheduledDate || cls.createdAt).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          title: cls.name,
+          datePublished: new Date(cls.createdAt).toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+          description: cls.description || '',
+          linkConectate: cls.meetingUrl || '',
+          theme: theme,
+        }));
+
+        setBackendClasses(mappedClasses);
+        console.log(`✅ Cargadas ${classes.length} clases desde el backend`);
+      } catch (err: any) {
+        // Si es 404, tratar como "sin clases" en lugar de error
+        if (err.response?.status === 404) {
+          console.warn('⚠️ No se encontraron clases para este cohorte (404)');
+          setBackendClasses([]);
+        } else {
+          console.error('❌ Error al cargar clases:', err);
+        }
+      } finally {
+        setLoadingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [cohorteId, theme]);
+
+  const isUploader = user?.role === 'TEACHER' || user?.role === 'ADMIN' || user?.role === 'TA';
+  const currentUserInfo: UserInfo | null = user ? { loggedName: user.name || 'Desconocido', loggedRol: user.role || 'Desconocido' } : null;
 
   const formatFullDate = (isoDate: string): string => {
-    if (!isoDate) return "";
+    if (!isoDate) return '';
     try {
-      const dateObj = new Date(isoDate + "T00:00:00");
+      const dateObj = new Date(isoDate + 'T00:00:00');
 
       const options: Intl.DateTimeFormatOptions = {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
       };
 
-      let formatted = new Intl.DateTimeFormat("es-ES", options).format(dateObj);
+      let formatted = new Intl.DateTimeFormat('es-ES', options).format(dateObj);
       formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
 
       return formatted;
     } catch (e) {
-      console.error("Error al formatear fecha completa:", e);
+      console.error('Error al formatear fecha completa:', e);
       return isoDate;
     }
   };
 
-  const handleDataUpdate = (data: cardDataProps & UserInfo) => {
-    const now = new Date();
-    const datePublishedString = now
-      .toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-      .replace(".", "");
+  const handleDataUpdate = async (data: cardDataProps & UserInfo) => {
+    try {
+      setSavingClass(true);
 
-    const formattedEventDate = formatFullDate(data.date);
-    const newCard: PublishedCard = {
-      name: data.loggedName,
-      rol: data.loggedRol,
-      ...data,
-      date: formattedEventDate,
-      linkConectate: data.linkclace,
-      datePublished: datePublishedString,
+      // 1. Construir DTO para backend
+      const classDto: CreateClassDto = {
+        cohorteId: cohorteId,
+        name: data.title, // Backend usa 'name'
+        description: data.description,
+        scheduledDate: `${data.date}T${data.time}:00`, // Backend usa 'scheduledDate'
+      };
 
-      picture: user?.profilePicture || undefined,
-    };
-    setPublishedCards((prevCards) => [newCard, ...prevCards]);
+      console.log('💾 Guardando clase Hands On en backend:', classDto);
+
+      // 2. Guardar en backend
+      await createClass(classDto);
+
+      console.log('✅ Clase Hands On guardada');
+
+      // 3. Recargar clases desde backend
+      const updatedClasses = await getClassesByCohorte(cohorteId);
+      const mappedClasses: PublishedCard[] = updatedClasses.map((cls) => ({
+        name: cls.teacher?.name || 'Instructor',
+        rol: 'TEACHER',
+        picture: cls.teacher?.profilePicture || undefined,
+        date: new Date(cls.scheduledDate || cls.createdAt).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'short',
+        }),
+        time: new Date(cls.scheduledDate || cls.createdAt).toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        title: cls.name,
+        datePublished: new Date(cls.createdAt).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+        description: cls.description || '',
+        linkConectate: cls.meetingUrl || '',
+        theme: theme,
+      }));
+
+      setBackendClasses(mappedClasses);
+      alert('✅ Clase agendada exitosamente');
+    } catch (error: any) {
+      console.error('❌ Error al guardar clase:', error);
+      alert(`Error al agendar clase: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setSavingClass(false);
+    }
   };
 
   return (
@@ -140,16 +169,22 @@ const ClaseHang: React.FC<ClaseHangProps> = ({theme}) => {
       </div>
 
       <div className=" md:flex md:flex-row flex flex-col items-center md:items-start">
-        {isUploader && currentUserInfo && (
-          <ClassProgramar onDataUpdate={handleDataUpdate} sectionTheme={theme} currentUser={currentUserInfo} />
-        )}
+        {isUploader && currentUserInfo && <ClassProgramar onDataUpdate={handleDataUpdate} sectionTheme={theme} currentUser={currentUserInfo} isLoading={savingClass} />}
         <div className=" ml-3 p-3 w-full">
-          {publishedCards.map((card, index) => (
-            <ClaseCard key={`pub-${index}`} {...card} theme={theme} />
-          ))}
-          {mockMensajes.map((post, index) => (
-            <ClaseCard key={`mock-${index}`} {...post} theme={theme} />
-          ))}
+          {loadingClasses ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Cargando clases...</p>
+            </div>
+          ) : (
+            <>
+              {publishedCards.map((card) => (
+                <ClaseCard key={`pub-${card.title}-${card.datePublished}`} {...card} theme={theme} />
+              ))}
+              {backendClasses.map((post) => (
+                <ClaseCard key={`backend-${post.title}-${post.date}`} {...post} theme={theme} />
+              ))}
+            </>
+          )}
         </div>
       </div>
     </>

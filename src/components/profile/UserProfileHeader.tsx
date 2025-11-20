@@ -106,7 +106,13 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
-      Swal.fire("⚠️ Debes iniciar sesión para seguir usuarios");
+      //alert("⚠️ Debes iniciar sesión para seguir usuarios");
+      Swal.fire({
+        title: 'Atención',
+        text: 'Debes iniciar sesión para seguir usuarios.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
       return;
     }
 
@@ -121,13 +127,29 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
           ...prev,
           followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
         }));
-        Swal.fire(result.message);
+        Swal.fire({
+          title: 'Listo',
+          text: result.message,
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+        });
       } else {
-        Swal.fire(result.message);
+        Swal.fire({
+          title: 'Atención',
+          text: result.message,
+          icon: 'warning',
+          confirmButtonText: 'Aceptar',
+        });
       }
     } catch (err) {
       console.error("Error al cambiar estado de seguimiento:", err);
-      Swal.fire("❌ Error al actualizar seguimiento");
+      //alert("❌ Error al actualizar seguimiento");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al actualizar seguimiento.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
     } finally {
       setIsFollowLoading(false);
     }
@@ -135,7 +157,13 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
   const handleMessage = () => {
     if (!currentUser) {
-      Swal.fire("⚠️ Debes iniciar sesión para enviar mensajes");
+      //alert("⚠️ Debes iniciar sesión para enviar mensajes");
+      Swal.fire({
+        title: 'Atención',
+        text: 'Debes iniciar sesión para enviar mensajes.',
+        icon: 'warning',
+        confirmButtonText: 'Aceptar',
+      });
       return;
     }
     router.push("/chat");
@@ -172,7 +200,7 @@ export default function UserProfileHeader({userId}: UserProfileHeaderProps) {
 
         {/* User Info */}
         <div className="flex items-center gap-2 mt-2">
-          <h1 className="text-xl font-semibold dark:text-white">
+          <h1 className="text-xl text-black font-semibold dark:text-white">
             {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || "Usuario"}
           </h1>
           {isOwnProfile && (

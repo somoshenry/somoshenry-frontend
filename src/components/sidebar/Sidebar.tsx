@@ -35,9 +35,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       if (!user) return;
       try {
         setLoadingCohortes(true);
-        const cohortes = await getMyCohortes();
-        const myCohortes = cohortes.filter((c) => c.members?.some((m) => m.user.id === user.id) || user.role === 'ADMIN');
-        setUserCohortes(myCohortes);
+        // Pasar el rol del usuario para que ADMIN vea todas las cohortes
+        const cohortes = await getMyCohortes(user.role);
+        setUserCohortes(cohortes);
       } catch (error) {
         console.error('Error al obtener cohortes del usuario:', error);
       } finally {
@@ -46,6 +46,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     };
 
     fetchUserCohortes();
+
+    // Listener para recargar cohortes cuando se recibe notificación de asignación
+    const handleCohorteAssigned = () => {
+      console.log('🎓 Cohorte asignada - recargando lista');
+      fetchUserCohortes();
+    };
+
+    globalThis.addEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+
+    return () => {
+      globalThis.removeEventListener('notification:cohorte_assigned', handleCohorteAssigned);
+    };
   }, [user]);
 
   const handleCohorteClick = (e: React.MouseEvent) => {
@@ -56,7 +68,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     } else if (userCohortes.length > 1) {
       router.push('/cohorte');
     } else {
-      //alert('No tienes cohortes asignadas');
       Swal.fire({
         title: 'Atención',
         text: 'No tienes cohortes asignadas',
@@ -80,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     { name: 'Clases en Vivo', href: '/live/create', icon: <Video size={20} /> },
 
     { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
-    { name: 'Cohorte 68 (Mock)', href: '/cohorte-mock', icon: <BookOpenText size={20} /> },
+    // { name: 'Cohorte 68 (Mock)', href: '/cohorte-mock', icon: <BookOpenText size={20} /> }, // 🔒 COMENTADO PARA PRE-DEMO
 
     // Este item usa botón, NO link
     { name: 'Mis Cohortes', href: '/cohorte', icon: <BookOpenText size={20} />, onClick: handleCohorteClick, badge: userCohortes.length },
@@ -116,20 +127,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                       onClick={item.onClick}
                       className={`
                         w-full flex items-center space-x-3 p-3 rounded-lg transition-colors
-                        ${
-                          item.href && pathname.startsWith(item.href)
-                            ? 'bg-[#ffff00] text-black font-semibold text-xl'
-                            : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'
-                        }
+                        ${item.href && pathname.startsWith(item.href) ? 'bg-[#ffff00] text-black font-semibold text-xl' : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'}
                       `}
                     >
                       <span className="text-xl">{item.icon}</span>
                       <span>{item.name}</span>
 
                       {/* Badge */}
-                      {'badge' in item && item.badge > 0 && (
-                        <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>
-                      )}
+                      {'badge' in item && item.badge > 0 && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>}
                     </button>
                   ) : (
                     /* 🔥 SI ES LINK NORMAL */
@@ -140,11 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                       }}
                       className={`
                         flex items-center space-x-3 p-3 rounded-lg transition-colors
-                        ${
-                          pathname === item.href
-                            ? 'bg-[#ffff00] text-black font-semibold text-xl'
-                            : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'
-                        }
+                        ${pathname === item.href ? 'bg-[#ffff00] text-black font-semibold text-xl' : 'hover:bg-gray-100 hover:scale-105 hover:text-black dark:hover:bg-gray-800 dark:hover:text-white'}
                       `}
                     >
                       <span className="text-xl">{item.icon}</span>

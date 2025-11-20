@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import {Plus, Users, Calendar, Clock, Edit, Trash2, UserPlus, X} from "lucide-react";
+import {Plus, Users, Calendar, Clock, Trash2, UserPlus, X} from "lucide-react";
 import {
   getAllCohortes,
   createCohorte,

@@ -1,163 +1,262 @@
-"use client";
+'use client';
 
-import {useState, useEffect, useRef} from "react";
-import {Send, Trash2} from "lucide-react";
-import {motion, AnimatePresence} from "framer-motion";
-import EmojiPicker, {EmojiClickData, Theme} from "emoji-picker-react";
+import { useState, useEffect, useRef } from 'react';
+import { Send, Loader2, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getCohorteChatGroupId } from '@/services/cohorteService';
+import { io, Socket } from 'socket.io-client';
+import { tokenStore } from '@/services/tokenStore';
 
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
+interface ChatGrupalProps {
+  readonly cohorteId: string;
+  readonly currentUser: {
+    id: string;
+    email: string;
+    name?: string | null;
+    lastName?: string | null;
+    username?: string | null;
+    profilePicture?: string | null;
+  };
 }
 
 interface Message {
   id: string;
-  sender: User;
   content: string;
+  senderId: string;
+  sender?: {
+    id: string;
+    name?: string;
+    lastName?: string;
+    username?: string;
+    profilePicture?: string;
+  };
   createdAt: string;
+  type?: string;
 }
 
-interface Conversation {
-  id: string;
-  groupName: string;
-  messages: Message[];
-}
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-export default function ChatGrupal() {
-  const [showEmoji, setShowEmoji] = useState(false);
-  // 🔹 Datos "mockeados"
-  const currentUser: User = {
-    id: "1",
-    name: "Tú",
-    avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=You",
-  };
-
-  const mockUsers: User[] = [
-    currentUser,
-    {
-      id: "2",
-      name: "Sofía",
-      avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=Sofia",
-    },
-    {
-      id: "3",
-      name: "Mateo",
-      avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=Mateo",
-    },
-  ];
-
-  const [conversation, setConversation] = useState<Conversation>({
-    id: "chat-1",
-    groupName: "Cohorte 68",
-    messages: [
-      {
-        id: "m1",
-        sender: mockUsers[1],
-        content: "¡Hola equipo! ¿Listos para la reunión?",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "m2",
-        sender: mockUsers[2],
-        content: "Sí, solo termino de ajustar algo del código 😅",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  });
-
-  const [newMessage, setNewMessage] = useState("");
+export default function ChatGrupal({ cohorteId, currentUser }: ChatGrupalProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [chatGroupId, setChatGroupId] = useState<string | null>(null);
+  const [connected, setConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
-  // 🔹 Auto-scroll al final
+  // Scroll automático al final
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
-  }, [conversation.messages]);
+    scrollToBottom();
+  }, [messages]);
 
-  // 🔹 Enviar mensaje
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+  // Obtener ID del grupo
+  useEffect(() => {
+    const groupId = getCohorteChatGroupId(cohorteId);
+    if (groupId) {
+      setChatGroupId(groupId);
+      console.log('✅ Grupo de chat encontrado:', groupId);
+    } else {
+      console.warn('⚠️ No hay grupo de chat asociado a esta cohorte');
+      setLoading(false);
+    }
+  }, [cohorteId]);
 
-    const message: Message = {
-      id: crypto.randomUUID(),
-      sender: currentUser,
-      content: newMessage.trim(),
-      createdAt: new Date().toISOString(),
+  // Conectar Socket.IO
+  useEffect(() => {
+    if (!chatGroupId) return;
+
+    const token = tokenStore.getAccess();
+    if (!token) {
+      console.error('❌ No hay token de autenticación');
+      setLoading(false);
+      return;
+    }
+
+    console.log('🔌 Conectando al socket...');
+
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('✅ Socket conectado:', socket.id);
+      setConnected(true);
+
+      // Unirse al grupo
+      socket.emit('joinGroup', { groupId: chatGroupId });
+      console.log('📥 Uniéndose al grupo:', chatGroupId);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket desconectado');
+      setConnected(false);
+    });
+
+    socket.on('systemMessage', (data: any) => {
+      console.log('📢 Mensaje del sistema:', data);
+    });
+
+    socket.on('messageReceived', (message: Message) => {
+      console.log('📨 Mensaje recibido:', message);
+      setMessages((prev) => [...prev, message]);
+    });
+
+    socket.on('connect_error', (error: any) => {
+      console.error('❌ Error de conexión:', error);
+      setConnected(false);
+    });
+
+    setLoading(false);
+
+    return () => {
+      if (chatGroupId) {
+        socket.emit('leaveGroup', { groupId: chatGroupId });
+      }
+      socket.disconnect();
     };
+  }, [chatGroupId]);
 
-    setConversation((prev) => ({
-      ...prev,
-      messages: [...prev.messages, message],
-    }));
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !chatGroupId || !socketRef.current || sending) {
+      return;
+    }
 
-    setNewMessage("");
+    try {
+      setSending(true);
+
+      console.log('📤 Enviando mensaje:', {
+        groupId: chatGroupId,
+        senderId: currentUser.id,
+        content: newMessage,
+      });
+
+      socketRef.current.emit('sendGroupMessage', {
+        groupId: chatGroupId,
+        senderId: currentUser.id,
+        content: newMessage.trim(),
+        type: 'TEXT',
+      });
+
+      setNewMessage('');
+    } catch (error) {
+      console.error('❌ Error al enviar mensaje:', error);
+      alert('Error al enviar el mensaje');
+    } finally {
+      setSending(false);
+    }
   };
 
-  const handleEmojiClick = (emojiData: EmojiClickData) => {
-    setNewMessage((prev) => prev + emojiData.emoji);
+  const getDisplayName = (msg: Message) => {
+    if (msg.sender) {
+      if (msg.sender.name && msg.sender.lastName) {
+        return `${msg.sender.name} ${msg.sender.lastName}`;
+      }
+      if (msg.sender.username) return msg.sender.username;
+    }
+    if (msg.senderId === currentUser.id) {
+      return currentUser.name && currentUser.lastName ? `${currentUser.name} ${currentUser.lastName}` : currentUser.username || 'Tú';
+    }
+    return 'Usuario';
   };
-  // 🔹 Borrar todos los mensajes (mock)
-  const handleClearChat = () => {
-    setConversation((prev) => ({...prev, messages: []}));
+
+  const getInitials = (msg: Message) => {
+    const name = getDisplayName(msg);
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <span className="ml-3 text-gray-600 dark:text-gray-400">Cargando chat...</span>
+      </div>
+    );
+  }
+
+  if (!chatGroupId) {
+    return (
+      <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="text-center py-8">
+          <MessageCircle size={48} className="mx-auto mb-4 text-gray-400" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No hay chat disponible</h3>
+          <p className="text-gray-600 dark:text-gray-400">Esta cohorte aún no tiene un grupo de chat creado</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col rounded-2xl shadow-xl h-dvh md:h-screen from-gray-50 to-gray-100 dark:bg-gray-200 overflow-hidden border border-gray-200 dark:border-gray-700">
-      {/* 🧭 Header */}
-      <div className="flex justify-between items-center px-5 py-3 bg-white/70 dark:bg-[#ffff00] backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-black/30 shadow-md">
-        <h2 className="text-lg font-semibold text-black flex items-center gap-2">💬 {conversation.groupName}</h2>
-        <button
-          onClick={handleClearChat}
-          className="text-gray-500 hover:text-red-500 transition-colors"
-          title="Limpiar chat"
-        >
-          <Trash2 size={18} />
-        </button>
+    <div className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="text-blue-500" size={24} />
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Chat Grupal</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {connected ? (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    Conectado
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                    Desconectado
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 🗨️ Área de mensajes */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
-        {conversation.messages.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-400">No hay mensajes todavía 💬</p>
+      {/* Mensajes */}
+      <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+        {messages.length === 0 ? (
+          <div className="text-center py-12">
+            <MessageCircle size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <p className="text-gray-500 dark:text-gray-400">No hay mensajes aún. ¡Sé el primero en escribir!</p>
+          </div>
         ) : (
           <AnimatePresence>
-            {conversation.messages.map((msg) => {
-              const isCurrentUser = msg.sender.id === currentUser.id;
+            {messages.map((msg) => {
+              const isOwn = msg.senderId === currentUser.id;
+              const displayName = getDisplayName(msg);
+              const initials = getInitials(msg);
+              const avatar = msg.sender?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=random`;
+
               return (
-                <motion.div
-                  key={msg.id}
-                  initial={{opacity: 0, y: 10}}
-                  animate={{opacity: 1, y: 0}}
-                  exit={{opacity: 0}}
-                  transition={{duration: 0.2}}
-                  className={`flex items-end gap-2 ${isCurrentUser ? "justify-end" : "justify-start"}`}
-                >
-                  {!isCurrentUser && (
-                    <img
-                      src={msg.sender.avatar}
-                      alt={msg.sender.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                  )}
-                  <div
-                    className={`px-4 py-2 rounded-2xl max-w-xs text-sm shadow-md ${
-                      isCurrentUser
-                        ? "bg-blue-500 text-white rounded-br-none"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
-                    }`}
-                  >
-                    {!isCurrentUser && (
-                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{msg.sender.name}</span>
-                    )}
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                    <span className="block text-[10px] text-gray-400 dark:text-gray-500 mt-1 text-right">
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                <motion.div key={msg.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex gap-3 max-w-md ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <img src={avatar} alt={displayName} className="w-10 h-10 rounded-full ring-2 ring-gray-200 dark:ring-gray-700" />
+                    <div className={`${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
+                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">{isOwn ? 'Tú' : displayName}</span>
+                      <div className={`px-4 py-2 rounded-2xl ${isOwn ? 'bg-blue-500 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-bl-none'}`}>
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        {new Date(msg.createdAt).toLocaleTimeString('es-ES', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -167,35 +266,22 @@ export default function ChatGrupal() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ✍️ Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 backdrop-blur-md flex gap-3">
-        {showEmoji && (
-          <div className="absolute bottom-20 left-4 z-50">
-            <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.LIGHT} />
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setShowEmoji(!showEmoji)}
-          className="text-2xl hover:scale-110 transition-transform cursor-pointer"
-        >
-          😊
-        </button>
-        <input
-          type="text"
-          placeholder="Escribe un mensaje..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-          className=" w-2/3 px-4 py-2 rounded-full border  border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#ffff00]"
-        />
-        <button
-          onClick={handleSendMessage}
-          className="p-4 bg-[#ffff00] hover:bg-[#ffff00]/70 cursor-pointer text-white rounded-full transition-colors"
-        >
-          <Send size={20} color="#000000" />
-        </button>
+      {/* Input */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Escribe un mensaje..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            disabled={!connected || sending}
+            className="flex-1 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+          <button onClick={handleSendMessage} disabled={!connected || sending || !newMessage.trim()} className="p-3 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full transition-colors">
+            {sending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+          </button>
+        </div>
       </div>
     </div>
   );

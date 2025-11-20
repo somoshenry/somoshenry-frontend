@@ -93,7 +93,13 @@ export default function ProfileHeader() {
       router.push(`/chat?conversationId=${conversation.id}`);
     } catch (error) {
       console.error("Error al abrir chat:", error);
-      Swal.fire("Error al abrir el chat.");
+      //alert("Error al abrir el chat.");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al abrir el chat.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
     }
   };
 
@@ -198,7 +204,7 @@ export default function ProfileHeader() {
         {/* ========================== */}
         <div className="flex flex-col items-center mt-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold dark:text-white">
+            <h1 className="text-xl text-black font-semibold dark:text-white">
               {user.name && user.lastName ? `${user.name} ${user.lastName}` : user.name || user.email || "Usuario"}
             </h1>
 

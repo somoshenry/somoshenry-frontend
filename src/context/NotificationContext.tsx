@@ -4,11 +4,11 @@ import { api } from '../services/api';
 import { useAuth } from '../hook/useAuth';
 import { useSocket } from '../hook/useSocket';
 import { tokenStore } from '../services/tokenStore';
-import { getSystemNotifications, markSystemNotificationAsRead, SystemNotification } from '../services/notificationService';
+import { getSystemNotifications, markSystemNotificationAsRead } from '../services/notificationService';
 
 export interface Notification {
   id: string;
-  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'system';
+  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'COHORTE_INVITATION' | 'system';
   receiverId?: string;
   senderId?: string;
   sender?: {
@@ -74,15 +74,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       systemType: notification.systemType,
       systemTitle: notification.systemTitle,
       systemMessage: notification.systemMessage,
+      metadata: notification.metadata,
+      senderId: notification.senderId,
+      receiverId: notification.receiverId,
     };
 
     // Agregar a la lista de notificaciones
     setNotifications((prev) => [newNotification, ...prev]);
 
+    // Si es asignación de cohorte, disparar evento para recargar sidebar
+    if (notification.type === 'COHORTE_INVITATION') {
+      console.log('🎓 Disparando evento de cohorte asignada');
+      globalThis.dispatchEvent(new CustomEvent('notification:cohorte_assigned'));
+    }
+
     // Mostrar notificación del navegador si está permitido
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification(notification.systemTitle || '¡Nueva notificación!', {
-        body: notification.systemMessage || notification.postContent || 'Tienes una nueva notificación',
+    if (typeof globalThis !== 'undefined' && 'Notification' in globalThis && Notification.permission === 'granted') {
+      const notifTitle = notification.type === 'COHORTE_INVITATION' ? '🎓 Nueva cohorte asignada' : notification.systemTitle || '¡Nueva notificación!';
+
+      const notifBody = notification.type === 'COHORTE_INVITATION' ? `Has sido asignado como ${notification.metadata?.role} a ${notification.metadata?.cohorteName}` : notification.systemMessage || notification.postContent || 'Tienes una nueva notificación';
+
+      new Notification(notifTitle, {
+        body: notifBody,
         icon: notification.authorAvatar || '/avatars/default.svg',
       });
     }
@@ -97,21 +110,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // Persistencia local para estado de lectura y contadores vistos (fallback por conteo)
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
-  const [seenPostLikeCounts, setSeenPostLikeCounts] = useState<Record<string, number>>({}); // postId -> count
-  const [seenCommentLikeCounts, setSeenCommentLikeCounts] = useState<Record<string, number>>({}); // commentId -> count
-
-  // Helpers de persistencia
-  const persistReadIds = useCallback((ids: Set<string>) => {
-    try {
-      localStorage.setItem('notif_read_ids', JSON.stringify(Array.from(ids)));
-    } catch {}
-  }, []);
-
-  const persistSeenCounts = useCallback((key: string, obj: Record<string, number>) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(obj));
-    } catch {}
-  }, []);
 
   // Cargar persistencia al montar
   useEffect(() => {
@@ -119,42 +117,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const rawRead = localStorage.getItem('notif_read_ids');
       if (rawRead) setReadIds(new Set(JSON.parse(rawRead)));
     } catch {}
-    try {
-      const rawPostCounts = localStorage.getItem('notif_seen_post_like_counts');
-      if (rawPostCounts) setSeenPostLikeCounts(JSON.parse(rawPostCounts));
-    } catch {}
-    try {
-      const rawCommentCounts = localStorage.getItem('notif_seen_comment_like_counts');
-      if (rawCommentCounts) setSeenCommentLikeCounts(JSON.parse(rawCommentCounts));
-    } catch {}
   }, []);
-
-  // Normaliza un like-array con estructura opcional de usuario
-  const toLikeNotification = (like: any, post: any): Notification => ({
-    id: `post-like-${like.id}`,
-    type: 'LIKE_POST',
-    postId: post.id,
-    postContent: post.content || '(sin contenido)',
-    authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
-    authorAvatar: like.user?.profilePicture,
-    createdAt: like.createdAt || new Date().toISOString(),
-    read: false,
-    isRead: false,
-  });
-
-  // Normaliza un like en comentario
-  const toCommentLikeNotification = (like: any, post: any, comment: any): Notification => ({
-    id: `comment-like-${like.id}`,
-    type: 'LIKE_COMMENT',
-    postId: post.id,
-    postContent: post.content || '(sin contenido)',
-    authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
-    authorAvatar: like.user?.profilePicture,
-    commentContent: comment.content,
-    createdAt: like.createdAt || new Date().toISOString(),
-    read: false,
-    isRead: false,
-  });
 
   // Función para obtener notificaciones desde el backend
   const fetchNotifications = useCallback(async () => {
@@ -279,11 +242,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       // Marcar notificaciones del sistema
       if (user) {
-        notifications.forEach((n) => {
+        for (const n of notifications) {
           if (n.type === 'system') {
             markSystemNotificationAsRead(user.id, n.id);
           }
-        });
+        }
       }
 
       // Actualizar localmente
@@ -312,11 +275,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const handleSystemNotification = () => {
       fetchNotifications();
     };
-    window.addEventListener('systemNotification', handleSystemNotification);
+    globalThis.addEventListener('systemNotification', handleSystemNotification);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('systemNotification', handleSystemNotification);
+      globalThis.removeEventListener('systemNotification', handleSystemNotification);
     };
   }, [fetchNotifications, user]);
 

@@ -11,11 +11,11 @@ import AvisoPage from './AvisoPage';
 import Clases from './Clases';
 import { useAuth } from '@/hook/useAuth';
 
-// MOCKS COMENTADOS PARA REFERENCIA
-// import FilePageMock from '@/components/cohorte/FilePageMock';
-// import ChatGrupalMock from '@/components/cohorte/ChatGrupalMock';
-// import AvisoPageMock from './AvisoPageMock';
-// import ClasesMock from './ClasesMock';
+// MOCKS
+import FilePageMock from '@/components/cohorte/FilePageMock';
+import ChatGrupalMock from '@/components/cohorte/ChatGrupalMock';
+import AvisoPageMock from './AvisoPageMock';
+import ClasesMock from './ClasesMock';
 
 export const Cohorte = () => {
   const { user } = useAuth();

@@ -36,8 +36,8 @@ const ClasesMock = () => {
         </div>
       </div>
       <div className="mt-6 w-full">
-        {activeButton === 'hang' && <ClaseHang theme={'hang'} />}
-        {activeButton === 'sub' && <ClassSub theme={'sub'} />}
+        {activeButton === 'hang' && <ClaseHang theme={'hang'} cohorteId="mock-cohorte" />}
+        {activeButton === 'sub' && <ClassSub theme={'sub'} cohorteId="mock-cohorte" />}
       </div>
     </>
   );

@@ -22,7 +22,7 @@ export interface UsersListResponse {
 /**
  * Obtiene la lista de usuarios con filtros opcionales
  */
-export async function getUsers(params?: { page?: number; limit?: number; name?: string; role?: 'ADMIN' | 'TEACHER' | 'MEMBER'; status?: 'ACTIVE' | 'SUSPENDED' | 'DELETED' }): Promise<{ users: AdminUser[]; total: number }> {
+export async function getUsers(params?: { page?: number; limit?: number; name?: string; role?: 'ADMIN' | 'TEACHER' | 'TA' | 'MEMBER'; status?: 'ACTIVE' | 'SUSPENDED' | 'DELETED' }): Promise<{ users: AdminUser[]; total: number }> {
   const { data } = await api.get<UsersListResponse>('/users', { params });
   return { users: data.users, total: data.total };
 }

@@ -22,7 +22,7 @@ export interface User {
   website?: string | null;
   joinDate?: string | null;
 
-  role: 'ADMIN' | 'TEACHER' | 'MEMBER';
+  role: 'ADMIN' | 'TEACHER' | 'TA' | 'MEMBER';
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
 
   createdAt: string;

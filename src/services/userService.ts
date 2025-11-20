@@ -12,7 +12,7 @@ export interface User {
   location?: string | null;
   website?: string | null;
   joinDate?: string | null;
-  role: 'ADMIN' | 'TEACHER' | 'MEMBER';
+  role: 'ADMIN' | 'TEACHER' | 'TA' | 'MEMBER';
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
   createdAt: string;
   updatedAt: string;
@@ -56,16 +56,7 @@ export async function getUserById(userId: string): Promise<User> {
 /**
  * Actualiza el perfil del usuario autenticado
  */
-export async function updateUserProfile(updates: {
-  name?: string;
-  lastName?: string;
-  biography?: string;
-  location?: string;
-  website?: string;
-  profilePicture?: string;
-  coverPicture?: string;
-  username?: string;
-}): Promise<User> {
+export async function updateUserProfile(updates: { name?: string; lastName?: string; biography?: string; location?: string; website?: string; profilePicture?: string; coverPicture?: string; username?: string }): Promise<User> {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
   const user = data.user;
   return user;

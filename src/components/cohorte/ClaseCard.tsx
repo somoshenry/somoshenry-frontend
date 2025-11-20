@@ -37,7 +37,7 @@ const ClaseCard: React.FC<CardMensajeProps> = ({
   const headerColorClass = isHang ? "text-sky-700" : "text-green-500";
   const perfilColorClass = isHang ? "bg-sky-400" : "bg-green-500";
   const lineaColorClass = isHang ? "bg-sky-400" : "bg-green-500";
-  const labelText = isHang ? "Hang On" : "Sub";
+  const labelText = isHang ? "Hands On" : "Sub";
 
   const labelColor = isHang ? "bg-sky-400 text-black" : "bg-green-500 text-white";
   const timeDisplay = isHang ? time : "10:30 Hrs";

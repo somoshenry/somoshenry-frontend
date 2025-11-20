@@ -23,6 +23,14 @@ interface SidebarProps {
   toggle: () => void;
 }
 
+interface MenuItem {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+  onClick?: (e: React.MouseEvent) => void;
+  badge?: number | string;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -82,13 +90,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   };
 
   // ⭐ ACÁ AGREGAMOS EL NUEVO BOTÓN ⭐
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { name: 'Inicio', href: '/home', icon: <Home size={20} /> },
     { name: 'Mi Tablero', href: '/profile', icon: <LayoutDashboard size={20} /> },
     { name: 'Mensajes', href: '/chat', icon: <MessageCircle size={20} /> },
 
-    // ⭐ NUEVO ITEM DEL SIDEBAR: "Clases en Vivo"
-    { name: 'Clases en Vivo', href: '/live/create', icon: <Video size={20} /> },
+    // ⭐ NUEVO ITEM DEL SIDEBAR: "Clases en Vivo" con badge BETA
+    { name: 'Clases en Vivo', href: '/live/create', icon: <Video size={20} />, badge: 'BETA' },
 
     { name: 'Configuración', href: '/config', icon: <Settings size={20} /> },
     // { name: 'Cohorte 68 (Mock)', href: '/cohorte-mock', icon: <BookOpenText size={20} /> }, // 🔒 COMENTADO PARA PRE-DEMO
@@ -134,7 +142,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                       <span>{item.name}</span>
 
                       {/* Badge */}
-                      {'badge' in item && item.badge > 0 && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>}
+                      {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>}
+                      {'badge' in item && typeof item.badge === 'string' && item.badge === 'BETA' && <span className="ml-auto text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded font-bold">BETA</span>}
                     </button>
                   ) : (
                     /* 🔥 SI ES LINK NORMAL */
@@ -150,6 +159,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                     >
                       <span className="text-xl">{item.icon}</span>
                       <span>{item.name}</span>
+
+                      {/* Badge para Links también */}
+                      {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{item.badge}</span>}
+                      {'badge' in item && item.badge === 'BETA' && <span className="ml-auto text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded font-bold">BETA</span>}
                     </Link>
                   )}
                 </li>

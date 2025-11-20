@@ -175,6 +175,11 @@ const ClaseHang: React.FC<ClaseHangProps> = ({ theme, cohorteId }) => {
             <div className="text-center py-8">
               <p className="text-gray-500">Cargando clases...</p>
             </div>
+          ) : publishedCards.length === 0 && backendClasses.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">📅 No hay clases programadas</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">Las clases agendadas aparecerán aquí</p>
+            </div>
           ) : (
             <>
               {publishedCards.map((card) => (

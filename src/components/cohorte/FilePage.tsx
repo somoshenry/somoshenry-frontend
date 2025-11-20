@@ -40,8 +40,8 @@ export default function FilePage({ cohorteId, canUpload, currentUserId }: FilePa
       setLoading(true);
       const response = await getMaterials(cohorteId);
 
-      // El backend devuelve objeto con paginación: { data: [], meta: {} }
-      const materialsData = Array.isArray(response) ? response : response.data || [];
+      // El backend devuelve un array directamente
+      const materialsData = Array.isArray(response) ? response : [];
 
       console.log('📦 Materiales cargados:', materialsData);
       console.log('📊 Total de materiales:', materialsData.length);

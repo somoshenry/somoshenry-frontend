@@ -283,6 +283,7 @@ export interface CohorteAnnouncement {
   title: string;
   content: string;
   pinned: boolean;
+  linkUrl?: string;
   author: {
     id: string;
     name: string;
@@ -301,6 +302,7 @@ export interface CohorteAnnouncement {
 export interface CreateAnnouncementDto {
   title: string;
   content: string;
+  linkUrl?: string;
 }
 
 /**

@@ -123,9 +123,7 @@ export default function ReportedPosts() {
       // PRIMERO: Actualizar el estado de todos los reportes del post
       // (Antes de eliminar, porque si eliminamos primero, los reportes se borran en cascada)
       if (selectedPost) {
-        console.log("📝 Actualizando reportes:", selectedPost.reports);
         for (const report of selectedPost.reports) {
-          console.log("  - Actualizando reporte:", report.id, "a estado:", isInappropriate ? "RESOLVED" : "DISMISSED");
           await updateReportStatus(report.id, isInappropriate ? ReportStatus.RESOLVED : ReportStatus.DISMISSED);
         }
       }
@@ -142,29 +140,21 @@ export default function ReportedPosts() {
         );
 
         // Obtener información del post antes de eliminarlo (para conseguir el userId)
-        console.log("� Obteniendo información completa del post:", postId);
         const fullPost = await getPostById(postId);
-        console.log("� Post completo obtenido:", fullPost);
-        console.log("👤 Usuario del post completo:", fullPost?.user);
 
         // Notificar al autor del post
         if (fullPost?.user?.id) {
-          console.log("✅ Notificando al autor del post:", fullPost.user.id);
           notifyPostDeleted(fullPost.user.id, mostCommonReason, selectedPost?.post.content || fullPost.content, postId);
-        } else {
-          console.warn("⚠️ No se pudo notificar al autor: no se encontró información del usuario en el post");
         }
 
         // Agradecer a los reportadores
         const reporterIds =
           selectedPost?.reports.map((r) => r.reporter.id).filter((id, index, self) => self.indexOf(id) === index) || [];
         if (reporterIds.length > 0) {
-          console.log("🙏 Agradeciendo a los reportadores:", reporterIds);
           notifyReportersThankYou(reporterIds, selectedPost?.post.content || "");
         }
 
         // Marcar el post como inapropiado (ocultar sin eliminar)
-        console.log("� Marcando post como inapropiado (ocultándolo):", postId);
         await moderatePost(postId, true);
       } else {
         // Si NO es inapropiado: solo desmoderar (aprobar)
@@ -173,7 +163,7 @@ export default function ReportedPosts() {
 
       setShowModal(false);
       fetchReportedPosts();
-      alert(`Post ${isInappropriate ? "ocultado" : "aprobado"} correctamente`);
+      Swal.fire(`Post ${isInappropriate ? "ocultado" : "aprobado"} correctamente`);
     } catch (error) {
       console.error("Error al moderar post:", error);
       Swal.fire("Error al procesar la acción");
@@ -321,7 +311,7 @@ export default function ReportedPosts() {
                         }
                         setShowModal(true);
                       }}
-                      className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors"
+                      className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors cursor-pointer"
                     >
                       <Eye size={16} />
                       Revisar detalles
@@ -454,7 +444,7 @@ export default function ReportedPosts() {
                 <button
                   onClick={() => handleModeratePost(selectedPost.post.id, true)}
                   disabled={actionLoading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:scale-105 text-white rounded-md font-medium cursor-pointer disabled:opacity-50"
                 >
                   <Ban size={18} />
                   {actionLoading ? "Procesando..." : "Marcar como Inapropiado"}
@@ -463,10 +453,10 @@ export default function ReportedPosts() {
                 <button
                   onClick={() => handleModeratePost(selectedPost.post.id, false)}
                   disabled={actionLoading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:scale-105 text-white rounded-md font-medium cursor-pointer  disabled:opacity-50"
                 >
                   <CheckCircle size={18} />
-                  {actionLoading ? "Procesando..." : "Rechazar Reportes"}
+                  {actionLoading ? "Procesando..." : "Rechazar Reporte"}
                 </button>
 
                 <button

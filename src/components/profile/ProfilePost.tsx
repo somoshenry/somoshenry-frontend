@@ -246,7 +246,7 @@ export default function ProfilePosts() {
 
   if (posts.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-gray-200  dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         <p className="text-lg font-semibold">No has realizado ninguna publicación aún</p>
         <p className="text-sm mt-2">¡Comparte tu primer post!</p>
       </div>
@@ -271,7 +271,7 @@ export default function ProfilePosts() {
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold text-black">
+                <div className="w-10 h-10 rounded-full bg-[#ffff00] flex items-center justify-center text-sm font-bold text-black">
                   {getInitials(post.user)}
                 </div>
               )}
@@ -380,7 +380,7 @@ export default function ProfilePosts() {
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold">
+                            <div className="w-8 h-8 rounded-full bg-[#ffff00] flex items-center justify-center text-xs font-bold">
                               {comment.author.name?.charAt(0) || comment.author.email.charAt(0).toUpperCase()}
                             </div>
                           )}

@@ -9,7 +9,7 @@ export interface UserResult {
   lastName?: string | null;
   email: string;
   profilePicture?: string | null;
-  role: "ADMIN" | "MEMBER" | "TEACHER" | "TA";
+  role: "ADMIN" | "MEMBER" | "TEACHER" | "TA" | "STUDENT";
 }
 
 interface GenericListProps {
@@ -50,7 +50,7 @@ const GenericList: React.FC<GenericListProps> = ({data, onClose}) => {
                 className="md:w-12 md:h-12 w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <div className="md:w-12 md:h-12 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg">
+              <div className="md:w-12 md:h-12 w-10 h-10 rounded-full bg-[#ffff00] flex items-center justify-center text-black font-bold text-lg">
                 {getDisplayName(user).charAt(0).toUpperCase()}
               </div>
             )}

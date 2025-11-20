@@ -1,10 +1,13 @@
-"use client";
-import {createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef} from "react";
-import {api} from "../services/api";
-import {tokenStore} from "../services/tokenStore";
-import {PostType} from "../interfaces/interfaces.post/post";
-import {useAlert} from "./AlertContext";
-import {useAuth} from "../hook/useAuth";
+'use client';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
+import { api } from '../services/api';
+import { tokenStore } from '../services/tokenStore';
+import { PostType } from '../interfaces/interfaces.post/post';
+import { useAlert } from './AlertContext';
+import { useAuth } from '../hook/useAuth';
+
+// 🔥 Beneficios del plan (BRONCE / PLATA / ORO)
+import { usePlanBenefits } from '../hook/usePlanBenefits';
 
 interface PostContextType {
   posts: PostType[];
@@ -12,38 +15,60 @@ interface PostContextType {
   fetchPosts: () => Promise<void>;
   addPost: (content: string, media?: File | null) => Promise<void>;
   likePost: (id: string) => Promise<void>;
-  addComment: (postId: string, text: string) => Promise<void>;
+  addComment: (postId: string, text: string, parentId?: string) => Promise<void>;
   likeComment: (commentId: string) => Promise<void>;
   reportPost: (postId: string, reason: string, description?: string) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
+  deleteComment: (commentId: string) => Promise<void>;
 }
 
 export const PostContext = createContext<PostContextType | null>(null);
 
-export function PostProvider({children}: {children: ReactNode}) {
+export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(false);
-  const {showAlert} = useAlert();
-  const {user} = useAuth();
+
+  const { showAlert } = useAlert();
+  const { user } = useAuth();
+  const { maxMonthlyPosts } = usePlanBenefits();
   const hasMountedRef = useRef(false);
 
-  // ✅ Verifica si hay token válido
-  const hasValidToken = (): boolean => {
-    const token = tokenStore.getAccess();
-    return !!token && token !== "undefined" && token !== "null";
+  // ============================================================
+  // 🔥 CALCULAR LIMITE MENSUAL SEGÚN PLAN
+  // ============================================================
+  const getMonthlyPostsCount = () => {
+    const now = new Date();
+    const currentUserId = user?.id;
+
+    const filtered = posts.filter((p) => {
+      if (!p.createdAt) return false;
+      // 🔥 Solo contar posts del usuario actual
+      if (p.user?.id !== currentUserId) return false;
+      const d = new Date(p.createdAt);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    return filtered.length;
   };
 
-  // ✅ Normaliza post con manejo seguro
+  const hasValidToken = (): boolean => {
+    const token = tokenStore.getAccess();
+    return !!token && token !== 'undefined' && token !== 'null';
+  };
+
+  // ============================================================
+  // 🔧 NORMALIZAR UN POST
+  // ============================================================
+
   const normalizePost = async (p: PostType) => {
     try {
-      const commentsResponse = await api.get(`/post/${p.id}/comments`);
-      const rawComments = Array.isArray(commentsResponse.data) ? commentsResponse.data : [];
+      const commentsResp = await api.get(`/post/${p.id}/comments`);
+      const rawComments = Array.isArray(commentsResp.data) ? commentsResp.data : [];
       const currentUserId = user?.id;
-      const comments = rawComments.map((c: any) => {
-        const liked =
-          Array.isArray(c?.likes) && currentUserId ? c.likes.some((l: any) => l?.userId === currentUserId) : false;
-        return {...c, likedByMe: liked};
-      });
+
+      const comments = rawComments.map((c: any) => ({
+        ...c,
+        likedByMe: Array.isArray(c.likes) ? c.likes.some((l: any) => l?.userId === currentUserId) : false,
+      }));
 
       let likeCount = 0;
       try {
@@ -53,13 +78,14 @@ export function PostProvider({children}: {children: ReactNode}) {
         likeCount = 0;
       }
 
-      let mediaType: "image" | "video" | null = null;
-      if (p.type === "VIDEO") mediaType = "video";
-      else if (p.type === "IMAGE") mediaType = "image";
+      let mediaType: 'image' | 'video' | null = null;
+
+      if (p.type === 'VIDEO') mediaType = 'video';
+      else if (p.type === 'IMAGE') mediaType = 'image';
       else if (p.mediaURL || p.mediaUrl) {
-        const url = p.mediaURL || p.mediaUrl || "";
-        const videoExt = [".mp4", ".webm", ".mov", ".avi", ".wmv", ".mkv", ".m4v"];
-        mediaType = videoExt.some((ext) => url.toLowerCase().includes(ext)) ? "video" : "image";
+        const url = p.mediaURL || p.mediaUrl || '';
+        const videoExt = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+        mediaType = videoExt.some((ext) => url.toLowerCase().includes(ext)) ? 'video' : 'image';
       }
 
       return {
@@ -69,255 +95,272 @@ export function PostProvider({children}: {children: ReactNode}) {
         mediaUrl: p.mediaURL || p.mediaUrl || null,
         mediaURL: p.mediaURL || p.mediaUrl || null,
         mediaType,
-        likedByMe: false as unknown as boolean,
+        likedByMe: false,
       };
-    } catch (err) {
-      console.warn(`No se pudieron cargar comentarios del post ${p.id}`, err);
+    } catch {
       return {
         ...p,
         comments: [],
         likes: 0,
         mediaUrl: p.mediaURL || p.mediaUrl || null,
-        mediaURL: p.mediaURL || p.mediaUrl || null,
         mediaType: null,
-        likedByMe: false as unknown as boolean,
       };
     }
   };
 
-  // ✅ Obtiene y normaliza los posts (con control de token)
+  // ============================================================
+  // 📌 FETCH POSTS (carga inicial)
+  // ============================================================
+
   const fetchPosts = useCallback(async () => {
-    // No intentar cargar posts si no hay token
-    const token = tokenStore.getAccess();
-    if (!token) {
-      console.log("No hay token, saltando carga de posts");
-      return;
-    }
+    if (!hasValidToken()) return;
 
     setLoading(true);
     try {
-      const {data} = await api.get("/posts");
-      const postsArray = Array.isArray(data) ? data : data.data;
-      const postsWithComments = await Promise.all((postsArray || []).map(normalizePost));
-      setPosts(postsWithComments);
-    } catch (err) {
-      console.error("Error al cargar posts:", err);
-      // Solo mostrar alerta si no es un error 401 (no autenticado)
-      if ((err as any)?.response?.status !== 401) {
-        showAlert("Error al cargar publicaciones ❌", "error");
-      }
-      setPosts([]);
+      const { data } = await api.get('/posts');
+      const list = Array.isArray(data) ? data : data.data;
+      const processed = await Promise.all(list.map(normalizePost));
+      setPosts(processed);
+    } catch (err: any) {
+      console.error('Error al cargar posts:', err);
+      if (err.response?.status !== 401) showAlert('Error al cargar publicaciones ❌', 'error');
     } finally {
       setLoading(false);
     }
-  }, [showAlert, user?.id]);
-
-  // ✅ Refresco silencioso con protección
-  const refreshPostsSilently = useCallback(async () => {
-    // No intentar refrescar si no hay token
-    const token = tokenStore.getAccess();
-    if (!token) return;
-
-    try {
-      const {data} = await api.get("/posts");
-      const postsArray = Array.isArray(data) ? data : data.data;
-      const normalized = await Promise.all((postsArray || []).map(normalizePost));
-      setPosts(normalized);
-    } catch (err) {
-      // silencioso - no mostrar error si es 401
-      if ((err as any)?.response?.status !== 401) {
-        console.warn("Error refrescando publicaciones (silencioso):", err);
-      }
-    }
   }, [user?.id]);
 
-  // ✅ Crear post (verifica token)
+  // ============================================================
+  // 🔄 REFRESCO SILENCIOSO
+  // ============================================================
+
+  const refreshPostsSilently = useCallback(async () => {
+    if (!hasValidToken()) return;
+    try {
+      const { data } = await api.get('/posts');
+      const list = Array.isArray(data) ? data : data.data;
+      const processed = await Promise.all(list.map(normalizePost));
+      setPosts(processed);
+    } catch {}
+  }, [user?.id]);
+
+  // ============================================================
+  // 📝 CREAR POST (con límite por plan)
+  // ============================================================
+
   const addPost = async (content: string, media?: File | null) => {
-    const token = tokenStore.getAccess();
-    if (!token) {
-      showAlert("Debes iniciar sesión para crear publicaciones.", "info");
-      return;
+    if (!hasValidToken()) {
+      showAlert('Debes iniciar sesión para crear publicaciones.', 'info');
+      throw new Error('No autenticado');
+    }
+
+    // 🔥 Verificar límites
+    const monthly = getMonthlyPostsCount();
+    console.log('monthly:', monthly, 'maxMonthlyPosts', maxMonthlyPosts);
+    if (monthly >= maxMonthlyPosts) {
+      const plan = user?.subscription ?? 'BRONCE';
+      showAlert(`Tu plan ${plan} permite ${maxMonthlyPosts} posteos por mes. Ya llegaste al límite.`, 'info');
+      throw new Error('Límite alcanzado');
     }
 
     try {
-      const hasText = typeof content === "string" && content.trim().length > 0;
-      const contentToSend = hasText ? content : " ";
-      const maybeType = media
-        ? media.type.startsWith("video/")
-          ? "VIDEO"
-          : media.type.startsWith("image/")
-          ? "IMAGE"
-          : undefined
-        : undefined;
+      const text = content?.trim() || ' ';
+      const type = media ? (media.type.startsWith('video/') ? 'VIDEO' : media.type.startsWith('image/') ? 'IMAGE' : undefined) : undefined;
 
-      const payload: any = {content: contentToSend};
-      if (maybeType) payload.type = maybeType;
+      const payload: any = { content: text };
+      if (type) payload.type = type;
 
-      // 1. LLAMADA API para crear el post base
-      const {data: apiResponse} = await api.post("/posts", payload);
-      const postData = apiResponse?.data || apiResponse;
-      const postId = postData?.id;
-
-      // 2. CONSTRUIR newPost (con texto asegurado)
+      const { data: resp } = await api.post('/posts', payload);
+      const post = resp?.data || resp;
       let newPost = {
-        ...postData,
-        content: postData.content || content, // Garantiza que el texto del formulario se use
-        comments: Array.isArray(postData?.comments) ? postData.comments : [],
-        likes: typeof postData?.likes === "number" ? postData.likes : 0,
-        mediaUrl: postData?.mediaURL ?? postData?.mediaUrl ?? null,
-        mediaURL: postData?.mediaURL ?? postData?.mediaUrl ?? null,
-        mediaType: postData?.mediaType ?? null,
+        ...post,
+        comments: [],
+        likes: post?.likes ?? 0,
+        mediaUrl: post?.mediaURL ?? null,
+        mediaType: post?.mediaType ?? null,
       };
 
-      // ❗ 3. LÓGICA DE SUBIDA DE ARCHIVO
-      if (media && postId) {
+      if (media) {
         try {
           const form = new FormData();
-          form.append("file", media);
-          const uploadResp = await api.put(`/files/uploadPostFile/${postId}`, form, {
-            headers: {"Content-Type": "multipart/form-data"},
+          form.append('file', media);
+
+          const upload = await api.put(`/files/uploadPostFile/${post.id}`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           });
-          const updated = uploadResp.data;
 
-          let mediaType: "image" | "video" | null = null;
-          if (updated.type === "VIDEO") mediaType = "video";
-          else if (updated.type === "IMAGE") mediaType = "image";
-
-          // Actualizar newPost con las URL y el TIPO devuelto por el servidor
           newPost = {
             ...newPost,
-            type: updated.type || newPost.type,
-            mediaUrl: updated.mediaURL ?? updated.mediaUrl ?? null,
-            mediaURL: updated.mediaURL ?? updated.mediaUrl ?? null,
-            mediaType,
-            user: updated.user || newPost.user,
+            mediaUrl: upload.data.mediaURL,
+            mediaType: upload.data.type === 'VIDEO' ? 'video' : 'image',
           };
-        } catch (uploadErr) {
-          console.warn("Error subiendo archivo:", uploadErr);
-          showAlert("No se pudo subir el archivo, pero el post se creó igual", "info");
+        } catch {
+          showAlert('El post se creó, pero no se pudo subir el archivo.', 'info');
         }
       }
 
-      // 4. Actualizar el estado
       setPosts((prev) => [newPost, ...prev]);
-      showAlert("Publicación creada correctamente ✅", "success");
-    } catch (err) {
-      console.error("Error al crear post:", err);
-      showAlert("Error al crear publicación ❌", "error");
+      showAlert('Publicación creada correctamente ✅', 'success');
+    } catch {
+      showAlert('Error al crear publicación ❌', 'error');
     }
   };
 
-  // ✅ Like post (solo con token)
+  // ============================================================
+  // ❤️ LIKE POST
+  // ============================================================
+
   const likePost = async (id: string) => {
-    const token = tokenStore.getAccess();
-    if (!token) {
-      showAlert("Debes iniciar sesión para dar like.", "info");
-      return;
-    }
+    if (!hasValidToken()) return showAlert('Debes iniciar sesión.', 'info');
 
     try {
-      const {data} = await api.post(`/posts/${id}/like`);
-      let serverCount = Number(data?.likeCount ?? data?.likes ?? 0);
-      if (!Number.isFinite(serverCount) || serverCount < 0) {
-        const {data: c} = await api.get(`/posts/${id}/likes`);
-        serverCount = Number(c?.likeCount ?? 0);
-      }
-      setPosts((prev) => prev.map((p) => (p.id === id ? {...p, likes: serverCount, likedByMe: true} : p)));
+      const { data } = await api.post(`/posts/${id}/like`);
+      const count = Number(data?.likeCount ?? data?.likes ?? 0);
+
+      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes: count, likedByMe: true } : p)));
     } catch (err: any) {
-      if (err.response?.status === 401) {
-        showAlert("Tu sesión expiró. Iniciá sesión nuevamente.", "info");
-        tokenStore.clear();
-        window.location.href = "/login";
-      } else {
-        console.error("Error al actualizar like:", err);
-        showAlert("No se pudo actualizar el like ❌", "error");
-      }
+      showAlert('No se pudo actualizar el like ❌', 'error');
     }
   };
 
-  const addComment = async (postId: string, text: string) => {
-    const token = tokenStore.getAccess();
-    if (!token) {
-      showAlert("Debes iniciar sesión para comentar.", "info");
-      return;
-    }
+  // ============================================================
+  // 💬 AGREGAR COMENTARIO
+  // ============================================================
+
+  const addComment = async (postId: string, text: string, parentId?: string) => {
+    if (!hasValidToken()) return showAlert('Debes iniciar sesión para comentar.', 'info');
 
     try {
-      const {data} = await api.post(`/comment/post/${postId}`, {content: text});
-      let comment: any = data?.data ?? data;
-      if (!comment?.author && user) {
-        comment = {
-          ...comment,
-          author: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            profilePicture: user.profilePicture,
-          },
-        };
-      }
-      setPosts((prev) => prev.map((p) => (p.id === postId ? {...p, comments: [...(p.comments || []), comment]} : p)));
-      showAlert("Comentario agregado correctamente ✅", "success");
-    } catch (err) {
-      console.error("Error al comentar:", err);
-      showAlert("Error al agregar comentario ❌", "error");
+      const payload: any = { content: text };
+      if (parentId) payload.parentId = parentId;
+
+      const { data } = await api.post(`/comment/post/${postId}`, payload);
+      const raw = data?.data ?? data;
+
+      const comment = raw.author
+        ? raw
+        : {
+            ...raw,
+            author: {
+              id: user?.id,
+              name: user?.name,
+              email: user?.email,
+              profilePicture: user?.profilePicture,
+            },
+          };
+
+      const updateTree = (comments: any[]): any[] =>
+        comments.map((c) => ({
+          ...c,
+          replies: c.id === parentId ? [...(c.replies || []), comment] : c.replies ? updateTree(c.replies) : [],
+        }));
+
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                comments: parentId ? updateTree(p.comments) : [...p.comments, comment],
+              }
+            : p
+        )
+      );
+
+      showAlert('Comentario agregado correctamente ✅', 'success');
+    } catch {
+      showAlert('Error al agregar comentario ❌', 'error');
     }
   };
+
+  // ============================================================
+  // 👍 LIKE COMMENT
+  // ============================================================
 
   const likeComment = async (commentId: string) => {
     try {
-      const {data} = await api.post(`/comment/${commentId}/like`);
-      const message = data?.message ?? "";
-      const delta = String(message).toLowerCase().includes("removed") ? -1 : 1;
-      setPosts((prev) =>
-        prev.map((p) => ({
-          ...p,
-          comments: (p.comments || []).map((c) =>
-            c.id === commentId ? {...c, likeCount: Math.max(0, (c.likeCount || 0) + delta)} : c
-          ),
-        }))
-      );
-      showAlert(delta > 0 ? "Like agregado ✅" : "Like quitado ✅", "success");
-    } catch (err) {
-      console.error("Error al actualizar like del comentario:", err);
-      showAlert("Error al actualizar like ❌", "error");
+      const { data } = await api.post(`/comment/${commentId}/like`);
+      const removed = String(data?.message ?? '')
+        .toLowerCase()
+        .includes('removed');
+      const delta = removed ? -1 : 1;
+
+      const updateLikes = (comments: any[]): any[] =>
+        comments.map((c) => ({
+          ...c,
+          likeCount: c.id === commentId ? Math.max(0, (c.likeCount || 0) + delta) : c.likeCount,
+          likedByMe: c.id === commentId ? delta > 0 : c.likedByMe,
+          replies: c.replies ? updateLikes(c.replies) : [],
+        }));
+
+      setPosts((prev) => prev.map((p) => ({ ...p, comments: updateLikes(p.comments || []) })));
+    } catch {
+      showAlert('Error al actualizar like ❌', 'error');
     }
   };
 
-  //  Reportar post
-  const reportPost = async (postId: string, reason: string, description?: string) => {
+  // ============================================================
+  // 🗑️ ELIMINAR COMENTARIO
+  // ============================================================
+
+  const deleteComment = async (commentId: string) => {
     try {
-      await api.post("/reports", {
-        postId,
-        reason,
-        description,
-      });
-      showAlert("Reporte enviado correctamente. Será revisado por los administradores ✅", "success");
-    } catch (err) {
-      console.error("Error al reportar post:", err);
-      showAlert("Error al enviar el reporte ❌", "error");
+      await api.delete(`/comment/${commentId}`);
+
+      const remove = (comments: any[]): any[] =>
+        comments
+          .filter((c) => c.id !== commentId)
+          .map((c) => ({
+            ...c,
+            replies: c.replies ? remove(c.replies) : [],
+          }));
+
+      setPosts((prev) => prev.map((p) => ({ ...p, comments: remove(p.comments || []) })));
+
+      showAlert('Comentario eliminado correctamente ✅', 'success');
+    } catch {
+      showAlert('Error al eliminar comentario ❌', 'error');
     }
   };
+
+  // ============================================================
+  // 🚨 REPORTAR POST
+  // ============================================================
+
+  const reportPost = async (postId: string, reason: string, description?: string) => {
+    try {
+      await api.post('/reports', { postId, reason, description });
+      showAlert('Reporte enviado correctamente ✅', 'success');
+    } catch {
+      showAlert('Error al enviar reporte ❌', 'error');
+    }
+  };
+
+  // ============================================================
+  // 🗑️ ELIMINAR POST
+  // ============================================================
 
   const deletePost = async (postId: string) => {
     try {
-      const {deletePost: deletePostService} = await import("../services/postService");
-      await deletePostService(postId);
+      const { deletePost: doDelete } = await import('../services/postService');
+      await doDelete(postId);
       setPosts((prev) => prev.filter((p) => p.id !== postId));
-      showAlert("Publicación eliminada correctamente ✅", "success");
-    } catch (err) {
-      console.error("Error al borrar post:", err);
-      showAlert("Error al eliminar publicación ❌", "error");
+      showAlert('Publicación eliminada correctamente ✅', 'success');
+    } catch {
+      showAlert('Error al eliminar publicación ❌', 'error');
     }
   };
+
+  // ============================================================
+  // 🔄 USE EFFECT INICIAL
+  // ============================================================
 
   useEffect(() => {
     if (hasMountedRef.current) return;
     hasMountedRef.current = true;
+
     fetchPosts();
-    const interval = setInterval(() => refreshPostsSilently(), 10000);
-    return () => clearInterval(interval);
-  }, [fetchPosts, refreshPostsSilently]);
+    const i = setInterval(refreshPostsSilently, 10000);
+    return () => clearInterval(i);
+  }, []);
 
   return (
     <PostContext.Provider
@@ -331,6 +374,7 @@ export function PostProvider({children}: {children: ReactNode}) {
         likeComment,
         reportPost,
         deletePost,
+        deleteComment,
       }}
     >
       {children}
@@ -339,7 +383,7 @@ export function PostProvider({children}: {children: ReactNode}) {
 }
 
 export const usePost = () => {
-  const context = useContext(PostContext);
-  if (!context) throw new Error("usePost debe usarse dentro de un PostProvider");
-  return context;
+  const ctx = useContext(PostContext);
+  if (!ctx) throw new Error('usePost debe usarse dentro de un PostProvider');
+  return ctx;
 };

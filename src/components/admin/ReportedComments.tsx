@@ -62,14 +62,8 @@ export default function ReportedComments() {
       // Obtener todos los reportes pendientes
       const allReports = await getPendingReports();
 
-      console.log("📊 Total reportes:", allReports.length);
-      console.log("📊 Reportes completos:", allReports);
-
       // Filtrar solo reportes de comentarios (que tengan commentId y comment)
       const commentReports = allReports.filter((r: Report) => r.commentId && r.comment);
-
-      console.log("💬 Reportes de comentarios filtrados:", commentReports.length);
-      console.log("💬 Primer reporte de comentario:", commentReports[0]);
 
       // Agrupar reportes por comentario
       const groupedByComment = commentReports.reduce((acc: Record<string, ReportedComment>, report: Report) => {
@@ -103,9 +97,6 @@ export default function ReportedComments() {
       // Ordenar por cantidad de reportes
       commentsArray.sort((a: ReportedComment, b: ReportedComment) => b.reportCount - a.reportCount);
 
-      console.log("📦 Comentarios agrupados:", commentsArray.length);
-      console.log("📦 Primer comentario agrupado:", commentsArray[0]);
-
       // Aplicar paginación manual
       const startIndex = (currentPage - 1) * limit;
       const endIndex = startIndex + limit;
@@ -136,10 +127,10 @@ export default function ReportedComments() {
 
       setShowModal(false);
       fetchReportedComments();
-      alert(`Reportes ${action === "resolve" ? "resueltos" : "rechazados"} correctamente`);
+      Swal.fire(`Reportes ${action === "resolve" ? "resueltos" : "rechazados"} correctamente`);
     } catch (error) {
       console.error("Error al procesar reportes:", error);
-      alert("Error al procesar la acción");
+      Swal.fire("Error al procesar la acción");
     } finally {
       setActionLoading(false);
     }
@@ -342,13 +333,13 @@ export default function ReportedComments() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 cursor-pointer">
                       <button
                         onClick={() => {
                           setSelectedComment(item);
                           setShowModal(true);
                         }}
-                        className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors cursor-pointer"
                       >
                         <Eye size={16} />
                         Revisar detalles
@@ -447,7 +438,7 @@ export default function ReportedComments() {
                 <button
                   onClick={handleDeleteComment}
                   disabled={actionLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:scale-105 cursor-pointer text-white rounded-md font-medium transition-colors disabled:opacity-50"
                 >
                   <Ban size={18} />
                   {actionLoading ? "Procesando..." : "Eliminar Comentario Inapropiado"}
@@ -458,25 +449,25 @@ export default function ReportedComments() {
                   <button
                     onClick={() => handleResolveReports("resolve")}
                     disabled={actionLoading}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium transition-colors disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:scale-105 cursor-pointer text-white rounded-md font-medium transition-colors disabled:opacity-50"
                   >
                     <CheckCircle size={16} />
-                    {actionLoading ? "Procesando..." : "Resolver sin eliminar"}
+                    {actionLoading ? "Procesando..." : "Resolver reporte sin eliminar"}
                   </button>
 
                   <button
                     onClick={() => handleResolveReports("dismiss")}
                     disabled={actionLoading}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium transition-colors disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 hover:scale-105 cursor-pointer text-white rounded-md font-medium transition-colors disabled:opacity-50"
                   >
                     <AlertCircle size={16} />
-                    {actionLoading ? "Procesando..." : "Rechazar Reportes"}
+                    {actionLoading ? "Procesando..." : "Rechazar Reporte"}
                   </button>
 
                   <button
                     onClick={() => setShowModal(false)}
                     disabled={actionLoading}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     Cancelar
                   </button>

@@ -41,7 +41,7 @@ export const pricingPlans = [
     id: "level2",
     name: "Nivel 2",
     badge: "Oro",
-    badgeColor: "bg-yellow-400 text-black",
+    badgeColor: "bg-[#ffff00] text-black",
     price: 10,
     currency: "USD/mes",
     features: [
@@ -55,8 +55,8 @@ export const pricingPlans = [
       {text: "Análisis de engagement"},
     ],
     buttonText: "Suscribirse Ahora",
-    buttonColor: "bg-yellow-400 hover:bg-yellow-500 mt-4 text-black",
-    borderColor: "border-t-4 border-yellow-400 dark:border-yellow-400",
+    buttonColor: "bg-[#ffff00] hover:bg-yellow-500 mt-4 text-black",
+    borderColor: "border-t-4 border-[#ffff00] dark:border-[#ffff00]",
     popular: true,
   },
 ];

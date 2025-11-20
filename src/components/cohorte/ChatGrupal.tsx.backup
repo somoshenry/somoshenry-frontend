@@ -1,0 +1,327 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { Send, Loader2, Heart, MessageCircle, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+import { getGroupMessages, sendGroupMessage, MessageType, GroupMessage, getDisplayName, getUserInitials } from '@/services/chatService';
+import { getCohorteChatGroupId } from '@/services/cohorteService';
+import { io, Socket } from 'socket.io-client';
+import { tokenStore } from '@/services/tokenStore';
+
+interface ChatGrupalProps {
+  readonly cohorteId: string;
+  readonly currentUser: {
+    id: string;
+    email: string;
+    name?: string | null;
+    lastName?: string | null;
+    username?: string | null;
+    profilePicture?: string | null;
+  };
+}
+
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+export default function ChatGrupal({ cohorteId, currentUser }: ChatGrupalProps) {
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [messages, setMessages] = useState<GroupMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [chatGroupId, setChatGroupId] = useState<string | null>(null);
+  const [likedMessages] = useState<Set<string>>(new Set());
+  const [likeCounts] = useState<Record<string, number>>({});
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+
+  return (
+    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      {/* Header con badge "En desarrollo" */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">💬 Chat de la Cohorte</h2>
+          <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded-full border border-yellow-300 dark:border-yellow-700">
+            🚧 En Desarrollo
+          </span>
+        </div>
+      </div>
+
+      {/* Mensaje informativo */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+        <div className="flex items-start gap-3">
+          <div className="text-blue-500 dark:text-blue-400 text-2xl">ℹ️</div>
+          <div>
+            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Función en desarrollo</h3>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              El chat grupal estará disponible próximamente. Estamos trabajando para ofrecerte la mejor experiencia de comunicación en tiempo real.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview deshabilitado del chat */}
+      <div className="relative opacity-50 pointer-events-none">
+        <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-4 overflow-y-auto">
+          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+            <MessageCircle size={48} className="mx-auto mb-3 opacity-50" />
+            <p>Los mensajes aparecerán aquí</p>
+          </div>
+        </div>
+
+        {/* Input deshabilitado */}
+        <div className="flex items-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <input
+            type="text"
+            placeholder="Escribe un mensaje..."
+            disabled
+            className="flex-1 px-4 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-400 cursor-not-allowed"
+          />
+          <button
+            disabled
+            className="p-3 bg-gray-400 text-white rounded-lg cursor-not-allowed"
+          >
+            <Send size={20} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* CÓDIGO ORIGINAL COMENTADO PARA FUTURO USO
+
+  // 🔹 Obtener el ID del grupo de chat asociado
+  useEffect(() => {
+    const groupId = getCohorteChatGroupId(cohorteId);
+    if (groupId) {
+      setChatGroupId(groupId);
+      console.log('✅ Grupo de chat encontrado:', groupId);
+    } else {
+      console.warn('⚠️ No hay grupo de chat asociado a esta cohorte');
+    }
+  }, [cohorteId]);
+
+
+  // 🔹 Cargar mensajes del grupo
+  useEffect(() => {
+    async function loadMessages() {
+      if (!chatGroupId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await getGroupMessages(chatGroupId, 1, 100);
+        setMessages(response.data || []);
+      } catch (error: any) {
+        console.error('Error al cargar mensajes del chat:', error);
+        if (error.response?.status === 404) {
+          console.warn('⚠️ Grupo de chat no existe');
+          setMessages([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMessages();
+  }, [chatGroupId]);
+
+  // 🔹 Conectar al socket y escuchar mensajes nuevos
+  useEffect(() => {
+    if (!chatGroupId) return;
+
+    const token = tokenStore.getAccess();
+    if (!token) return;
+
+    // Crear conexión del socket
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('🔌 Socket conectado para chat grupal');
+      socket.emit('join-group', chatGroupId);
+    });
+
+    // Escuchar mensajes nuevos
+    const handleNewMessage = (message: GroupMessage) => {
+      console.log('📩 Mensaje recibido:', message);
+      if (message.group.id === chatGroupId) {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === message.id);
+          if (exists) return prev;
+          return [...prev, message];
+        });
+      }
+    };
+
+    socket.on('group-message', handleNewMessage);
+
+    return () => {
+      socket.emit('leave-group', chatGroupId);
+      socket.off('group-message', handleNewMessage);
+      socket.disconnect();
+    };
+  }, [chatGroupId]);
+
+  // 🔹 Auto-scroll al final
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 🔹 Enviar mensaje
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || sending || !chatGroupId) return;
+
+    const messageContent = newMessage.trim();
+    setNewMessage('');
+    setSending(true);
+
+    try {
+      const sentMessage = await sendGroupMessage({
+        groupId: chatGroupId,
+        content: messageContent,
+        type: MessageType.TEXT,
+      });
+
+      // El mensaje se agregará automáticamente cuando llegue por socket
+      // Pero si el socket falla, lo agregamos manualmente
+      if (!socketRef.current?.connected) {
+        setMessages((prev) => [...prev, sentMessage]);
+      }
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+      setNewMessage(messageContent); // Restaurar el mensaje si falla
+      alert('Error al enviar el mensaje');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    setNewMessage((prev) => prev + emojiData.emoji);
+  };
+
+  return (
+    <div className="flex flex-col rounded-2xl shadow-xl h-dvh md:h-screen from-gray-50 to-gray-100 dark:bg-gray-200 overflow-hidden border border-gray-200 dark:border-gray-700">
+      {/* 🧭 Header */}
+      <div className="flex justify-between items-center px-5 py-3 bg-white/70 dark:bg-[#ffff00] backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-black/30 shadow-md">
+        <h2 className="text-lg font-semibold text-black flex items-center gap-2">💬 Chat de la Cohorte</h2>
+        {loading && <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />}
+      </div>
+
+      {!chatGroupId ? (
+        // Mostrar mensaje si no hay grupo de chat asociado
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <div className="text-6xl mb-4">🔒</div>
+            <h3 className="text-xl font-bold text-gray-700 dark:text-gray-900 mb-2">Chat no disponible</h3>
+            <p className="text-gray-500 dark:text-gray-600 mb-4">El grupo de chat aún no ha sido creado para esta cohorte.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">El administrador debe crear la cohorte para habilitar el chat grupal.</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 🗨️ Área de mensajes */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">💬</div>
+                <p className="text-gray-500 dark:text-gray-400 text-lg font-medium mb-2">No hay mensajes todavía</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm">Sé el primero en escribir algo</p>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {messages.map((msg) => {
+                  const isCurrentUserMessage = msg.sender.id === currentUser.id;
+                  const senderName = getDisplayName(msg.sender);
+                  const senderInitials = getUserInitials(msg.sender);
+                  const senderAvatar = msg.sender.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderInitials)}&background=random`;
+                  const messageDate = new Date(msg.createdAt);
+                  const now = new Date();
+                  const diffInHours = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60 * 60));
+
+                  let timeAgo = '';
+                  if (diffInHours < 1) {
+                    const diffInMinutes = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60));
+                    timeAgo = diffInMinutes < 1 ? 'Justo ahora' : `Hace ${diffInMinutes}m`;
+                  } else if (diffInHours < 24) {
+                    timeAgo = `Hace ${diffInHours}h`;
+                  } else {
+                    const diffInDays = Math.floor(diffInHours / 24);
+                    timeAgo = `Hace ${diffInDays}d`;
+                  }
+
+                  return (
+                    <motion.div key={msg.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg transition-shadow">
+                      {/* Header del mensaje */}
+                      <div className="flex items-start gap-3 mb-3">
+                        <img src={senderAvatar} alt={senderName} className="w-12 h-12 rounded-full ring-2 ring-gray-200 dark:ring-gray-700" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-bold text-gray-900 dark:text-white">{senderName}</h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{timeAgo}</p>
+                            </div>
+                            {isCurrentUserMessage && (
+                              <button className="text-gray-400 hover:text-red-500 transition-colors p-1">
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contenido del mensaje */}
+                      <div className="ml-15 mb-3">
+                        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                      </div>
+
+                      {/* Footer con acciones */}
+                      <div className="ml-15 flex items-center gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <button className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm">
+                          <Heart size={16} />
+                          <span>{likeCounts[msg.id] || 0}</span>
+                        </button>
+                        <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors text-sm">
+                          <MessageCircle size={16} />
+                          <span>Responder</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* ✍️ Input */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 backdrop-blur-md flex gap-3">
+            {showEmoji && (
+              <div className="absolute bottom-20 left-4 z-50">
+                <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.LIGHT} />
+              </div>
+            )}
+
+            <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="text-2xl hover:scale-110 transition-transform">
+              😊
+            </button>
+            <input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} className=" w-2/3 px-4 py-2 rounded-full border  border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#ffff00]" />
+            <button onClick={handleSendMessage} disabled={sending || !newMessage.trim()} className="p-4 bg-[#ffff00] hover:bg-[#ffff00]/70 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white rounded-full transition-colors">
+              {sending ? <Loader2 size={20} color="#000000" className="animate-spin" /> : <Send size={20} color="#000000" />}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

@@ -2,22 +2,41 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../hook/useAuth';
-import { getSystemNotifications, markSystemNotificationAsRead, SystemNotification } from '../services/notificationService';
+import { useSocket } from '../hook/useSocket';
+import { tokenStore } from '../services/tokenStore';
+import { getSystemNotifications, markSystemNotificationAsRead } from '../services/notificationService';
 
 export interface Notification {
   id: string;
-  type: 'like' | 'comment' | 'comment-like' | 'system';
-  postId?: string;
-  postContent?: string;
-  authorName: string;
-  authorAvatar?: string;
-  commentContent?: string;
+  type: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'REPLY_COMMENT' | 'NEW_FOLLOWER' | 'NEW_MESSAGE' | 'COHORTE_INVITATION' | 'system';
+  receiverId?: string;
+  senderId?: string;
+  sender?: {
+    id: string;
+    name: string;
+    email: string;
+    profilePicture?: string;
+  };
+  metadata?: {
+    postId?: string;
+    postContent?: string;
+    commentId?: string;
+    commentContent?: string;
+    [key: string]: any;
+  };
+  isRead: boolean;
   createdAt: string;
-  read: boolean;
-  // Para notificaciones del sistema
+  // Campos legacy para notificaciones del sistema
   systemType?: string;
   systemTitle?: string;
   systemMessage?: string;
+  // Campos calculados para compatibilidad
+  authorName?: string;
+  authorAvatar?: string;
+  postId?: string;
+  postContent?: string;
+  commentContent?: string;
+  read?: boolean;
 }
 
 interface NotificationContextType {
@@ -25,8 +44,8 @@ interface NotificationContextType {
   unreadCount: number;
   loading: boolean;
   fetchNotifications: () => Promise<void>;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -36,23 +55,61 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
+  // WebSocket para notificaciones en tiempo real
+  const handleRealtimeNotification = useCallback((notification: any) => {
+    console.log('🔔 Nueva notificación en tiempo real:', notification);
+
+    // Convertir notificación del WebSocket al formato local
+    const newNotification: Notification = {
+      id: notification.id || `realtime-${Date.now()}`,
+      type: notification.type || 'system',
+      postId: notification.postId,
+      postContent: notification.postContent,
+      authorName: notification.authorName || 'Sistema',
+      authorAvatar: notification.authorAvatar,
+      commentContent: notification.commentContent,
+      createdAt: notification.createdAt || new Date().toISOString(),
+      read: false,
+      isRead: false,
+      systemType: notification.systemType,
+      systemTitle: notification.systemTitle,
+      systemMessage: notification.systemMessage,
+      metadata: notification.metadata,
+      senderId: notification.senderId,
+      receiverId: notification.receiverId,
+    };
+
+    // Agregar a la lista de notificaciones
+    setNotifications((prev) => [newNotification, ...prev]);
+
+    // Si es asignación de cohorte, disparar evento para recargar sidebar
+    if (notification.type === 'COHORTE_INVITATION') {
+      console.log('🎓 Disparando evento de cohorte asignada');
+      globalThis.dispatchEvent(new CustomEvent('notification:cohorte_assigned'));
+    }
+
+    // Mostrar notificación del navegador si está permitido
+    if (typeof globalThis !== 'undefined' && 'Notification' in globalThis && Notification.permission === 'granted') {
+      const notifTitle = notification.type === 'COHORTE_INVITATION' ? '🎓 Nueva cohorte asignada' : notification.systemTitle || '¡Nueva notificación!';
+
+      const notifBody = notification.type === 'COHORTE_INVITATION' ? `Has sido asignado como ${notification.metadata?.role} a ${notification.metadata?.cohorteName}` : notification.systemMessage || notification.postContent || 'Tienes una nueva notificación';
+
+      new Notification(notifTitle, {
+        body: notifBody,
+        icon: notification.authorAvatar || '/avatars/default.svg',
+      });
+    }
+  }, []);
+
+  const token = tokenStore.getAccess();
+  useSocket({
+    token,
+    enabled: !!user && !!token,
+    onNotification: handleRealtimeNotification,
+  });
+
   // Persistencia local para estado de lectura y contadores vistos (fallback por conteo)
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
-  const [seenPostLikeCounts, setSeenPostLikeCounts] = useState<Record<string, number>>({}); // postId -> count
-  const [seenCommentLikeCounts, setSeenCommentLikeCounts] = useState<Record<string, number>>({}); // commentId -> count
-
-  // Helpers de persistencia
-  const persistReadIds = useCallback((ids: Set<string>) => {
-    try {
-      localStorage.setItem('notif_read_ids', JSON.stringify(Array.from(ids)));
-    } catch {}
-  }, []);
-
-  const persistSeenCounts = useCallback((key: string, obj: Record<string, number>) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(obj));
-    } catch {}
-  }, []);
 
   // Cargar persistencia al montar
   useEffect(() => {
@@ -60,40 +117,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const rawRead = localStorage.getItem('notif_read_ids');
       if (rawRead) setReadIds(new Set(JSON.parse(rawRead)));
     } catch {}
-    try {
-      const rawPostCounts = localStorage.getItem('notif_seen_post_like_counts');
-      if (rawPostCounts) setSeenPostLikeCounts(JSON.parse(rawPostCounts));
-    } catch {}
-    try {
-      const rawCommentCounts = localStorage.getItem('notif_seen_comment_like_counts');
-      if (rawCommentCounts) setSeenCommentLikeCounts(JSON.parse(rawCommentCounts));
-    } catch {}
   }, []);
-
-  // Normaliza un like-array con estructura opcional de usuario
-  const toLikeNotification = (like: any, post: any): Notification => ({
-    id: `post-like-${like.id}`,
-    type: 'like',
-    postId: post.id,
-    postContent: post.content || '(sin contenido)',
-    authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
-    authorAvatar: like.user?.profilePicture,
-    createdAt: like.createdAt || new Date().toISOString(),
-    read: false,
-  });
-
-  // Normaliza un like en comentario
-  const toCommentLikeNotification = (like: any, post: any, comment: any): Notification => ({
-    id: `comment-like-${like.id}`,
-    type: 'comment-like',
-    postId: post.id,
-    postContent: post.content || '(sin contenido)',
-    authorName: like.user?.name || like.user?.email?.split?.('@')?.[0] || 'Alguien',
-    authorAvatar: like.user?.profilePicture,
-    commentContent: comment.content,
-    createdAt: like.createdAt || new Date().toISOString(),
-    read: false,
-  });
 
   // Función para obtener notificaciones desde el backend
   const fetchNotifications = useCallback(async () => {
@@ -101,98 +125,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     try {
-      // 1. Obtener todos los posts del usuario
-      const { data: postsData } = await api.get('/posts');
-      const allPosts = Array.isArray(postsData) ? postsData : postsData.data || [];
-      const userPosts = allPosts.filter((p: any) => p.userId === user.id);
+      // Obtener notificaciones del endpoint real
+      const { data: backendNotifications } = await api.get('/notifications');
 
       const built: Notification[] = [];
 
-      // 2. Para cada post del usuario, revisar likes y comentarios
-      for (const post of userPosts) {
-        // Obtener likes del post
-        try {
-          const { data: likesData } = await api.get(`/posts/${post.id}/likes`);
-          const likesArray = Array.isArray(likesData?.likes) ? likesData.likes : null;
-          // Caso A: el backend devuelve el array de likes con usuarios
-          if (likesArray) {
-            const otherUserLikes = likesArray.filter((like: any) => like.userId !== user.id);
-            for (const like of otherUserLikes) {
-              built.push(toLikeNotification(like, post));
-            }
-          } else {
-            // Caso B: solo devuelve likeCount -> generar notificación agregada si aumentó
-            const count = Number(likesData?.likeCount ?? 0);
-            const seen = Number(seenPostLikeCounts[post.id] ?? 0);
-            if (count > seen) {
-              built.push({
-                id: `post-like-${post.id}-${count}`,
-                type: 'like',
-                postId: post.id,
-                postContent: post.content || '(sin contenido)',
-                authorName: count - seen === 1 ? 'Alguien' : `${count - seen} usuarios`,
-                authorAvatar: undefined,
-                createdAt: new Date().toISOString(),
-                read: false,
-              });
-            }
-          }
-        } catch (err) {
-          console.warn(`Error al cargar likes del post ${post.id}`, err);
-        }
-
-        // Obtener comentarios del post
-        try {
-          const { data: commentsData } = await api.get(`/post/${post.id}/comments`);
-          const comments = Array.isArray(commentsData) ? commentsData : [];
-
-          // Filtrar comentarios que NO sean del propio usuario
-          const otherUserComments = comments.filter((comment: any) => comment.author?.id !== user.id);
-
-          for (const comment of otherUserComments) {
-            built.push({
-              id: `comment-${comment.id}`,
-              type: 'comment',
-              postId: post.id,
-              postContent: post.content || '(sin contenido)',
-              authorName: comment.author?.name || 'Usuario',
-              authorAvatar: comment.author?.profilePicture,
-              commentContent: comment.content,
-              createdAt: comment.createdAt || new Date().toISOString(),
-              read: false,
-            });
-          }
-
-          // Notificaciones por likes en comentarios
-          for (const comment of comments) {
-            // Ignorar likes propios
-            const cLikesArray = Array.isArray(comment?.likes) ? comment.likes : null;
-            if (cLikesArray) {
-              const otherUserLikes = cLikesArray.filter((like: any) => like.userId !== user.id);
-              for (const like of otherUserLikes) {
-                built.push(toCommentLikeNotification(like, post, comment));
-              }
-            } else {
-              // Fallback por conteo si no hay array de likes
-              const cCount = Number(comment?.likeCount ?? 0);
-              const seenC = Number(seenCommentLikeCounts[comment.id] ?? 0);
-              if (cCount > seenC) {
-                built.push({
-                  id: `comment-like-${comment.id}-${cCount}`,
-                  type: 'comment-like',
-                  postId: post.id,
-                  postContent: post.content || '(sin contenido)',
-                  authorName: cCount - seenC === 1 ? 'Alguien' : `${cCount - seenC} usuarios`,
-                  authorAvatar: undefined,
-                  commentContent: comment.content,
-                  createdAt: new Date().toISOString(),
-                  read: false,
-                });
-              }
-            }
-          }
-        } catch (err) {
-          console.warn(`Error al cargar comentarios del post ${post.id}`, err);
+      // Procesar notificaciones del backend
+      if (Array.isArray(backendNotifications)) {
+        for (const notif of backendNotifications) {
+          // Normalizar la notificación para el formato del frontend
+          const normalized: Notification = {
+            id: notif.id,
+            type: notif.type,
+            receiverId: notif.receiverId,
+            senderId: notif.senderId,
+            sender: notif.sender,
+            metadata: notif.metadata || {},
+            isRead: notif.isRead || false,
+            createdAt: notif.createdAt,
+            // Campos calculados para compatibilidad
+            authorName: notif.sender?.name || notif.sender?.email?.split('@')[0] || 'Usuario',
+            authorAvatar: notif.sender?.profilePicture,
+            postId: notif.metadata?.postId,
+            postContent: notif.metadata?.postContent,
+            commentContent: notif.metadata?.commentContent,
+            read: notif.isRead || false,
+          };
+          built.push(normalized);
         }
       }
 
@@ -202,8 +161,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         built.push({
           id: sn.id,
           type: 'system',
-          authorName: 'Sistema',
+          isRead: sn.read,
           createdAt: sn.createdAt,
+          authorName: 'Sistema',
           read: sn.read,
           systemType: sn.type,
           systemTitle: sn.title,
@@ -224,94 +184,82 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       // Ordenar por fecha más reciente
       list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      setNotifications(list);
+      // Ordenar por fecha descendente
+      built.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      setNotifications(built);
     } catch (err) {
       console.error('Error al cargar notificaciones:', err);
+      // Si falla el endpoint, intentar cargar solo notificaciones del sistema
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Endpoint de notificaciones no disponible, mostrando solo notificaciones del sistema');
+      }
+      const systemNotifs = getSystemNotifications(user.id);
+      const systemOnly = systemNotifs.map((sn) => ({
+        id: sn.id,
+        type: 'system' as const,
+        isRead: sn.read,
+        createdAt: sn.createdAt,
+        authorName: 'Sistema',
+        read: sn.read,
+        systemType: sn.type,
+        systemTitle: sn.title,
+        systemMessage: sn.message,
+      }));
+      setNotifications(systemOnly);
     } finally {
       setLoading(false);
     }
-  }, [user, readIds, seenPostLikeCounts, seenCommentLikeCounts]);
+  }, [user]);
 
   // Marcar notificación como leída
-  const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAsRead = async (id: string) => {
+    try {
+      const notification = notifications.find((n) => n.id === id);
 
-    // Si es una notificación del sistema, marcarla en su storage
-    const notification = notifications.find((n) => n.id === id);
-    if (notification?.type === 'system' && user) {
-      markSystemNotificationAsRead(user.id, id);
-    }
-
-    // Persistir
-    setReadIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      persistReadIds(next);
-      return next;
-    });
-
-    // Si es una notificación agregada por conteo, actualizar 'seen' para no re-aparecer
-    // Formatos soportados: post-like-<postId>-<count> | comment-like-<commentId>-<count>
-    if (id.startsWith('post-like-')) {
-      const parts = id.split('-');
-      const postId = parts[2];
-      const count = Number(parts[3]);
-      if (postId && Number.isFinite(count)) {
-        setSeenPostLikeCounts((prev) => {
-          const next = { ...prev, [postId]: Math.max(count, Number(prev[postId] ?? 0)) };
-          persistSeenCounts('notif_seen_post_like_counts', next);
-          return next;
-        });
+      // Si es notificación del sistema
+      if (notification?.type === 'system') {
+        if (user) markSystemNotificationAsRead(user.id, id);
+      } else {
+        // Notificación del backend
+        await api.patch(`/notifications/${id}/read`);
       }
-    }
-    if (id.startsWith('comment-like-') && id.match(/^comment-like-[^-]+-\d+$/)) {
-      const parts = id.split('-');
-      const commentId = parts[2];
-      const count = Number(parts[3]);
-      if (commentId && Number.isFinite(count)) {
-        setSeenCommentLikeCounts((prev) => {
-          const next = { ...prev, [commentId]: Math.max(count, Number(prev[commentId] ?? 0)) };
-          persistSeenCounts('notif_seen_comment_like_counts', next);
-          return next;
-        });
-      }
+
+      // Actualizar localmente
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true, isRead: true } : n)));
+    } catch (err) {
+      console.error('Error al marcar notificación como leída:', err);
+      // Fallback: actualizar solo localmente
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true, isRead: true } : n)));
     }
   };
 
   // Marcar todas como leídas
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setReadIds((prev) => {
-      const next = new Set(prev);
-      for (const n of notifications) next.add(n.id);
-      persistReadIds(next);
-      return next;
-    });
-    // Actualizar todos los contadores 'seen' a valores máximos actuales
-    const postCounts = { ...seenPostLikeCounts };
-    const commentCounts = { ...seenCommentLikeCounts };
-    for (const n of notifications) {
-      if (n.id.startsWith('post-like-')) {
-        const parts = n.id.split('-');
-        const postId = parts[2];
-        const count = Number(parts[3]);
-        if (postId && Number.isFinite(count)) postCounts[postId] = Math.max(count, Number(postCounts[postId] ?? 0));
+  const markAllAsRead = async () => {
+    try {
+      // Marcar todas en el backend
+      await api.patch('/notifications/read-all');
+
+      // Marcar notificaciones del sistema
+      if (user) {
+        for (const n of notifications) {
+          if (n.type === 'system') {
+            markSystemNotificationAsRead(user.id, n.id);
+          }
+        }
       }
-      if (n.id.startsWith('comment-like-') && n.id.match(/^comment-like-[^-]+-\d+$/)) {
-        const parts = n.id.split('-');
-        const commentId = parts[2];
-        const count = Number(parts[3]);
-        if (commentId && Number.isFinite(count)) commentCounts[commentId] = Math.max(count, Number(commentCounts[commentId] ?? 0));
-      }
+
+      // Actualizar localmente
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true, isRead: true })));
+    } catch (err) {
+      console.error('Error al marcar todas como leídas:', err);
+      // Fallback: actualizar solo localmente
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true, isRead: true })));
     }
-    setSeenPostLikeCounts(postCounts);
-    setSeenCommentLikeCounts(commentCounts);
-    persistSeenCounts('notif_seen_post_like_counts', postCounts);
-    persistSeenCounts('notif_seen_comment_like_counts', commentCounts);
   };
 
   // Contador de no leídas
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read && !n.isRead).length;
 
   // Cargar notificaciones al montar y cada 60 segundos
   useEffect(() => {
@@ -327,11 +275,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const handleSystemNotification = () => {
       fetchNotifications();
     };
-    window.addEventListener('systemNotification', handleSystemNotification);
+    globalThis.addEventListener('systemNotification', handleSystemNotification);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('systemNotification', handleSystemNotification);
+      globalThis.removeEventListener('systemNotification', handleSystemNotification);
     };
   }, [fetchNotifications, user]);
 

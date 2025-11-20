@@ -111,7 +111,7 @@ export default function CreatePost() {
       <div className="flex items-center justify-between">
         <label
           htmlFor="file-upload"
-          className="cursor-pointer bg-[#ffff00] text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition"
+          className="cursor-pointer bg-[#ffff00] text-black px-4 py-2 rounded-lg font-semibold hover:scale-105 transition"
         >
           📎 Agregar imagen o video
         </label>
@@ -136,7 +136,7 @@ export default function CreatePost() {
               setMedia(null);
               setPreview(null);
             }}
-            className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full px-2 py-1 text-xs hover:bg-opacity-80"
+            className="absolute top-2 right-2 bg-black bg-opacity-60 cursor-pointer text-white rounded-full px-2 py-1 text-xs hover:bg-opacity-80"
           >
             ✖
           </button>
@@ -151,7 +151,7 @@ export default function CreatePost() {
                ${
                  pushbutton
                    ? "bg-gray-400 cursor-not-allowed" // Estilo para deshabilitado
-                   : "bg-[#ffff00] hover:bg-yellow-300 cursor-pointer"
+                   : "bg-[#ffff00] hover:scale-105 cursor-pointer"
                }`}
       >
         Publicar

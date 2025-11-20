@@ -18,6 +18,7 @@ import {
   deleteConversation /*, uploadChatMedia */,
 } from "@/services/chatService";
 import {Send} from "lucide-react";
+import Swal from "sweetalert2";
 
 interface Message {
   id: string;
@@ -44,16 +45,6 @@ interface Conversation {
 }
 
 export default function FloatingChatButton() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [newMessage, setNewMessage] = useState("");
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(false);
-  // const [uploadingFile, setUploadingFile] = useState(false);
-  // const [previewFile, setPreviewFile] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
-  // const fileInputRef = useRef<HTMLInputElement>(null);
-
   const pathname = usePathname();
   const router = useRouter();
   const {user} = useAuth();
@@ -64,6 +55,17 @@ export default function FloatingChatButton() {
     markConversationAsRead: markConversationAsReadGlobal,
     refreshUnreadCount,
   } = useChat();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [newMessage, setNewMessage] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(false);
+  // const [uploadingFile, setUploadingFile] = useState(false);
+  // const [previewFile, setPreviewFile] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [theme] = useDarkMode();
@@ -77,6 +79,7 @@ export default function FloatingChatButton() {
   });
   const buttonBaseClasses =
     "py-2 text-black font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90";
+
   // Convertir mensaje del backend a formato frontend
   const convertMessage = useCallback((msg: BackendMessage, currentUserId: string): Message => {
     // Normalizar URL de avatar
@@ -351,7 +354,7 @@ export default function FloatingChatButton() {
       refreshUnreadCount();
     } catch (error) {
       console.error("Error al eliminar conversación:", error);
-      alert("Error al eliminar la conversación. Por favor intenta de nuevo.");
+      Swal.fire("Error al eliminar la conversación. Por favor intenta de nuevo.");
     }
   };
 
@@ -485,6 +488,12 @@ export default function FloatingChatButton() {
 
   const formatMessageTime = (date: Date) => date.toLocaleTimeString("es-ES", {hour: "2-digit", minute: "2-digit"});
 
+  // Ocultar el botón flotante en las páginas de videollamada
+  // IMPORTANTE: Este return debe estar AL FINAL, después de todos los hooks
+  if (pathname?.startsWith("/live/") && pathname !== "/live/create") {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-6 right-6 mb-20 z-50" ref={menuRef}>
       {/* Menú desplegable */}
@@ -528,7 +537,7 @@ export default function FloatingChatButton() {
                     <p>No tienes conversaciones</p>
                     <button
                       onClick={handleOpenFullChat}
-                      className="mt-4 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
+                      className="mt-4 px-4 py-2 bg-[#ffff00] hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
                     >
                       Iniciar chat
                     </button>
@@ -538,7 +547,7 @@ export default function FloatingChatButton() {
                     <div key={conv.id} className="relative group">
                       <button
                         onClick={() => handleSelectConversation(conv.id)}
-                        className="w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        className="w-full p-4 flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                       >
                         <div className="relative shrink-0">
                           {conv.userAvatar ? (
@@ -578,7 +587,7 @@ export default function FloatingChatButton() {
                       {/* Botón de eliminar - aparece al hacer hover */}
                       <button
                         onClick={(e) => handleDeleteConversation(conv.id, e)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute right-3 top-14 -translate-y-1/2 p-1 rounded-lg bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         title="Eliminar conversación"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -633,14 +642,14 @@ export default function FloatingChatButton() {
                 {/* Botón de eliminar conversación */}
                 <button
                   onClick={(e) => handleDeleteConversation(selectedConversation.id, e)}
-                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
                   title="Eliminar conversación"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={3}
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
@@ -648,7 +657,7 @@ export default function FloatingChatButton() {
               </div>
 
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
                 {selectedConversation.messages.map((message) => (
                   <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
                     <div className={`flex gap-2 max-w-[80%] ${message.isOwn ? "flex-row-reverse" : "flex-row"}`}>
@@ -679,7 +688,7 @@ export default function FloatingChatButton() {
                               ? "text-black"
                               : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
                           }`}
-                          style={message.isOwn ? {backgroundColor: "#ffff00"} : {}}
+                          style={message.isOwn ? {backgroundColor: "#D1D5DB"} : {}}
                         >
                           {/* Mostrar imagen */}
                           {message.type === MessageType.IMAGE && message.mediaUrl && (
@@ -774,7 +783,7 @@ export default function FloatingChatButton() {
                   <button
                     type="button"
                     onClick={() => setShowEmoji(!showEmoji)}
-                    className="text-xl hover:scale-110 transition-transform"
+                    className="text-xl hover:scale-110 transition-transform cursor-pointer"
                   >
                     😊
                   </button>
@@ -785,7 +794,7 @@ export default function FloatingChatButton() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Escribe un mensaje..."
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffff00] text-sm"
                   />
 
                   <button
@@ -794,10 +803,10 @@ export default function FloatingChatButton() {
                     className={`
         ${buttonBaseClasses}
         bg-[#ffff00] 
-        hover:bg-yellow-300
+        hover:scale-105 cursor-pointer
         
         // Estilos para MÓVIL (Por defecto, solo el icono)
-        px-3 md:hidden 
+        px-3 
         
         // Estilos para ESCRITORIO (Aparece a partir de 'md')
         md:px-4 md:inline-flex md:text-sm
@@ -821,7 +830,7 @@ export default function FloatingChatButton() {
       {/* Botón principal */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative group text-black rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+        className="relative group text-black rounded-full p-4 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
         style={{backgroundColor: "#ffff00"}}
         aria-label="Abrir mensajes"
       >
@@ -838,7 +847,7 @@ export default function FloatingChatButton() {
           </span>
         )}
 
-        <img src={mensajeSrc} alt="mensajes" className="w-6 h-6" />
+        <img src={mensajeSrc} alt="mensajes" className="w-6 h-6 cursor-pointer" />
 
         {!isOpen && (
           <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">

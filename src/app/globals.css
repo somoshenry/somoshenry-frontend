@@ -8,15 +8,6 @@
   }
 }
 
-@layer components {
-  /* Clase personalizada para el efecto de arcoíris en hover */
-  .rainbow-shadow-hover:hover {
-    box-shadow: 0 0 0 2px #ff0000, /* Rojo */ 0 0 0 4px #ff7f00, /* Naranja */ 0 0 0 6px #ffff00,
-      /* Amarillo */ 0 0 0 8px #00ff00, /* Verde */ 0 0 0 10px #0000ff, /* Azul */ 0 0 0 12px #4b0082,
-      /* Índigo */ 0 0 0 14px #9400d3; /* Violeta */
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -29,4 +20,15 @@ input[type="password"]::-webkit-reveal {
 
 input[type="password"]::-ms-reveal {
   display: none !important;
+}
+
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -3px; /* que rodee la tarjeta */
+  z-index: -1;
+  border-radius: 1rem;
+  background: linear-gradient(45deg, #ffbf00, #ffd988, #fff3c2);
+  filter: blur(8px);
+  opacity: 1;
 }

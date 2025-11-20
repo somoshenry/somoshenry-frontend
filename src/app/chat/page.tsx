@@ -1,19 +1,20 @@
-'use client';
-import ChatSidebar from '@/components/chat/ChatSidebar';
-import ChatWindow from '@/components/chat/ChatWindow';
-import SearchUserModal from '@/components/chat/SearchUserModal';
-import CreateGroupModal from '@/components/chat/CreateGroupModal';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hook/useAuth';
-import { useChat } from '@/context/ChatContext';
-import { useSocket } from '@/hook/useSocket';
-import { tokenStore } from '@/services/tokenStore';
-import { useChatConversations } from '@/hooks/chat/useChatConversations';
-import { useChatMessages } from '@/hooks/chat/useChatMessages';
-import { useChatCache } from '@/hooks/chat/useChatCache';
-import { convertMessage, convertGroupToConversation } from '@/utils/chat/conversationHelpers';
-import { Message as BackendMessage, MessageType, getDisplayName } from '@/services/chatService';
-import type { Message, Conversation } from '@/interfaces/chat';
+"use client";
+import ChatSidebar from "@/components/chat/ChatSidebar";
+import ChatWindow from "@/components/chat/ChatWindow";
+import SearchUserModal from "@/components/chat/SearchUserModal";
+import CreateGroupModal from "@/components/chat/CreateGroupModal";
+import {useState, useEffect} from "react";
+import {useAuth} from "@/hook/useAuth";
+import {useChat} from "@/context/ChatContext";
+import {useSocket} from "@/hook/useSocket";
+import {tokenStore} from "@/services/tokenStore";
+import {useChatConversations} from "@/hook/chat/useChatConversations";
+import {useChatMessages} from "@/hook/chat/useChatMessages";
+import {useChatCache} from "@/hook/chat/useChatCache";
+import {convertMessage, convertGroupToConversation} from "@/utils/chat/conversationHelpers";
+import {Message as BackendMessage, MessageType, getDisplayName} from "@/services/chatService";
+import type {Message, Conversation} from "@/interfaces/chat";
+import Swal from "sweetalert2";
 
 // Tipo para evento de grupo creado
 type GroupCreatedEvent = {
@@ -21,7 +22,7 @@ type GroupCreatedEvent = {
 };
 
 // Re-exportar interfaces para mantener compatibilidad con componentes
-export type { Message, Participant, Conversation } from '@/interfaces/chat';
+export type {Message, Participant, Conversation} from "@/interfaces/chat";
 
 export default function ChatPage() {
   // Estado para manejar si el sidebar está visible en móvil
@@ -29,19 +30,19 @@ export default function ChatPage() {
 
   // Restaurar conversación seleccionada desde localStorage
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('chat_selected_conversation') || null;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("chat_selected_conversation") || null;
     }
     return null;
   });
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
-  const { user } = useAuth();
-  const { markMessagesAsRead, markConversationAsRead: markConversationAsReadGlobal } = useChat();
+  const {user} = useAuth();
+  const {markMessagesAsRead, markConversationAsRead: markConversationAsReadGlobal} = useChat();
 
   // Verificar si el chat está habilitado
-  const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED !== 'false';
+  const chatEnabled = process.env.NEXT_PUBLIC_CHAT_ENABLED !== "false";
 
   const token = tokenStore.getAccess();
   const socket = useSocket({
@@ -51,11 +52,12 @@ export default function ChatPage() {
 
   // Hooks personalizados
   const cache = useChatCache();
-  const { conversations, setConversations, loading, chatAvailable, loadConversations, openConversation } = useChatConversations({
-    userId: user?.id,
-    chatEnabled,
-  });
-  const { clearLoadedFlag } = useChatMessages({
+  const {conversations, setConversations, loading, chatAvailable, loadConversations, openConversation} =
+    useChatConversations({
+      userId: user?.id,
+      chatEnabled,
+    });
+  const {clearLoadedFlag} = useChatMessages({
     selectedConversationId,
     userId: user?.id,
     conversations,
@@ -71,29 +73,31 @@ export default function ChatPage() {
   useEffect(() => {
     const handleChatSync = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const { conversationId, action } = customEvent.detail || {};
+      const {conversationId, action} = customEvent.detail || {};
 
-      if (action === 'read' && conversationId) {
+      if (action === "read" && conversationId) {
         // Marcar localmente la conversación como leída
-        setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv)));
+        setConversations((prev) => prev.map((conv) => (conv.id === conversationId ? {...conv, unreadCount: 0} : conv)));
       }
     };
 
-    window.addEventListener('chat-sync', handleChatSync);
-    return () => window.removeEventListener('chat-sync', handleChatSync);
+    window.addEventListener("chat-sync", handleChatSync);
+    return () => window.removeEventListener("chat-sync", handleChatSync);
   }, [setConversations]);
 
   // Cuando seleccionas una conversación, resetear el contador de mensajes no leídos
   useEffect(() => {
     if (selectedConversationId) {
       // Guardar en localStorage para persistir la selección
-      localStorage.setItem('chat_selected_conversation', selectedConversationId);
+      localStorage.setItem("chat_selected_conversation", selectedConversationId);
 
       // Marcar la conversación como leída usando el ChatContext (sincroniza automáticamente)
       markConversationAsReadGlobal(selectedConversationId);
 
       // También actualizar localmente
-      setConversations((prev) => prev.map((conv) => (conv.id === selectedConversationId ? { ...conv, unreadCount: 0 } : conv)));
+      setConversations((prev) =>
+        prev.map((conv) => (conv.id === selectedConversationId ? {...conv, unreadCount: 0} : conv))
+      );
 
       // En móvil, cerrar el sidebar cuando seleccionas una conversación
       setIsMobileSidebarOpen(false);
@@ -138,7 +142,9 @@ export default function ChatPage() {
         // Si la conversación NO existe, crearla (puede ser grupo o 1:1)
         if (!conv) {
           // Detectar si es grupo por la estructura del mensaje (solo si existe participants)
-          const isGroup = Array.isArray((message.conversation as any).participants) && (message.conversation as any).participants.length > 2;
+          const isGroup =
+            Array.isArray((message.conversation as any).participants) &&
+            (message.conversation as any).participants.length > 2;
           let newConversation: Conversation;
           if (isGroup) {
             // Usar helper para asegurar estructura correcta y agregar el mensaje recibido
@@ -169,7 +175,7 @@ export default function ChatPage() {
             newConversation = {
               id: convId,
               userId: otherUserInfo?.userId,
-              userName: otherUserInfo?.userName || 'Conversación',
+              userName: otherUserInfo?.userName || "Conversación",
               userAvatar: otherUserInfo?.userAvatar,
               lastMessage: frontendMessage.content,
               lastMessageTime: frontendMessage.timestamp,
@@ -203,7 +209,7 @@ export default function ChatPage() {
             }
 
             // Verificar si el mensaje ya existe
-            const exists = currentMessages.some((m) => m.id === frontendMessage.id && !m.id.startsWith('temp-'));
+            const exists = currentMessages.some((m) => m.id === frontendMessage.id && !m.id.startsWith("temp-"));
             if (exists) return conv;
 
             const shouldIncrementUnread = !frontendMessage.isOwn && conv.id !== selectedConversationId;
@@ -237,7 +243,9 @@ export default function ChatPage() {
           if (conv.id === convId) {
             return {
               ...conv,
-              messages: conv.messages.map((m) => (m.tempId && m.tempId === frontendMessage.tempId ? frontendMessage : m)),
+              messages: conv.messages.map((m) =>
+                m.tempId && m.tempId === frontendMessage.tempId ? frontendMessage : m
+              ),
             };
           }
           return conv;
@@ -257,28 +265,26 @@ export default function ChatPage() {
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
   // Crear nueva conversación con un usuario
-  const handleCreateConversation = async (selectedUser: { id: string; name: string; avatar?: string; email: string }) => {
+  const handleCreateConversation = async (selectedUser: {id: string; name: string; avatar?: string; email: string}) => {
     try {
       const conv = await openConversation(selectedUser);
       if (conv) {
         setSelectedConversationId(conv.id);
       }
     } catch (error) {
-      console.error('Error al crear conversación:', error);
-      alert('Error al crear la conversación');
+      console.error("Error al crear conversación:", error);
+      Swal.fire("Error al crear la conversación");
     }
   };
 
   // Manejar grupo recién creado
   const handleGroupCreated = async (group: any) => {
-    console.log('✅ Grupo creado exitosamente:', group);
-
     try {
       const groupConv = convertGroupToConversation(group);
       setConversations((prev) => [groupConv, ...prev]);
       setSelectedConversationId(group.id);
     } catch (error) {
-      console.error('❌ Error al procesar grupo creado:', error);
+      console.error("❌ Error al procesar grupo creado:", error);
       await loadConversations();
       setSelectedConversationId(group.id);
     }
@@ -335,8 +341,8 @@ export default function ChatPage() {
     });
 
     if (!sent) {
-      console.error('No se pudo enviar el mensaje, socket desconectado');
-      alert('Error: No hay conexión con el servidor');
+      console.error("No se pudo enviar el mensaje, socket desconectado");
+      //alert("Error: No hay conexión con el servidor");
 
       // Remover el mensaje temporal
       setConversations((prev) =>
@@ -359,20 +365,22 @@ export default function ChatPage() {
     const conv = conversations.find((c) => c.id === conversationId);
     if (!conv) return;
 
-    const confirmMsg = conv.isGroup ? `¿Eliminar el grupo "${conv.groupName}"?` : `¿Eliminar conversación con ${conv.userName}?`;
+    const confirmMsg = conv.isGroup
+      ? `¿Eliminar el grupo "${conv.groupName}"?`
+      : `¿Eliminar conversación con ${conv.userName}?`;
 
     if (!confirm(confirmMsg)) return;
 
     try {
       if (conv.isGroup) {
-        const { deleteGroup, leaveGroup } = await import('@/services/chatService');
-        if (conv.participants?.some((p: any) => p.id === user?.id && p.role === 'ADMIN')) {
+        const {deleteGroup, leaveGroup} = await import("@/services/chatService");
+        if (conv.participants?.some((p: any) => p.id === user?.id && p.role === "ADMIN")) {
           await deleteGroup(conversationId);
         } else {
           await leaveGroup(conversationId);
         }
       } else {
-        const { deleteConversation } = await import('@/services/chatService');
+        const {deleteConversation} = await import("@/services/chatService");
         await deleteConversation(conversationId);
       }
 
@@ -381,7 +389,7 @@ export default function ChatPage() {
         setSelectedConversationId(null);
       }
     } catch (e: any) {
-      alert('Error al eliminar la conversación o grupo');
+      Swal.fire("Error al eliminar la conversación o grupo");
     }
   };
 
@@ -397,31 +405,61 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="fixed top-16 left-0 md:left-64 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="fixed top-16 left-0 md:left-65 right-0 bottom-0 flex bg-white dark:bg-gray-900 overflow-hidden">
       {/* Sidebar con lista de conversaciones - Se oculta en móvil cuando hay conversación seleccionada */}
-      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-80 shrink-0 h-full`}>
-        <ChatSidebar conversations={conversations} selectedId={selectedConversationId} onSelectConversation={setSelectedConversationId} onOpenSearch={() => setIsSearchModalOpen(true)} onOpenCreateGroup={() => setIsCreateGroupOpen(true)} />
+      <div className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block w-full md:w-80 shrink-0 h-full`}>
+        <ChatSidebar
+          conversations={conversations}
+          selectedId={selectedConversationId}
+          onSelectConversation={setSelectedConversationId}
+          onOpenSearch={() => setIsSearchModalOpen(true)}
+          onOpenCreateGroup={() => setIsCreateGroupOpen(true)}
+        />
       </div>
 
       {/* Ventana de chat - Se muestra en toda la pantalla en móvil cuando hay conversación seleccionada */}
-      <div className={`${!isMobileSidebarOpen ? 'block' : 'hidden'} md:block flex-1 relative h-full`}>
+      <div className={`${!isMobileSidebarOpen ? "block" : "hidden"} md:block flex-1 relative h-full`}>
         {/* Botón de volver en móvil */}
         {selectedConversation && (
-          <button onClick={() => setIsMobileSidebarOpen(true)} className="md:hidden absolute top-4 left-4 z-10 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700" aria-label="Volver a conversaciones">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-300">
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="md:hidden absolute top-4 left-4 z-10 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700"
+            aria-label="Volver a conversaciones"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-6 h-6 text-gray-700 dark:text-gray-300"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
           </button>
         )}
 
-        <ChatWindow conversation={selectedConversation} onSendMessage={handleSendMessage} onDeleteConversation={handleDeleteConversation} />
+        <ChatWindow
+          conversation={selectedConversation}
+          onSendMessage={handleSendMessage}
+          onDeleteConversation={handleDeleteConversation}
+        />
       </div>
 
       {/* Modal de búsqueda de usuarios */}
-      <SearchUserModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} onSelectUser={handleCreateConversation} currentUserId={user?.id || ''} />
+      <SearchUserModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelectUser={handleCreateConversation}
+        currentUserId={user?.id || ""}
+      />
 
       {/* Modal de creación de grupo */}
-      <CreateGroupModal isOpen={isCreateGroupOpen} onClose={() => setIsCreateGroupOpen(false)} onGroupCreated={handleGroupCreated} />
+      <CreateGroupModal
+        isOpen={isCreateGroupOpen}
+        onClose={() => setIsCreateGroupOpen(false)}
+        onGroupCreated={handleGroupCreated}
+      />
     </div>
   );
 }

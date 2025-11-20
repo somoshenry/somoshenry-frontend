@@ -16,7 +16,7 @@
 //           <img
 //             src={s.avatar}
 //             alt={s.name}
-//             className="w-12 h-12 rounded-full mb-2 border-2 border-yellow-400"
+//             className="w-12 h-12 rounded-full mb-2 border-2 border-[#ffff00]"
 //           />
 //           <h3 className="font-semibold">{s.name}</h3>
 //           <p className="text-sm text-gray-500">{s.role}</p>

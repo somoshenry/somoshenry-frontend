@@ -88,10 +88,7 @@ export default function Post({post, onUpdatePost}: {post: PostType; onUpdatePost
             />
           </div>
           <div>
-            <p
-              className="font-semibold text-gray-900 cursor-pointer hover:text-yellow-500 transition-colors"
-              onClick={handleUserClick}
-            >
+            <p className="font-semibold text-gray-900 cursor-pointer hover:scale-105" onClick={handleUserClick}>
               {getDisplayName(post.user)}
             </p>
             <p className="text-xs text-gray-500">{formatDateArgentina(post.createdAt)}</p>
@@ -100,14 +97,14 @@ export default function Post({post, onUpdatePost}: {post: PostType; onUpdatePost
         <div className="flex gap-2 items-center">
           <button
             onClick={() => setShowReportModal(true)}
-            className="text-gray-400 hover:text-red-500 transition text-sm"
+            className="text-gray-400 hover:text-red-500 cursor-pointer transition text-sm"
           >
             Reportar
           </button>
           {canDelete && (
             <button
               onClick={handleDelete}
-              className="text-gray-400 hover:text-red-500 transition text-sm"
+              className="text-gray-400 hover:text-red-500 cursor-pointer transition text-sm"
               title="Borrar post"
             >
               Borrar
@@ -137,7 +134,7 @@ export default function Post({post, onUpdatePost}: {post: PostType; onUpdatePost
       {/* Likes y contador de comentarios */}
       <div className="flex items-center justify-between mt-2">
         <LikeButton likes={likesCount} liked={likedByMe} onLike={() => likePost(post.id)} />
-        <span className="text-xs text-gray-500">{safeComments.length} comentarios</span>
+        <span className="text-xs text-gray-500 cursor-pointer">{safeComments.length} comentarios</span>
       </div>
 
       {/* Sección de comentarios */}

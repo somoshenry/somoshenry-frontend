@@ -3,6 +3,7 @@
 "use client";
 
 import React, {useState} from "react";
+import Swal from "sweetalert2";
 // 💡 Importamos la interfaz para asegurar la consistencia de los datos
 
 // Definimos la estructura de los datos que se enviarán al padre, omitiendo
@@ -26,7 +27,7 @@ const PostAviso: React.FC<PostFormCardProps> = ({onPost}) => {
   const handlePost = () => {
     // Validación básica
     if (title.trim() === "" || message.trim() === "") {
-      alert("Por favor, ingresa un título y un mensaje.");
+      Swal.fire("Por favor, ingresa un título y un mensaje.");
       return;
     }
 

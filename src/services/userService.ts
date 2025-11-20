@@ -1,3 +1,4 @@
+import { Subscription } from '@/interfaces/context/auth';
 import { api } from './api';
 
 export interface User {
@@ -11,10 +12,17 @@ export interface User {
   location?: string | null;
   website?: string | null;
   joinDate?: string | null;
-  role: 'ADMIN' | 'TEACHER' | 'MEMBER';
+  role: 'ADMIN' | 'TEACHER' | 'TA' | 'MEMBER';
   status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
   createdAt: string;
   updatedAt: string;
+
+  // SUSCRIPCIÓN - Lo que el backend devuelve
+  subscription?: Subscription | null;
+  subscriptionExpiresAt?: string | null;
+
+  // LEGADO
+  suscriptions?: Subscription[];
 }
 
 export interface UserProfileResponse {
@@ -27,15 +35,22 @@ export interface UserProfileResponse {
  */
 export async function getUserProfile(): Promise<User> {
   const { data } = await api.get<UserProfileResponse>('/users/me');
-  return data.user;
-}
+  const user = data.user;
 
+  console.log('📡 getUserProfile - Respuesta del backend:', {
+    subscriptionExpiresAt: user.subscriptionExpiresAt,
+    subscription: user.subscription,
+  });
+
+  return user;
+}
 /**
  * Obtiene el perfil de un usuario por ID
  */
 export async function getUserById(userId: string): Promise<User> {
   const { data } = await api.get<UserProfileResponse>(`/users/${userId}`);
-  return data.user;
+  const user = data.user;
+  return user;
 }
 
 /**
@@ -43,5 +58,6 @@ export async function getUserById(userId: string): Promise<User> {
  */
 export async function updateUserProfile(updates: { name?: string; lastName?: string; biography?: string; location?: string; website?: string; profilePicture?: string; coverPicture?: string; username?: string }): Promise<User> {
   const { data } = await api.patch<UserProfileResponse>('/users/me', updates);
-  return data.user;
+  const user = data.user;
+  return user;
 }

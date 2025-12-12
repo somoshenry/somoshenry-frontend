@@ -129,6 +129,14 @@ export default function PlanesPage() {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ MOCK: expiración + posteos restantes (para demo/UI)
+  const subscriptionMock: SubscriptionData = {
+    plan: "PLATA",
+    expiresAt: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(), // +18 días
+    postsRemaining: 8,
+    postsLimit: 30,
+  };
+
   useEffect(() => {
     loadSubscriptionData();
   }, []);
@@ -136,10 +144,19 @@ export default function PlanesPage() {
   const loadSubscriptionData = async () => {
     try {
       setLoading(true);
-      const data = await getMySubscription();
-      setSubscriptionData(data);
+
+      // ✅ MOCK MODE (UI demo) - deja esto así mientras maqueteás
+      setSubscriptionData(subscriptionMock);
+      return;
+
+      // ✅ REAL MODE (cuando conectes backend)
+      // const data = await getMySubscription();
+      // setSubscriptionData(data);
     } catch (error) {
       console.error("Error al cargar suscripción:", error);
+
+      // fallback mock para que nunca quede vacío
+      setSubscriptionData(subscriptionMock);
     } finally {
       setLoading(false);
     }
@@ -301,12 +318,7 @@ export default function PlanesPage() {
                   <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                     Tipo de Plan
                   </h3>
-                  <svg
-                    className="w-6 h-6 text-blue-500 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-6 h-6 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -316,9 +328,7 @@ export default function PlanesPage() {
                   </svg>
                 </div>
                 {planBadge && (
-                  <span
-                    className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${planBadge.color} shadow-md`}
-                  >
+                  <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${planBadge.color} shadow-md`}>
                     {planBadge.text}
                   </span>
                 )}
@@ -329,12 +339,7 @@ export default function PlanesPage() {
                   <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                     Fecha de Expiración
                   </h3>
-                  <svg
-                    className="w-6 h-6 text-green-500 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-6 h-6 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -362,12 +367,7 @@ export default function PlanesPage() {
                   <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                     Posteos Restantes
                   </h3>
-                  <svg
-                    className="w-6 h-6 text-purple-500 dark:text-purple-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-6 h-6 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -382,6 +382,7 @@ export default function PlanesPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   de {subscriptionData.postsLimit === -1 ? "ilimitados" : subscriptionData.postsLimit}
                 </p>
+
                 <div className="mt-3 bg-white dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                   <div
                     className={`h-full transition-all duration-300 ${
@@ -399,7 +400,7 @@ export default function PlanesPage() {
                           ? "100%"
                           : `${Math.max(5, (subscriptionData.postsRemaining / subscriptionData.postsLimit) * 100)}%`,
                     }}
-                  ></div>
+                  />
                 </div>
               </div>
             </div>
@@ -415,15 +416,11 @@ export default function PlanesPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {pricingPlans.map((plan) => (
-            <PricingCard
-              key={plan.id}
-              plan={plan}
-              isCurrentPlan={plan.id === currentPlanId}
-              onUpgrade={handleUpgrade}
-            />
+            <PricingCard key={plan.id} plan={plan} isCurrentPlan={plan.id === currentPlanId} onUpgrade={handleUpgrade} />
           ))}
         </div>
       </div>
     </div>
   );
 }
+
